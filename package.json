@@ -1,0 +1,32 @@
+{
+  "name": "overkami",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@fluentui/web-components": "^2.6.1",
+    "@tauri-apps/api": ">=2.0.0-beta.0",
+    "@tauri-apps/plugin-shell": ">=2.0.0-beta.0"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^0.6.8",
+    "@rsbuild/plugin-svelte": "^0.6.8",
+    "@rsbuild/plugin-yaml": "^0.6.8",
+    "@tauri-apps/cli": ">=2.0.0-beta.0",
+    "@tsconfig/svelte": "^5.0.2",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "svelte": "^4.2.8",
+    "svelte-check": "^3.4.6",
+    "tailwindcss": "^3.4.3",
+    "tslib": "^2.6.0",
+    "typescript": "^5.0.2"
+  }
+}
