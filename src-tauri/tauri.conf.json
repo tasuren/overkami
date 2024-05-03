@@ -11,9 +11,11 @@
   "app": {"windows": [
       {
         "title": "overkami",
-        "width": 800,
-        "height": 600,
+        "width": 600,
+        "height": 400,
         "transparent": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
         "windowEffects": {
           "effects": ["menu", "mica"]
         }

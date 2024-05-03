@@ -1,19 +1,38 @@
-<fluent-tabs activeid="entrees" class="h-full">
-  <fluent-tab id="profiles">プロファイル</fluent-tab>
-  <fluent-tab id="wallpapers">壁紙</fluent-tab>
-  <fluent-tab id="extensions">拡張機能</fluent-tab>
+<script>
+  import { onMount } from "svelte";
 
-  <fluent-tab-panel id="profilesPanel">
-    あ
-  </fluent-tab-panel>
-  <fluent-tab-panel id="wallpapersPanel">
-    い
-  </fluent-tab-panel>
-  <fluent-tab-panel id="dessertsPanel">
-      <ol>
-          <li><fluent-anchor href="#" appearance="hypertext">Tiramisu</fluent-anchor></li>
-          <li><fluent-anchor href="#" appearance="hypertext">Spumoni</fluent-anchor></li>
-          <li><fluent-anchor href="#" appearance="hypertext">Limoncello and Ice Cream with Biscotti</fluent-anchor></li>
-      </ol>
-  </fluent-tab-panel>
-</fluent-tabs>
+  import { getCurrent } from "@tauri-apps/api/window";
+  import MenuItem from "./lib/components/ui/MenuItem.svelte";
+  import TitleBar from "./lib/components/TitleBar.svelte";
+
+  import { lazyThemeTransitionSetup } from "./lib";
+  import { Screen } from "$lib/state";
+
+  onMount(() => lazyThemeTransitionSetup());
+
+  getCurrent().startDragging();
+</script>
+
+<div class="flex h-full">
+  <div class="w-1/4">
+    <TitleBar />
+
+    <div class="p-2 space-y-2">
+      <MenuItem screen={Screen.Profile}>プロファイル</MenuItem>
+      <MenuItem screen={Screen.Wallpapers}>壁紙</MenuItem>
+      <MenuItem screen={Screen.Extensions}>拡張機能</MenuItem>
+    </div>
+  </div>
+
+  <div
+    class="w-3/4 outline outline-1 outline-white dark:outline-black bg-primary-light dark:bg-primary-dark"
+  >
+    <TitleBar class="outline outline-1 dark:outline-black box-border p-2">
+      
+    </TitleBar>
+
+    <div class="p-4">
+      <button>あいうえお</button>
+    </div>
+  </div>
+</div>

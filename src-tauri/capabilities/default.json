@@ -7,6 +7,7 @@
     "path:default",
     "event:default",
     "window:default",
+    "window:allow-start-dragging",
     "app:default",
     "image:default",
     "resources:default",

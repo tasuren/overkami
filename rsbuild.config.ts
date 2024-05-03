@@ -11,6 +11,7 @@ export default defineConfig({
     exclude: ["**/src-tauri/**"],
     alias: {
       $lib: "./src/lib",
+      $ui: "./src/lib/components/ui"
     },
   },
   html: {
