@@ -6,7 +6,10 @@
   import TitleBar from "./lib/components/TitleBar.svelte";
 
   import { lazyThemeTransitionSetup } from "./lib";
-  import { Screen } from "$lib/state";
+  import { Screen, screen } from "$lib/state";
+  import ProfileScreen from "$lib/ProfileScreen.svelte";
+  import WallpapersScreen from "$lib/WallpapersScreen.svelte";
+  import ExtensionsScreen from "$lib/ExtensionsScreen.svelte";
 
   onMount(() => lazyThemeTransitionSetup());
 
@@ -25,14 +28,23 @@
   </div>
 
   <div
-    class="w-3/4 outline outline-1 outline-white dark:outline-black bg-primary-light dark:bg-primary-dark"
+    class="
+      w-3/4 outline outline-1 outline-white dark:outline-black
+      bg-primary-light dark:bg-primary-dark
+    "
   >
     <TitleBar class="outline outline-1 dark:outline-black box-border p-2">
       
     </TitleBar>
 
     <div class="p-4">
-      <button>あいうえお</button>
+      {#if $screen == Screen.Profile}
+        <ProfileScreen />
+      {:else if $screen == Screen.Wallpapers}
+        <WallpapersScreen />
+      {:else if $screen == Screen.Extensions}
+        <ExtensionsScreen />
+      {/if}
     </div>
   </div>
 </div>
