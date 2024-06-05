@@ -1,7 +1,7 @@
 import { Component, For, useContext } from "solid-js";
+import styles from "./styles.module.css";
 
 import { Screen, ScreenContext } from "../screen";
-
 
 const SCREENS = {
     "🗂️ Profiles": Screen.Profiles,
