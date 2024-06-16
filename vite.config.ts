@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
@@ -8,6 +10,11 @@ export default defineConfig({
     css: {
         modules: {
             localsConvention: "camelCase"
+        }
+    },
+    resolve: {
+        alias: {
+            "~": resolve(__dirname, "src")
         }
     },
 

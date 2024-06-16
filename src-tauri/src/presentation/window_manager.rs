@@ -1,16 +1,3 @@
-use std::ops::Deref;
-
-struct MainThreadSafe<T>(T);
-
-unsafe impl<T> Send for MainThreadSafe<T> {}
-
-impl<T> Deref for MainThreadSafe<T> {
-    type Target = T;
-    fn deref(&self) -> &T {
-        &self.0
-    }
-}
-
 pub struct WindowManager {
     windows: smallvec::SmallVec<[tauri::Window; 6]>,
 }

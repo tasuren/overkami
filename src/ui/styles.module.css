@@ -1,8 +1,0 @@
-.menu-button {
-    /* レイアウト */
-    @apply reset w-fit;
-    /* 見た目 */
-    @apply disabled:bg-black disabled:dark:bg-white bg-opacity-80;
-    /* 挙動 */
-    @apply cursor-pointer disabled:cursor-default;
-}
