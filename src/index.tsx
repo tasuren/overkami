@@ -2,8 +2,9 @@
 import { render } from "solid-js/web";
 
 import "./styles.css";
-import App from "./App";
 
-document.documentElement.style.colorScheme = "dark";
+const app = location.pathname.endsWith("wallpaper")
+    ? (await import("./wallpaper/App")).default
+    : (await import("./App")).default;
+render(app, document.getElementById("root") as HTMLElement);
 
-render(() => <App />, document.getElementById("root") as HTMLElement);

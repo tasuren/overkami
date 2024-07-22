@@ -1,38 +1,34 @@
 {
-  "name": "overkami",
-  "version": "0.0.0",
-  "description": "",
-  "type": "module",
-  "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "tauri": "tauri",
-    "ui": "solidui-cli"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@kobalte/core": "^0.13.3",
-    "@tauri-apps/api": "2.0.0-beta.13",
-    "@tauri-apps/plugin-shell": "2.0.0-beta.6",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "solid-icons": "^1.1.0",
-    "solid-js": "^1.8.17",
-    "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "2.0.0-beta.20",
-    "@types/node": "^20.14.2",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "prettier": "3.2.5",
-    "solidui-cli": "^0.6.6",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.12",
-    "vite-plugin-solid": "^2.10.2"
-  }
+    "name": "overkami",
+    "version": "0.0.0",
+    "description": "",
+    "type": "module",
+    "scripts": {
+        "start": "vite",
+        "dev": "vite",
+        "build": "vite build",
+        "serve": "vite preview",
+        "tauri": "tauri",
+        "ui": "solidui-cli",
+        "cargo": "cargo +nightly -Z unstable-options -C src-tauri"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@tauri-apps/api": "2.0.0-beta.13",
+        "@tauri-apps/plugin-shell": "2.0.0-beta.6",
+        "@tauri-apps/plugin-store": "2.0.0-beta.5",
+        "solid-icons": "^1.1.0",
+        "solid-js": "^1.8.17"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "2.0.0-beta.20",
+        "@types/node": "^20.14.2",
+        "autoprefixer": "^10.4.19",
+        "postcss": "^8.4.38",
+        "prettier": "3.2.5",
+        "tailwindcss": "^3.4.4",
+        "typescript": "^5.4.5",
+        "vite": "^5.2.12",
+        "vite-plugin-solid": "^2.10.2"
+    }
 }

@@ -1,25 +1,17 @@
-import {
-    ColorModeProvider,
-    ColorModeScript,
-    createLocalStorageManager
-} from "@kobalte/core";
+import { PreferenceProvider } from "./lib/preference";
 import { TitleBar } from "./components/TitleBar";
 import { ScreenProvider } from "./screen";
-import { Separator } from "./components/ui/separator";
 
-function App() {
-    const storageManager = createLocalStorageManager("vite-ui-theme");
-
+export default function App() {
     return (
         <ScreenProvider>
-            <ColorModeScript storageType={storageManager.type} />
-            <ColorModeProvider storageManager={storageManager}>
-                <TitleBar />
+            <PreferenceProvider>
+                <div class="w-screen h-screen flex flex-col bg-light dark:bg-dark">
+                    <TitleBar />
 
-                <div class="w-screen h-full">あ</div>
-            </ColorModeProvider>
+                    <div class="w-full flex-1"></div>
+                </div>
+            </PreferenceProvider>
         </ScreenProvider>
     );
 }
-
-export default App;
