@@ -11,7 +11,7 @@ module.exports = {
         extend: {
             colors: {
                 dark: colors.zinc[800],
-                light: colors.zinc[100]
+                light: colors.zinc[200]
             }
         }
     }

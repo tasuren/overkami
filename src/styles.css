@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+    :root {
+        --color-primary-dark: 24 24 27;
+        --color-primary-light: 244 244 245;
+    }
+
     .no-preflight {
         all: revert;
     }
