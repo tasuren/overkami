@@ -11,7 +11,8 @@ import { join } from "@tauri-apps/api/path";
 import { paths } from "./data";
 
 // Types
-export type Theme = "dark" | "light" | "system";
+export const THEMES = ["dark", "light", "system"] as const;
+export type Theme = (typeof THEMES)[number];
 
 // Store
 const store = new Store(await join(paths.app_config_dir, "state.bin"));
@@ -60,7 +61,9 @@ export const PreferenceProvider: Component<ParentProps> = (props) => {
         setTheme
     };
 
+    console.log(2);
     createEffect(() => {
+        console.log(1);
         applyTheme(theme());
     });
 

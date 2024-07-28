@@ -6,7 +6,7 @@ export default function App() {
     return (
         <ScreenProvider>
             <PreferenceProvider>
-                <div class="w-screen h-screen flex flex-col bg-light dark:bg-dark">
+                <div class="w-screen h-screen flex flex-col">
                     <TitleBar />
 
                     <div class="w-full flex-1"></div>

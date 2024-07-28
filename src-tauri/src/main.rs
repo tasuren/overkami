@@ -18,7 +18,7 @@ pub mod prelude {
 
 fn apply_main_window_decoration(window: &tauri::WebviewWindow) {
     #[cfg(target_os = "macos")]
-    window.set_traffic_lights_inset(24., 24.).unwrap();
+    window.set_traffic_lights_inset(20., 20.).unwrap();
 }
 
 fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {

@@ -11,4 +11,8 @@
     .no-preflight {
         all: revert;
     }
+
+    .native-controls * {
+        @apply no-preflight;
+    }
 }
