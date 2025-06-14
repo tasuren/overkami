@@ -17,6 +17,7 @@ pub async fn get_application_windows() -> Vec<ApplicationWindow> {
     tauri::async_runtime::spawn_blocking(|| {
         let windows = window_getter::get_windows().expect("Failed to get windows");
         let mut applications = Vec::new();
+        let mut added = std::collections::HashSet::new();
 
         for window in windows {
             let Some(pid) = window.owner_pid().ok() else {
@@ -24,6 +25,13 @@ pub async fn get_application_windows() -> Vec<ApplicationWindow> {
                 // So skip such windows.
                 continue;
             };
+
+            if std::process::id() == pid as u32 || added.contains(&pid) {
+                // If the PID matches the overkami itself, skip it.
+                // This is to avoid repetion of application wallpapers to overkami itself.
+                continue;
+            }
+            added.insert(pid);
 
             let Some(process) = ApplicationMonitor::new().get_application_process(pid as _) else {
                 continue;
