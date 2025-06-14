@@ -1,16 +1,22 @@
 import {
   type FieldElementProps,
   type FieldStore,
+  type FormStore,
   type SubmitHandler,
   createForm,
   maxLength,
   minLength,
   required,
+  setValue,
 } from "@modular-forms/solid";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
-import { For, Show, createSignal, onMount } from "solid-js";
-import { type EditingWallpaper, useWallpapers } from "../../GlobalState";
+import { For, Show, createSignal, onMount, splitProps } from "solid-js";
+import {
+  type EditingWallpaper,
+  useEditing,
+  useWallpapers,
+} from "../../GlobalState";
 import {
   type ApplicationWindow,
   getApplicationWindows,
@@ -26,7 +32,10 @@ import {
 
 type WallpaperForm = {
   name: string;
-  targetPath: string;
+  application: {
+    name: string | undefined;
+    path: string;
+  };
 };
 
 export default function WallpaperForm(props: {
@@ -35,12 +44,15 @@ export default function WallpaperForm(props: {
   const { wallpaper } = props;
   const [form, { Form, Field }] = createForm<WallpaperForm>();
   const [wallpapers, setWallpapers] = useWallpapers();
+  const [editing, setEditing] = useEditing();
 
   const { base, error } = fieldClass();
 
-  const handleSubmit: SubmitHandler<WallpaperForm> = (values, event) => {
+  const handleSubmit: SubmitHandler<WallpaperForm> = (values) => {
     const items = wallpapers();
-    items.push();
+    items.push(values);
+    setWallpapers(items);
+    setEditing(values);
   };
 
   return (
@@ -70,14 +82,14 @@ export default function WallpaperForm(props: {
       </Field>
 
       <Field
-        name="targetPath"
+        name="application.path"
         validate={[required("壁紙を適用するアプリを選択してください。")]}
       >
         {(field, props) => (
           <div class={base()}>
             <label for={props.name}>壁紙を適用するアプリ</label>
 
-            <ApplicationSelect {...props} field={field} />
+            <ApplicationSelect {...props} form={form} field={field} />
 
             <div
               class={textInputClass({
@@ -106,13 +118,24 @@ export default function WallpaperForm(props: {
 }
 
 function ApplicationSelect(
-  props: FieldElementProps<WallpaperForm, "targetPath"> & {
-    field: FieldStore<WallpaperForm, "targetPath">;
+  raw: FieldElementProps<WallpaperForm, "application.path"> & {
+    form: FormStore<WallpaperForm>;
+    field: FieldStore<WallpaperForm, "application.path">;
   },
 ) {
-  const { field } = props;
+  const [{ field, form }, props] = splitProps(raw, ["field", "form"]);
   const [options, setOptions] = createSignal<ApplicationWindow[]>();
 
+  const onSelect = () => {
+    for (const option of options() || []) {
+      if (option.path !== field.value) continue;
+
+      setValue(form, "application.name", option.name);
+      break;
+    }
+  };
+
+  // Retrieve the list of application windows for the select
   const loadApplicationWindows = async () => {
     const windows = await getApplicationWindows();
     setOptions(windows);
@@ -122,13 +145,9 @@ function ApplicationSelect(
     loadApplicationWindows();
   });
 
-  const onClick = async () => {
+  const reloadApplicationWindows = async () => {
     setOptions(undefined);
     loadApplicationWindows();
-  };
-
-  const onSelect = (event: Event) => {
-    console.log((event.currentTarget as HTMLSelectElement).value);
   };
 
   const { base, chevron } = selectClass();
@@ -142,7 +161,6 @@ function ApplicationSelect(
           name={field.name}
           id={field.name}
           disabled={options() === undefined}
-          onSelect={onSelect}
         >
           <option value="" disabled selected>
             <Show when={options() === undefined} fallback="アプリを選択">
@@ -168,7 +186,7 @@ function ApplicationSelect(
         <button
           type="button"
           class={iconButtonClass({ class: "block mx-auto" })}
-          onClick={onClick}
+          onClick={reloadApplicationWindows}
         >
           <RefreshCcw />
         </button>

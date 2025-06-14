@@ -1,5 +1,5 @@
 import ChevronLeft from "lucide-solid/icons/chevron-left";
-import { Show, createSignal } from "solid-js";
+import { Show } from "solid-js";
 import { type EditingWallpaper, useEditing } from "../../GlobalState";
 import { iconButtonClass, iconClass } from "../ui";
 import WallpaperForm from "./WallpaperForm";
@@ -8,7 +8,6 @@ export default function WallpaperScreen(props: {
   wallpaper?: EditingWallpaper;
 }) {
   const { wallpaper } = props;
-  const [name, setName] = createSignal(undefined);
   const [, setEditing] = useEditing();
 
   return (
@@ -25,8 +24,8 @@ export default function WallpaperScreen(props: {
           />
         </button>
         <h1 class="text-2xl">
-          <Show when={name() === undefined} fallback={`壁紙: ${name()}`}>
-            新しい壁紙
+          <Show when={wallpaper?.name} fallback="新しい壁紙">
+            {`壁紙: ${wallpaper?.name}`}
           </Show>
         </h1>
       </div>

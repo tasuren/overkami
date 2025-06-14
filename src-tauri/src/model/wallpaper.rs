@@ -83,9 +83,6 @@ mod filter {
         filters
             .iter()
             .all(|filter| match (&app_name, &window_name, filter) {
-                (Some(app_name), _, Filter::AppName { name, strategy }) => {
-                    string_filter(app_name, name, strategy)
-                }
                 (_, Some(window_name), Filter::WindowName { name, strategy }) => {
                     string_filter(window_name, name, strategy)
                 }
