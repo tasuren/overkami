@@ -3,7 +3,7 @@ import { For, Show } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding";
 import { cl } from "../../lib/utils";
-import { buttonClass } from "../ui";
+import { buttonClass, textMutedClass } from "../ui";
 
 export function HomeView() {
   const [wallpapers] = useWallpapers();
@@ -75,7 +75,7 @@ export function WallpaperCard(props: {
 function NothingFound() {
   return (
     <div class="h-full flex justify-center items-center">
-      <div class="text-center text-dark/60 dark:text-light/60">
+      <div class={textMutedClass({ class: "text-center" })}>
         壁紙がまだ設定されていません。
         <br />
         ¯\_(ツ)_/¯

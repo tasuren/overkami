@@ -17,8 +17,8 @@ export function Main() {
         <Match when={view()}>
           {(view) => {
             const wallpaperView = view();
-            console.log("a");
             if (wallpaperView.type !== "wallpaper") return;
+            console.log(wallpaperView.wallpaper);
 
             return <WallpaperView wallpaper={wallpaperView.wallpaper} />;
           }}

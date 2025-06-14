@@ -25,6 +25,7 @@ import {
   iconClass,
   selectClass,
   textInputClass,
+  textMutedClass,
 } from "../ui";
 
 type WallpaperForm = {
@@ -89,14 +90,16 @@ export default function WallpaperForm(props: {
             <ApplicationSelect {...props} form={form} field={field} />
 
             <div
-              class={textInputClass({
-                class: "font-mono w-96",
-                disabled: true,
+              class={textMutedClass({
+                class: [
+                  "overflow-hidden",
+                  "font-mono text-sm cursor-text select-all",
+                ],
               })}
             >
               <Show
                 when={field.value || wallpaper?.application?.name}
-                fallback="..."
+                fallback=""
               >
                 {field.value || wallpaper?.application?.path}
               </Show>

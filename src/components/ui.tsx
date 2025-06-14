@@ -36,6 +36,10 @@ export const iconButtonClass = tv({
   ],
 });
 
+export const textMutedClass = tv({
+  base: ["text-dark/60 dark:text-light/60"],
+});
+
 export const textInputClass = tv({
   base: [
     "h-10 p-2 rounded-lg",
