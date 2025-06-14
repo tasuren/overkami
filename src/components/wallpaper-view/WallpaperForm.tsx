@@ -50,7 +50,7 @@ export default function WallpaperForm(props: {
     const items = wallpapers();
     items.push(values);
     setWallpapers(items);
-    setView({ type: "wallpaper", wallpaper: values });
+    setView({ type: "home" });
   };
 
   return (
@@ -97,10 +97,7 @@ export default function WallpaperForm(props: {
                 ],
               })}
             >
-              <Show
-                when={field.value || wallpaper?.application?.name}
-                fallback=""
-              >
+              <Show when={field.value || wallpaper?.application?.name}>
                 {field.value || wallpaper?.application?.path}
               </Show>
             </div>
