@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+    
+        <script>
+          addEventListener("load", () => {
+            /** @type{HTMLImageElement}  */
+            let wallpaper = document.getElementById("wallpaper");
+            /** @type{string} */
+            let src = window.__overkami__.config.src;
+            
+            wallpaper.src = src;
+          })
+        </script>
+    </head>
+
+    <body>
+        <img src="" alt="" id="wallpaper">
+    </body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "overkami",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "tauri": "tauri",
+    "cargo": "cargo +nightly -Z unstable-options -C src-tauri"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modular-forms/solid": "^0.25.1",
+    "@tailwindcss/vite": "^4.1.8",
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "~2",
+    "@tauri-apps/plugin-opener": "^2.2.6",
+    "lucide-solid": "^0.513.0",
+    "solid-js": "^1.9.6",
+    "tailwind-variants": "^1.0.0",
+    "tailwindcss": "^4.1.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@tauri-apps/cli": "^2.5.0",
+    "pathe": "^2.0.3",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.4",
+    "vite-plugin-solid": "^2.11.6"
+  }
+}
