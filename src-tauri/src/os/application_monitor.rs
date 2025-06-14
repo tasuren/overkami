@@ -56,13 +56,7 @@ pub struct ApplicationProcess {
 }
 
 impl ApplicationProcess {
-    pub fn new(pid: u32, name: Option<String>, executable_path: PathBuf) -> Self {
-        let path = if cfg!(target_os = "macos") {
-            utils::get_application_path_by_exe(&executable_path).unwrap_or(executable_path)
-        } else {
-            executable_path
-        };
-
+    pub fn new(pid: u32, name: Option<String>, path: PathBuf) -> Self {
         Self { pid, name, path }
     }
 }
@@ -77,21 +71,5 @@ impl ApplicationProcess {
             .map(|name| name.to_owned());
 
         Some(Self::new(pid, name, path.to_owned()))
-    }
-}
-
-mod utils {
-    #[cfg(target_os = "macos")]
-    use std::path::{Path, PathBuf};
-
-    #[cfg(target_os = "macos")]
-    pub fn get_application_path_by_exe(exe: impl AsRef<Path>) -> Option<PathBuf> {
-        for ancestor in exe.as_ref().ancestors() {
-            if ancestor.extension().is_some_and(|ext| ext == "app") {
-                return Some(ancestor.to_owned());
-            }
-        }
-
-        None
     }
 }
