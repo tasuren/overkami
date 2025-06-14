@@ -67,7 +67,10 @@ export const selectClass = tv({
 });
 
 export const fieldClass = tv({
-  base: "flex flex-col gap-2",
+  slots: {
+    base: "flex flex-col gap-2",
+    error: "text-dark/80 dark:text-light/80 text-sm",
+  },
 });
 
 export const boxClass = tv({

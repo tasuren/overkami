@@ -43,10 +43,6 @@ mod wallpaper {
     #[derive(Serialize, Deserialize)]
     #[serde(tag = "type")]
     pub enum Filter {
-        AppName {
-            name: String,
-            strategy: StringFilterStrategy,
-        },
         WindowName {
             name: String,
             strategy: StringFilterStrategy,
@@ -56,6 +52,7 @@ mod wallpaper {
     #[derive(Serialize, Deserialize)]
     pub struct Wallpaper {
         pub name: String,
+        pub application: super::Application,
         pub filters: Vec<Filter>,
         pub source: WallpaperSource,
     }

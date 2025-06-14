@@ -1,4 +1,4 @@
-import tailwindcss from '@tailwindcss/vite';
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
@@ -16,10 +16,10 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-        protocol: "ws",
-        host,
-        port: 1421,
-      }
+          protocol: "ws",
+          host,
+          port: 1421,
+        }
       : undefined,
     watch: {
       ignored: ["**/src-tauri/**"],
@@ -30,8 +30,8 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         index: "./index.html",
-        "builtin-wallpapers/picture": "./src/builtin-wallpapers/picture.html"
-      }
-    }
-  }
+        "builtin-wallpapers/picture": "./src/builtin-wallpapers/picture.html",
+      },
+    },
+  },
 }));

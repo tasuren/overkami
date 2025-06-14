@@ -1,46 +1,46 @@
 {
-    "$schema": "https://schema.tauri.app/config/2",
-    "productName": "overkami",
-    "version": "0.1.0",
-    "identifier": "overkami.tasuren.jp",
-    "build": {
-        "beforeDevCommand": "bun run dev",
-        "devUrl": "http://localhost:1420",
-        "beforeBuildCommand": "bun run build",
-        "frontendDist": "../dist"
-    },
-    "app": {
-        "windows": [
-            {
-                "title": "overkami - オーバーカミ！",
-                "width": 800,
-                "height": 600,
-                "transparent": true,
-                "titleBarStyle": "Overlay",
-                "hiddenTitle": true,
-                "trafficLightPosition": {
-                    "x": 16,
-                    "y": 20
-                },
-                "windowEffects": {
-                    "effects": ["acrylic", "sidebar"]
-                }
-            }
-        ],
-        "security": {
-            "csp": null
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "overkami",
+  "version": "0.1.0",
+  "identifier": "overkami.tasuren.jp",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "overkami - オーバーカミ！",
+        "width": 800,
+        "height": 600,
+        "transparent": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 16,
+          "y": 20
         },
-        "macOSPrivateApi": true
+        "windowEffects": {
+          "effects": ["acrylic", "sidebar"]
+        }
+      }
+    ],
+    "security": {
+      "csp": null
     },
-    "bundle": {
-        "active": true,
-        "targets": "all",
-        "icon": [
-            "icons/32x32.png",
-            "icons/128x128.png",
-            "icons/128x128@2x.png",
-            "icons/icon.icns",
-            "icons/icon.ico"
-        ]
-    }
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
 }
