@@ -97,7 +97,7 @@ export default function WallpaperForm(props: {
                 ],
               })}
             >
-              <Show when={field.value || wallpaper?.application?.name}>
+              <Show when={field.value || wallpaper?.application?.path}>
                 {field.value || wallpaper?.application?.path}
               </Show>
             </div>
