@@ -1,20 +1,22 @@
 import Plus from "lucide-solid/icons/plus";
-import { For } from "solid-js";
-import { useEditing, useWallpapers } from "../../GlobalState";
+import { For, Show } from "solid-js";
+import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding";
 import { cl } from "../../lib/utils";
 import { buttonClass } from "../ui";
 
-export function Home() {
+export function HomeView() {
   const [wallpapers] = useWallpapers();
 
   return (
     <>
-      <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
-        <For each={wallpapers()}>
-          {(wallpaper) => <WallpaperCard wallpaper={wallpaper} />}
-        </For>
-      </div>
+      <Show when={wallpapers().length > 0} fallback={<NothingFound />}>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
+          <For each={wallpapers()}>
+            {(wallpaper) => <WallpaperCard wallpaper={wallpaper} />}
+          </For>
+        </div>
+      </Show>
 
       <AddButton />
     </>
@@ -22,10 +24,10 @@ export function Home() {
 }
 
 function AddButton() {
-  const [_, setEditing] = useEditing();
+  const [, setView] = useView();
 
   const onClick = () => {
-    setEditing({});
+    setView({ type: "wallpaper", wallpaper: undefined });
   };
 
   return (
@@ -45,10 +47,10 @@ export function WallpaperCard(props: {
   wallpaper: Wallpaper;
 }) {
   const { wallpaper } = props;
-  const [_, setEditing] = useEditing();
+  const [, setView] = useView();
 
   const onClick = () => {
-    setEditing(wallpaper);
+    setView({ type: "wallpaper", wallpaper });
   };
 
   return (
@@ -67,5 +69,17 @@ export function WallpaperCard(props: {
         <div class="text-sm">{wallpaper.application.name}</div>
       </div>
     </button>
+  );
+}
+
+function NothingFound() {
+  return (
+    <div class="h-full flex justify-center items-center">
+      <div class="text-center text-dark/60 dark:text-light/60">
+        壁紙がまだ設定されていません。
+        <br />
+        ¯\_(ツ)_/¯
+      </div>
+    </div>
   );
 }

@@ -12,13 +12,10 @@ import {
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
 import { For, Show, createSignal, onMount, splitProps } from "solid-js";
-import {
-  type EditingWallpaper,
-  useEditing,
-  useWallpapers,
-} from "../../GlobalState";
+import { useView, useWallpapers } from "../../GlobalState";
 import {
   type ApplicationWindow,
+  type Wallpaper,
   getApplicationWindows,
 } from "../../lib/binding";
 import {
@@ -39,12 +36,12 @@ type WallpaperForm = {
 };
 
 export default function WallpaperForm(props: {
-  wallpaper?: EditingWallpaper;
+  wallpaper: Wallpaper | undefined;
 }) {
   const { wallpaper } = props;
   const [form, { Form, Field }] = createForm<WallpaperForm>();
   const [wallpapers, setWallpapers] = useWallpapers();
-  const [editing, setEditing] = useEditing();
+  const [, setView] = useView();
 
   const { base, error } = fieldClass();
 
@@ -52,7 +49,7 @@ export default function WallpaperForm(props: {
     const items = wallpapers();
     items.push(values);
     setWallpapers(items);
-    setEditing(values);
+    setView({ type: "wallpaper", wallpaper: values });
   };
 
   return (
@@ -161,6 +158,7 @@ function ApplicationSelect(
           name={field.name}
           id={field.name}
           disabled={options() === undefined}
+          onSelect={onSelect}
         >
           <option value="" disabled selected>
             <Show when={options() === undefined} fallback="アプリを選択">

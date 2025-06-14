@@ -1,14 +1,15 @@
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import { Show } from "solid-js";
-import { type EditingWallpaper, useEditing } from "../../GlobalState";
+import { useView } from "../../GlobalState";
+import type { Wallpaper } from "../../lib/binding";
 import { iconButtonClass, iconClass } from "../ui";
 import WallpaperForm from "./WallpaperForm";
 
-export default function WallpaperScreen(props: {
-  wallpaper?: EditingWallpaper;
+export default function WallpaperView(props: {
+  wallpaper: Wallpaper | undefined;
 }) {
   const { wallpaper } = props;
-  const [, setEditing] = useEditing();
+  const [, setView] = useView();
 
   return (
     <div>
@@ -16,7 +17,7 @@ export default function WallpaperScreen(props: {
         <button
           type="button"
           class={iconButtonClass()}
-          onClick={() => setEditing(undefined)}
+          onClick={() => setView({ type: "home" })}
         >
           <ChevronLeft
             class={iconClass({ class: "cursor-pointer" })}

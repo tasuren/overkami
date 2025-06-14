@@ -1,18 +1,29 @@
-import { Show } from "solid-js";
+import { Match, Switch } from "solid-js";
 import "./App.css";
-import { GlobalStateProvider, useEditing } from "./GlobalState";
-import { Home } from "./components/home-screen/HomeScreen";
-import WallpaperScreen from "./components/wallpaper-screen/WallpaperScreen";
+import { GlobalStateProvider, useView } from "./GlobalState";
+import { HomeView } from "./components/home-view/HomeView";
+import { default as WallpaperView } from "./components/wallpaper-view/WallpaperView";
 import { cl } from "./lib/utils";
 
 export function Main() {
-  const [editing] = useEditing();
+  const [view] = useView();
 
   return (
     <main class="h-full pt-4">
-      <Show when={editing() !== undefined} fallback={<Home />}>
-        <WallpaperScreen wallpaper={editing()} />
-      </Show>
+      <Switch>
+        <Match when={view().type === "home"}>
+          <HomeView />
+        </Match>
+        <Match when={view()}>
+          {(view) => {
+            const wallpaperView = view();
+            console.log("a");
+            if (wallpaperView.type !== "wallpaper") return;
+
+            return <WallpaperView wallpaper={wallpaperView.wallpaper} />;
+          }}
+        </Match>
+      </Switch>
     </main>
   );
 }

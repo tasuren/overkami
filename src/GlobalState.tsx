@@ -5,28 +5,26 @@ import {
   useContext,
 } from "solid-js";
 import type { Wallpaper } from "./lib/binding";
-import type { OptionalizeAll } from "./lib/utils";
-
-export type EditingWallpaper = OptionalizeAll<Wallpaper>;
+import type { View } from "./lib/view";
 
 export interface GlobalState {
   wallpapers: () => Wallpaper[];
   setWallpapers: (wallpapers: Wallpaper[]) => void;
-  editing: () => Wallpaper | EditingWallpaper | undefined;
-  setEditing: (wallpaper: Wallpaper | EditingWallpaper | undefined) => void;
+  view: () => View;
+  setView: (view: View) => void;
 }
 
 export const GlobalStateContext = createContext<GlobalState>();
 
 export function GlobalStateProvider(props: ParentProps) {
   const [wallpapers, setWallpapers] = createSignal<Wallpaper[]>([]);
-  const [editing, setEditing] = createSignal<Wallpaper>();
+  const [view, setView] = createSignal<View>({ type: "home" });
 
   const state: GlobalState = {
     wallpapers,
     setWallpapers,
-    editing,
-    setEditing,
+    view,
+    setView,
   };
 
   return (
@@ -51,7 +49,7 @@ export function useWallpapers() {
   return [state.wallpapers, state.setWallpapers] as const;
 }
 
-export function useEditing() {
+export function useView() {
   const state = useGlobalState();
-  return [state.editing, state.setEditing] as const;
+  return [state.view, state.setView] as const;
 }
