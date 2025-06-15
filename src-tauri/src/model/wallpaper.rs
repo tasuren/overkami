@@ -106,11 +106,11 @@ pub mod settings {
             WallpaperSource::Video { .. } => {
                 WebviewUrl::App("/builtin-wallpapers/video.html".into())
             }
-            WallpaperSource::LocalWebPage { path } => {
-                WebviewUrl::External(Url::parse(&convert_file_src(path).unwrap()).unwrap())
+            WallpaperSource::LocalWebPage { location } => {
+                WebviewUrl::External(Url::parse(&convert_file_src(location).unwrap()).unwrap())
             }
-            WallpaperSource::RemoteWebPage { url } => {
-                WebviewUrl::External(Url::parse(url).unwrap())
+            WallpaperSource::RemoteWebPage { location } => {
+                WebviewUrl::External(Url::parse(location).unwrap())
             }
         }
     }

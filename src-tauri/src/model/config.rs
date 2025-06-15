@@ -38,15 +38,17 @@ mod application {
 }
 
 mod wallpaper {
+    use std::path::PathBuf;
+
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(tag = "type")]
     pub enum WallpaperSource {
-        RemoteWebPage { url: String },
-        LocalWebPage { path: String },
-        Picture { path: String },
-        Video { path: String },
+        RemoteWebPage { location: String },
+        LocalWebPage { location: PathBuf },
+        Picture { location: PathBuf },
+        Video { location: PathBuf },
     }
 
     #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]

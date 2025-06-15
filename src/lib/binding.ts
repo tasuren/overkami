@@ -25,29 +25,30 @@ export type Application = {
 
 export type RemoteWebPageSource = {
   type: "RemoteWebPage";
-  url: string;
+  location: string;
 };
 
 export type LocalWebPageSource = {
   type: "LocalWebPage";
-  path: string;
+  location: string;
 };
 
 export type PictureSource = {
   type: "Picture";
-  path: string;
+  location: string;
 };
 
 export type VideoSource = {
   type: "Video";
-  path: string;
+  location: string;
 };
 
-export type WallpaperSource =
-  | RemoteWebPageSource
+export type RemoteWallpaperSource = RemoteWebPageSource;
+export type LocalWallpaperSource =
   | LocalWebPageSource
   | PictureSource
   | VideoSource;
+export type WallpaperSource = RemoteWallpaperSource | LocalWallpaperSource;
 
 export const STRING_FILTER_STRATEGIES = {
   Prefix: "前方一致",

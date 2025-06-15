@@ -6,3 +6,6 @@ dist
 
 # Editor
 *.code-workspace
+
+# Project
+mock-env

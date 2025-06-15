@@ -3,18 +3,61 @@ import {
   type FieldElementProps,
   type FieldStore,
   type FormStore,
+  getValue,
   required,
+  setValue,
 } from "@modular-forms/solid";
+import { basename } from "@tauri-apps/api/path";
+import { open } from "@tauri-apps/plugin-dialog";
 import ChevronDown from "lucide-solid/icons/chevron-down";
-import { Show, createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import type { WallpaperSource } from "../../lib/binding";
 import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
-export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
-  const { form } = props;
+export default function SourceField(props: {
+  form: FormStore<WallpaperForm>;
+  defaultSourcePath?: string;
+}) {
+  const { form, defaultSourcePath } = props;
 
-  const [type, setType] = createSignal<WallpaperSource["type"]>("Picture");
+  const [_, setType] = createSignal<WallpaperSource["type"]>("Picture");
+
+  const selectFile = async () => {
+    let filter = undefined;
+
+    switch (getValue(form, "source.type")) {
+      case "Picture":
+        filter = {
+          name: "画像",
+          extensions: ["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp"],
+        };
+        break;
+      case "Video":
+        filter = {
+          name: "動画",
+          extensions: ["mp4", "webm", "avi", "mov", "flv"],
+        };
+        break;
+      case "LocalWebPage":
+        filter = {
+          name: "HTML",
+          extensions: ["html", "htm"],
+        };
+        break;
+    }
+
+    if (filter === undefined) return;
+
+    const path = await open({
+      multiple: false,
+      filters: [filter],
+    });
+
+    if (path !== null) {
+      setValue(form, "source.location", path);
+    }
+  };
 
   return (
     <div>
@@ -24,28 +67,43 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
 
       <Field
         of={form}
-        name="source.path"
+        name="source.location"
         validate={[required("壁紙に使うHTMLファイルを指定してください。")]}
       >
         {(field, props) => {
           const { base, error } = fieldClass();
+          let fileName = field.value || defaultSourcePath;
+
+          let buttonElement!: HTMLButtonElement;
+          onMount(async () => {
+            if (fileName) {
+              fileName = await basename(fileName);
+            } else {
+              fileName = "クリックで壁紙を選択";
+            }
+
+            buttonElement.innerText = fileName;
+          });
 
           return (
-            <Show when={type() === "Picture"}>
-              <div class={base()}>
-                <label for={props.name} class="text-sm">
-                  壁紙のパス
-                </label>
-                <input
-                  {...props}
-                  id={props.name}
-                  type="file"
-                  class={inputClass({ file: true })}
-                  placeholder="壁紙のパスを入力してください"
-                />
-                <div class={error()}>{field.error}</div>
-              </div>
-            </Show>
+            <div class={base()}>
+              <label for={props.name} class="text-sm">
+                壁紙のパス
+              </label>
+              <input {...props} id={props.name} type="text" hidden />
+
+              <button
+                type="button"
+                class={inputClass({
+                  file: true,
+                  class: "text-left font-mono",
+                })}
+                onClick={selectFile}
+                ref={buttonElement}
+              />
+
+              <div class={error()}>{field.error}</div>
+            </div>
           );
         }}
       </Field>

@@ -1,3 +1,4 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
 import Plus from "lucide-solid/icons/plus";
 import { For, Show } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
@@ -11,7 +12,7 @@ export function HomeView() {
   return (
     <>
       <Show when={wallpapers().length > 0} fallback={<NothingFound />}>
-        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
+        <div class="px-14 py-10 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
           <For each={wallpapers()}>
             {(wallpaper) => <WallpaperCard wallpaper={wallpaper} />}
           </For>
@@ -63,13 +64,49 @@ export function WallpaperCard(props: {
       )}
       onClick={onClick}
     >
-      <div class="p-2 grow">あいうえお</div>
+      <div class="p-2 grow">
+        <Thumbnail wallpaper={wallpaper} />
+      </div>
       <div class="space-y-1">
         <div class="xl">{wallpaper.name}</div>
         <div class="text-sm">{wallpaper.application.name}</div>
       </div>
     </button>
   );
+}
+
+function Thumbnail(props: { wallpaper: Wallpaper }) {
+  const { wallpaper } = props;
+
+  switch (wallpaper.source.type) {
+    case "Picture":
+      return (
+        <img
+          src={convertFileSrc(wallpaper.source.location)}
+          alt="🖼"
+          class="object-cover"
+        />
+      );
+    case "Video":
+      return (
+        <video
+          src={convertFileSrc(wallpaper.source.location)}
+          class="object-cover"
+          autoplay
+          loop
+          muted
+        />
+      );
+    case "LocalWebPage":
+      return (
+        <iframe
+          title={wallpaper.name}
+          src={convertFileSrc(wallpaper.source.location)}
+        />
+      );
+    case "RemoteWebPage":
+      return <iframe title={wallpaper.name} src={wallpaper.source.location} />;
+  }
 }
 
 function NothingFound() {

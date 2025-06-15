@@ -52,7 +52,7 @@ export default function WallpaperForm(props: {
 
       <SourceField form={form} />
 
-      <button type="submit" class={buttonClass({ class: "ml-auto mb-4 " })}>
+      <button type="submit" class={buttonClass({ class: "ml-auto mb-4" })}>
         保存
       </button>
     </Form>

@@ -14,21 +14,21 @@
   "license": "MIT",
   "dependencies": {
     "@modular-forms/solid": "^0.25.1",
-    "@tailwindcss/vite": "^4.1.8",
+    "@tailwindcss/vite": "^4.1.10",
     "@tauri-apps/api": "^2.5.0",
-    "@tauri-apps/plugin-dialog": "~2",
-    "@tauri-apps/plugin-opener": "^2.2.6",
-    "lucide-solid": "^0.513.0",
-    "solid-js": "^1.9.6",
+    "@tauri-apps/plugin-dialog": "~2.2.2",
+    "@tauri-apps/plugin-opener": "^2.2.7",
+    "lucide-solid": "^0.515.0",
+    "solid-js": "^1.9.7",
     "tailwind-variants": "^1.0.0",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^4.1.10"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tauri-apps/cli": "^2.5.0",
     "pathe": "^2.0.3",
     "typescript": "~5.8.3",
-    "vite": "^6.3.4",
+    "vite": "^6.3.5",
     "vite-plugin-solid": "^2.11.6"
   }
 }
