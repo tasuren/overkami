@@ -50,7 +50,6 @@ mod wallpaper {
     }
 
     #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(untagged)]
     pub enum StringFilterStrategy {
         Prefix,
         Suffix,

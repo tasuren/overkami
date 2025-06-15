@@ -207,6 +207,12 @@ export function FilterFields(props: {
           <For each={fieldArray.items || [0]}>
             {(_, index) => (
               <div>
+                <Field of={form} name={`${fieldArray.name}.${index()}.type`}>
+                  {(_, props) => (
+                    <input {...props} type="text" value="WindowName" hidden />
+                  )}
+                </Field>
+
                 <Field of={form} name={`${fieldArray.name}.${index()}.name`}>
                   {(field, props) => (
                     <div class={base()}>

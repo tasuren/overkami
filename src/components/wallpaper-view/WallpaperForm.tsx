@@ -6,7 +6,7 @@ import {
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Filter, Wallpaper, WallpaperSource } from "../../lib/binding";
 import { buttonClass } from "../ui";
-import { ApplicationField, FilterFields, WallpaperNameField } from "./Field";
+import { ApplicationField, FilterFields, WallpaperNameField } from "./WallpaperField";
 
 export type WallpaperForm = {
   name: string;
