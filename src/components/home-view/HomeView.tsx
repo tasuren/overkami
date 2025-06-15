@@ -34,7 +34,7 @@ function AddButton() {
     <button
       type="button"
       class={buttonClass({
-        class: "absolute bottom-10 left-10 p-4 h-fit rounded-xl",
+        class: "fixed bottom-10 left-10 p-4 h-fit rounded-xl",
       })}
       onClick={onClick}
     >

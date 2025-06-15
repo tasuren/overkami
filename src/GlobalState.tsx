@@ -1,24 +1,45 @@
 import {
   type ParentProps,
   createContext,
+  createEffect,
   createSignal,
   useContext,
 } from "solid-js";
-import type { Wallpaper } from "./lib/binding";
+import {
+  type Config,
+  type Wallpaper,
+  getConfig,
+  saveConfig,
+} from "./lib/binding";
 import type { View } from "./lib/view";
 
 export interface GlobalState {
   wallpapers: () => Wallpaper[];
-  setWallpapers: (wallpapers: Wallpaper[]) => void;
+  setWallpapers: (update: (prev: Wallpaper[]) => void) => void;
   view: () => View;
   setView: (view: View) => void;
 }
 
 export const GlobalStateContext = createContext<GlobalState>();
+const initialConfig = await getConfig();
 
 export function GlobalStateProvider(props: ParentProps) {
-  const [wallpapers, setWallpapers] = createSignal<Wallpaper[]>([]);
+  let config: Config = initialConfig;
+  const [wallpapers, setWallpapers] = createSignal<Wallpaper[]>([], {
+    equals: false,
+  });
   const [view, setView] = createSignal<View>({ type: "home" });
+
+  createEffect(async () => {
+    config = await getConfig();
+    setWallpapers(config.wallpapers);
+  });
+
+  createEffect(() => {
+    config.wallpapers = wallpapers();
+
+    saveConfig(config);
+  });
 
   const state: GlobalState = {
     wallpapers,

@@ -70,8 +70,8 @@ mod filter {
         match strategy {
             StringFilterStrategy::Prefix => target.starts_with(search),
             StringFilterStrategy::Suffix => target.ends_with(search),
-            StringFilterStrategy::Infix => target.contains(search),
-            StringFilterStrategy::Whole => target == search,
+            StringFilterStrategy::Contains => target.contains(search),
+            StringFilterStrategy::Exact => target == search,
         }
     }
 

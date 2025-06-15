@@ -13,7 +13,7 @@ export default function WallpaperView(props: {
 
   return (
     <div>
-      <div class="flex items-center gap-2 mb-4">
+      <div class="flex items-center gap-2 mb-4 sticky top-0 backdrop-blur-sm rounded-lg">
         <button
           type="button"
           class={iconButtonClass()}

@@ -54,8 +54,8 @@ mod wallpaper {
     pub enum StringFilterStrategy {
         Prefix,
         Suffix,
-        Infix,
-        Whole,
+        Contains,
+        Exact,
     }
 
     #[derive(Debug, Serialize, Deserialize)]

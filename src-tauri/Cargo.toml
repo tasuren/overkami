@@ -30,3 +30,4 @@ window-getter = { git = "https://github.com/tasuren/window-getter-rs.git" }
 tauri-plugin-dialog = "2"
 applications = "0.3.1"
 anyhow = "1.0.98"
+async-fs = "2.1.2"

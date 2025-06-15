@@ -1,15 +1,25 @@
-use std::{ path::PathBuf};
+use std::path::PathBuf;
 
 use tauri::{async_runtime::Mutex, App, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 
 use crate::model::config::Config;
 
+pub struct ConfigPath(PathBuf);
+
+impl std::ops::Deref for ConfigPath {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 pub fn setup_config(app: &App) {
     let path = app.path();
 
     let config_path = if cfg!(debug_assertions) {
-        PathBuf::from("mock-env/config")
+        PathBuf::from("../mock-env/config")
     } else {
         path.app_config_dir()
             .expect("Failed to get app config directory")
@@ -21,10 +31,10 @@ pub fn setup_config(app: &App) {
         };
     }
 
-    let config_file = config_path.join("config.json");
+    let config_path = config_path.join("config.json");
 
-    let config = if config_file.exists() {
-        let raw = match std::fs::read(config_file) {
+    let config = if config_path.exists() {
+        let raw = match std::fs::read(&config_path) {
             Ok(raw) => raw,
             Err(error) => failed_to_read_config_file(app, error.to_string()),
         };
@@ -37,6 +47,7 @@ pub fn setup_config(app: &App) {
         Config::default()
     };
 
+    app.manage(ConfigPath(config_path));
     app.manage(Mutex::new(config));
 }
 

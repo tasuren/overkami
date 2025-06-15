@@ -19,7 +19,11 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::get_application_windows])
+        .invoke_handler(tauri::generate_handler![
+            commands::config::get_config,
+            commands::config::save_config,
+            commands::application_window::get_application_windows
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
