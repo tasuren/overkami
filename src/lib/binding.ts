@@ -2,13 +2,21 @@ import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
 
 async function errorMessage(error: Error) {
-  await message(`${error.message}\n詳細: ${error.detail}`);
+  if (typeof error === "string") {
+    await message(`不明なエラーが発生しました。\n詳細: ${error}`, {
+      kind: "error",
+    });
+  } else {
+    await message(`${error.message}\n詳細: ${error.detail}`, { kind: "error" });
+  }
 }
 
-export type Error = {
-  message: string;
-  detail: string;
-};
+export type Error =
+  | string
+  | {
+      message: string;
+      detail: string;
+    };
 
 export type Application = {
   name?: string;
