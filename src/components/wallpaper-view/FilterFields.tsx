@@ -68,7 +68,12 @@ export default function FilterFields(props: {
                       <label for={field.name} class="text-sm">
                         壁紙をつけるウィンドウの名前
                       </label>
-                      <input {...props} type="text" class={inputClass()} />
+                      <input
+                        {...props}
+                        type="text"
+                        class={inputClass()}
+                        value={field.value}
+                      />
                       <div class={error()}>{field.error}</div>
                     </div>
                   )}
