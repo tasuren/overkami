@@ -4,7 +4,7 @@ pub use wallpaper::*;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub version: String,
     pub wallpapers: Vec<Wallpaper>,
@@ -24,7 +24,7 @@ mod application {
 
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Application {
         pub name: Option<String>,
         pub path: PathBuf,
@@ -42,7 +42,7 @@ mod wallpaper {
 
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(tag = "type")]
     pub enum WallpaperSource {
         RemoteWebPage { location: String },
@@ -51,7 +51,7 @@ mod wallpaper {
         Video { location: PathBuf },
     }
 
-    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
     pub enum StringFilterStrategy {
         Prefix,
         Suffix,
@@ -59,7 +59,7 @@ mod wallpaper {
         Exact,
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(tag = "type")]
     pub enum Filter {
         WindowName {
@@ -68,11 +68,12 @@ mod wallpaper {
         },
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Wallpaper {
         pub name: String,
         pub application: super::Application,
         pub filters: Vec<Filter>,
         pub source: WallpaperSource,
+        pub opacity: f64,
     }
 }

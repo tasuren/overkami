@@ -4,9 +4,11 @@ mod model;
 mod os;
 mod service;
 mod utils;
+mod wallpaper;
 
 fn setup(app: &tauri::App) {
     config::setup_config(app);
+    wallpaper::setup_wallpapers(app);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

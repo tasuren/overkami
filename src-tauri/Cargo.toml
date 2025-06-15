@@ -31,3 +31,7 @@ tauri-plugin-dialog = "2"
 applications = "0.3.1"
 anyhow = "1.0.98"
 async-fs = "2.1.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.1"
+objc2-app-kit = { version = "0.3.1", default-features = false, features = ["NSResponder", "NSWindow"] }

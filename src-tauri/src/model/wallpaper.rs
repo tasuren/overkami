@@ -3,9 +3,16 @@ pub use instance::*;
 
 mod instance {
     use tauri::{AppHandle, WebviewWindow, WebviewWindowBuilder};
+    use window_getter::Window;
 
     use super::filter::wallpaper_filter;
-    use crate::model::config;
+    use crate::{
+        model::{
+            config::{self, Application},
+            wallpaper,
+        },
+        os::{ApplicationProcess, WindowExt},
+    };
 
     pub struct WallpaperInstance {
         app: AppHandle,
@@ -22,36 +29,62 @@ mod instance {
             }
         }
 
-        pub fn get_config(&mut self) -> &config::WallpaperSource {
-            return &self.config.source;
+        pub fn config(&mut self) -> &config::WallpaperSource {
+            &self.config.source
         }
 
-        pub fn add_wallpaper_window(&mut self) {
-            let window = WebviewWindowBuilder::new(
-                &self.app,
-                format!("wallpaper-{}-{}", &self.config.name, self.windows.len()),
-                super::settings::get_wallpaper_url(&self.config.source),
-            )
-            .build()
-            .expect("WebViewのウィンドウの作成に失敗しました。");
+        pub async fn add_wallpaper_windows(&mut self, target_windows: &[Window]) {
+            for window in target_windows {
+                let Some(bounds) = window.bounds().ok() else {
+                    continue;
+                };
 
-            self.windows.push(window);
+                let window = WebviewWindowBuilder::new(
+                    &self.app,
+                    format!("wallpaper-{}-{}", &self.config.name, self.windows.len()),
+                    super::settings::get_wallpaper_url(&self.config.source),
+                )
+                .decorations(false)
+                .position(bounds.x(), bounds.y())
+                .inner_size(bounds.width(), bounds.height())
+                .transparent(true)
+                .build()
+                .expect("WebViewのウィンドウの作成に失敗しました。");
+
+                window.set_opacity(self.config.opacity);
+
+                self.windows.push(window);
+            }
         }
 
-        pub fn on_app_create(&mut self, app_name: String) {
-            if !wallpaper_filter(Some(app_name), None, &self.config.filters) {
+        pub async fn on_app_create(&mut self, application: ApplicationProcess) {
+            if application.path != self.config.application.path {
                 return;
             }
 
-            self.add_wallpaper_window();
+            // Get current windows owned by the application.
+            let app_pid = application.pid as i32;
+            let windows = tauri::async_runtime::spawn_blocking(move || {
+                window_getter::get_windows()
+                    .expect("Failed to get windows")
+                    .into_iter()
+                    .filter(|window| window.owner_pid().is_ok_and(|pid| pid == app_pid))
+                    .collect::<Vec<window_getter::Window>>()
+            })
+            .await
+            .expect("Failed to get windows");
+
+            self.add_wallpaper_windows(&windows).await;
         }
 
-        pub fn on_window_create(&mut self, app_name: String, window_name: String) {
-            if !wallpaper_filter(Some(app_name), Some(window_name), &self.config.filters) {
+        pub fn on_window_event(
+            &mut self,
+            window: window_observer::Window,
+            event: window_observer::Event,
+        ) {
+            if !wallpaper_filter(window.get_title().ok(), &self.config.filters) {
                 return;
             };
-
-            self.add_wallpaper_window();
         }
     }
 }
@@ -75,23 +108,18 @@ mod filter {
         }
     }
 
-    pub fn wallpaper_filter(
-        app_name: Option<String>,
-        window_name: Option<String>,
-        filters: &Vec<Filter>,
-    ) -> bool {
-        filters
-            .iter()
-            .all(|filter| match (&app_name, &window_name, filter) {
-                (_, Some(window_name), Filter::WindowName { name, strategy }) => {
-                    string_filter(window_name, name, strategy)
-                }
-                _ => false,
-            })
+    pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
+        filters.iter().all(|filter| match (&window_name, filter) {
+            (Some(window_name), Filter::WindowName { name, strategy }) => {
+                string_filter(window_name, name, strategy)
+            }
+            _ => false,
+        })
     }
 }
 
 pub mod settings {
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     use tauri::{Url, WebviewUrl};
 
     use crate::{model::config::WallpaperSource, utils::convert_file_src};
@@ -100,11 +128,21 @@ pub mod settings {
     /// これはHTMLを指定する形式の壁紙には対応していない。それはカスタム壁紙であり、ビルトイン壁紙ではない。
     pub fn get_wallpaper_url(source: &WallpaperSource) -> WebviewUrl {
         match source {
-            WallpaperSource::Picture { .. } => {
-                WebviewUrl::App("/builtin-wallpapers/picture.html".into())
+            WallpaperSource::Picture { location } => {
+                let path = utf8_percent_encode(
+                    location.to_str().expect("Failed to read picture location"),
+                    NON_ALPHANUMERIC,
+                );
+
+                WebviewUrl::App(format!("?wallpaper=picture&path={path}").into())
             }
-            WallpaperSource::Video { .. } => {
-                WebviewUrl::App("/builtin-wallpapers/video.html".into())
+            WallpaperSource::Video { location } => {
+                let path = utf8_percent_encode(
+                    location.to_str().expect("Failed to read picture location"),
+                    NON_ALPHANUMERIC,
+                );
+
+                WebviewUrl::App(format!("?wallpaper=video&path={path}").into())
             }
             WallpaperSource::LocalWebPage { location } => {
                 WebviewUrl::External(Url::parse(&convert_file_src(location).unwrap()).unwrap())

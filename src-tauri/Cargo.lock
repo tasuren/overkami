@@ -3053,6 +3053,8 @@ dependencies = [
  "applications",
  "async-fs",
  "dunce",
+ "objc2 0.6.1",
+ "objc2-app-kit",
  "percent-encoding",
  "serde",
  "serde_json",

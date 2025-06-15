@@ -11,6 +11,7 @@ import { buttonClass } from "../ui";
 import ApplicationField from "./ApplicationField";
 import FilterFields from "./FilterFields";
 import WallpaperNameField from "./NameField";
+import OpacityField from "./OpacityField";
 import SourceField from "./SourceField";
 
 export type WallpaperForm = {
@@ -21,6 +22,7 @@ export type WallpaperForm = {
   };
   filters: Filter[];
   source: WallpaperSource;
+  opacity: string;
 };
 
 export function useWallpaperForm() {
@@ -44,7 +46,10 @@ export default function WallpaperForm(props: {
     } else {
       setWallpapers((prev) => {
         const updated = [...prev];
-        updated[index] = values;
+        updated[index] = {
+          ...values,
+          opacity: Number.parseFloat(values.opacity) / 100,
+        };
         return updated;
       });
     }
@@ -71,6 +76,11 @@ export default function WallpaperForm(props: {
       <SourceField
         form={form}
         defaultSourcePath={wallpaper?.source?.location}
+      />
+
+      <OpacityField
+        form={form}
+        defaultOpacity={(wallpaper?.opacity || 0.7) * 100}
       />
 
       <div class="my-4 flex gap-2">

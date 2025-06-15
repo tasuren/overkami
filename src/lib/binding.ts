@@ -71,6 +71,7 @@ export type Wallpaper = {
   application: Application;
   filters: Filter[];
   source: WallpaperSource;
+  opacity: number;
 };
 
 export type Config = {
