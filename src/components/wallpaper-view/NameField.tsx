@@ -5,7 +5,7 @@ import {
   minLength,
   required,
 } from "@modular-forms/solid";
-import { fieldClass, textInputClass } from "../ui";
+import { fieldClass, inputClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
 export default function WallpaperNameField(props: {
@@ -34,7 +34,7 @@ export default function WallpaperNameField(props: {
             type="text"
             value={defaultName}
             placeholder="壁紙の設定名を入力"
-            class={textInputClass({ class: "w-96" })}
+            class={inputClass()}
           />
           <div class={error()}>{field.error}</div>
         </div>

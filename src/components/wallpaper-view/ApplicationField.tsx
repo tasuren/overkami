@@ -6,8 +6,8 @@ import {
   required,
   setValue,
 } from "@modular-forms/solid";
-import { RefreshCcw } from "lucide-solid";
 import ChevronDown from "lucide-solid/icons/chevron-down";
+import RefreshCcw from "lucide-solid/icons/refresh-ccw";
 import { For, Show, createSignal, onMount, splitProps } from "solid-js";
 import {
   type ApplicationWindow,
@@ -98,10 +98,10 @@ function ApplicationSelect(
 
   return (
     <div class="flex items-center gap-2 w-96">
-      <div class={base({ class: "w-5/6" })}>
+      <div class={base()}>
         <select
           {...selectProps}
-          class={select({ class: "w-full", disabled: options() === undefined })}
+          class={select({ disabled: options() === undefined })}
           name={field.name}
           id={field.name}
           disabled={options() === undefined}

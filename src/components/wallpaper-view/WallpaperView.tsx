@@ -13,7 +13,7 @@ export default function WallpaperView(props: {
 
   return (
     <div>
-      <div class="flex items-center gap-2 mb-4 sticky top-0 backdrop-blur-sm rounded-lg">
+      <div class="fixed top-[48px] left-0 px-14 z-50 w-screen flex items-center gap-2 bg-light dark:bg-dark">
         <button
           type="button"
           class={iconButtonClass()}
@@ -31,7 +31,12 @@ export default function WallpaperView(props: {
         </h1>
       </div>
 
-      <WallpaperForm wallpaper={wallpaper} />
+      <div
+        class="px-16 py-8 mt-[48px] overflow-y-auto"
+        style="height: calc(100vh - 48px * 2);"
+      >
+        <WallpaperForm wallpaper={wallpaper} />
+      </div>
     </div>
   );
 }

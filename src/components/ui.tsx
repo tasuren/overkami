@@ -40,7 +40,7 @@ export const textMutedClass = tv({
   base: ["text-dark/60 dark:text-light/60"],
 });
 
-export const textInputClass = tv({
+export const inputClass = tv({
   base: [
     "h-10 p-2 rounded-lg",
     "border border-dark/40 dark:border-light/40",
@@ -50,6 +50,16 @@ export const textInputClass = tv({
     disabled: {
       true: "opacity-60 pointer-events-none",
     },
+    size: {
+      sm: "w-40",
+      lg: "w-96",
+    },
+    file: {
+      true: "cursor-pointer",
+    },
+  },
+  defaultVariants: {
+    size: "lg",
   },
 });
 
@@ -60,10 +70,17 @@ export const selectClass = tv({
         base: "opacity-60 pointer-events-none",
       },
     },
+    size: {
+      sm: { base: "w-40" },
+      lg: { base: "w-96" },
+    },
+  },
+  defaultVariants: {
+    size: "lg",
   },
   slots: {
     base: "relative",
-    select: [...textInputClass.base, "appearance-none cursor-pointer"],
+    select: [...inputClass.base, "appearance-none cursor-pointer w-full"],
     chevron: [
       "absolute right-3 top-1/2 -translate-y-1/2",
       "cursor-pointer pointer-events-none",

@@ -35,12 +35,12 @@ export type LocalWebPageSource = {
 
 export type PictureSource = {
   type: "Picture";
-  location: string;
+  path: string;
 };
 
 export type VideoSource = {
   type: "Video";
-  location: string;
+  path: string;
 };
 
 export type WallpaperSource =

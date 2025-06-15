@@ -12,13 +12,7 @@ import {
   STRING_FILTER_STRATEGIES,
   type StringFilterStrategy,
 } from "../../lib/binding";
-import {
-  fieldClass,
-  iconClass,
-  selectClass,
-  textInputClass,
-  textMutedClass,
-} from "../ui";
+import { fieldClass, iconClass, selectClass, inputClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
 export default function FilterFields(props: {
@@ -55,13 +49,13 @@ export default function FilterFields(props: {
                 <Field of={form} name={`${fieldArray.name}.${index()}.name`}>
                   {(field, props) => (
                     <div class={base()}>
-                      <label for={field.name} class={textMutedClass()}>
+                      <label for={field.name} class="text-sm">
                         壁紙をつけるウィンドウの名前
                       </label>
                       <input
                         {...props}
                         type="text"
-                        class={textInputClass({ class: "w-96" })}
+                        class={inputClass()}
                       />
                       <div class={error()}>{field.error}</div>
                     </div>
@@ -77,7 +71,7 @@ export default function FilterFields(props: {
                 >
                   {(field, props) => (
                     <div class={base()}>
-                      <label for={field.name} class={textMutedClass()}>
+                      <label for={field.name} class="text-sm">
                         ウィンドウ名の絞り込み方法
                       </label>
                       <WindowNameFilterSelect
@@ -107,8 +101,8 @@ function WindowNameFilterSelect(
   const { base, select, chevron } = selectClass();
 
   return (
-    <div class={base({ class: "w-96" })}>
-      <select class={select({ class: "w-full" })} {...props}>
+    <div class={base()}>
+      <select class={select()} {...props}>
         <For each={Object.entries(STRING_FILTER_STRATEGIES)}>
           {([value, label]) => (
             <option value={value} selected={props.value === value}>

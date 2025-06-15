@@ -45,8 +45,8 @@ mod wallpaper {
     pub enum WallpaperSource {
         RemoteWebPage { url: String },
         LocalWebPage { path: String },
-        Picture { src: String },
-        Video { src: String },
+        Picture { path: String },
+        Video { path: String },
     }
 
     #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]

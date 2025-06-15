@@ -9,6 +9,7 @@ import { buttonClass } from "../ui";
 import ApplicationField from "./ApplicationField";
 import FilterFields from "./FilterFields";
 import WallpaperNameField from "./NameField";
+import SourceField from "./SourceField";
 
 export type WallpaperForm = {
   name: string;
@@ -39,7 +40,7 @@ export default function WallpaperForm(props: {
   };
 
   return (
-    <Form of={form} class="p-2 space-y-2" onSubmit={handleSubmit}>
+    <Form of={form} class="space-y-2" onSubmit={handleSubmit}>
       <WallpaperNameField form={form} defaultName={wallpaper?.name} />
 
       <ApplicationField
@@ -49,7 +50,9 @@ export default function WallpaperForm(props: {
 
       <FilterFields form={form} />
 
-      <button type="submit" class={buttonClass({ class: "ml-auto" })}>
+      <SourceField form={form} />
+
+      <button type="submit" class={buttonClass({ class: "ml-auto mb-4 " })}>
         保存
       </button>
     </Form>

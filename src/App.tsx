@@ -9,7 +9,7 @@ export function Main() {
   const [view] = useView();
 
   return (
-    <main class="h-full">
+    <main style="height: calc(100vh - 48px);">
       <Switch>
         <Match when={view().type === "home"}>
           <HomeView />
@@ -18,7 +18,6 @@ export function Main() {
           {(view) => {
             const wallpaperView = view();
             if (wallpaperView.type !== "wallpaper") return;
-            console.log(wallpaperView.wallpaper);
 
             return <WallpaperView wallpaper={wallpaperView.wallpaper} />;
           }}
@@ -31,11 +30,7 @@ export function Main() {
 function Header() {
   return (
     <div
-      class={cl(
-        "fixed top-0 left-0",
-        "w-screen h-12 z-50",
-        "flex justify-center items-center",
-      )}
+      class={cl("w-screen h-[48px] z-50", "flex justify-center items-center")}
       data-tauri-drag-region
     >
       <h1 class="h-fit text-xl font-bold" data-tauri-drag-region>
@@ -50,10 +45,9 @@ function App() {
     <GlobalStateProvider>
       <div
         class={cl(
-          "overflow-y-auto w-screen h-screen",
+          "w-screen h-screen",
           "text-dark dark:text-light",
           "bg-light dark:bg-dark",
-          "px-14 pt-14 box-border",
         )}
       >
         <Header />
