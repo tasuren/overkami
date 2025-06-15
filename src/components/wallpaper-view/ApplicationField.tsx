@@ -39,7 +39,12 @@ export default function ApplicationField(props: {
         <div class={base()}>
           <label for={props.name}>壁紙を適用するアプリ</label>
 
-          <ApplicationSelect {...props} form={form} field={field} />
+          <ApplicationSelect
+            {...props}
+            form={form}
+            field={field}
+            defaultAppPath={defaultAppPath}
+          />
 
           <div
             class={textMutedClass({
@@ -65,9 +70,14 @@ function ApplicationSelect(
   props: FieldElementProps<WallpaperForm, "application.path"> & {
     form: FormStore<WallpaperForm>;
     field: FieldStore<WallpaperForm, "application.path">;
+    defaultAppPath?: string;
   },
 ) {
-  const [{ field, form }, selectProps] = splitProps(props, ["field", "form"]);
+  const [{ field, form, defaultAppPath }, selectProps] = splitProps(props, [
+    "defaultAppPath",
+    "field",
+    "form",
+  ]);
   const [options, setOptions] = createSignal<ApplicationWindow[]>();
 
   const onSelect = () => {
@@ -85,8 +95,12 @@ function ApplicationSelect(
     setOptions(windows);
   };
 
-  onMount(() => {
-    loadApplicationWindows();
+  onMount(async () => {
+    await loadApplicationWindows();
+
+    if (defaultAppPath !== undefined) {
+      setValue(form, "application.path", defaultAppPath);
+    }
   });
 
   const reloadApplicationWindows = async () => {
@@ -102,12 +116,11 @@ function ApplicationSelect(
         <select
           {...selectProps}
           class={select({ disabled: options() === undefined })}
-          name={field.name}
-          id={field.name}
+          id={selectProps.name}
           disabled={options() === undefined}
           onSelect={onSelect}
         >
-          <option value="" disabled selected>
+          <option value="" disabled selected={defaultAppPath === undefined}>
             <Show when={options() === undefined} fallback="アプリを選択">
               読み込み中
             </Show>
@@ -115,7 +128,10 @@ function ApplicationSelect(
 
           <For each={options()}>
             {(option) => (
-              <option value={option.path}>
+              <option
+                value={option.path}
+                selected={option.path === defaultAppPath}
+              >
                 {option.windowTitle || option.name || "不明なアプリ"}
               </option>
             )}

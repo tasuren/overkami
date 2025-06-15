@@ -5,29 +5,45 @@ import {
   type FormStore,
   insert,
   required,
+  reset,
 } from "@modular-forms/solid";
 import ChevronDown from "lucide-solid/icons/chevron-down";
-import { For, onMount } from "solid-js";
+import { For, createEffect, onCleanup } from "solid-js";
 import {
   STRING_FILTER_STRATEGIES,
   type StringFilterStrategy,
 } from "../../lib/binding";
-import { fieldClass, iconClass, selectClass, inputClass } from "../ui";
+import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
 export default function FilterFields(props: {
   form: FormStore<WallpaperForm>;
+  defaultFilters?: WallpaperForm["filters"];
 }) {
-  const { form } = props;
+  const { form, defaultFilters } = props;
   const { base, error } = fieldClass();
 
-  onMount(() => {
+  createEffect(() => {
+    if (defaultFilters !== undefined && defaultFilters.length > 0) {
+      for (const filter of defaultFilters) {
+        insert(form, "filters", {
+          value: filter,
+        });
+      }
+
+      return;
+    }
+
     insert(form, "filters", {
       value: {
         type: "WindowName",
         name: "",
         strategy: "Contains",
       },
+    });
+
+    onCleanup(() => {
+      reset(form, "filters");
     });
   });
 
@@ -52,11 +68,7 @@ export default function FilterFields(props: {
                       <label for={field.name} class="text-sm">
                         壁紙をつけるウィンドウの名前
                       </label>
-                      <input
-                        {...props}
-                        type="text"
-                        class={inputClass()}
-                      />
+                      <input {...props} type="text" class={inputClass()} />
                       <div class={error()}>{field.error}</div>
                     </div>
                   )}

@@ -48,9 +48,12 @@ export default function WallpaperForm(props: {
         defaultAppPath={wallpaper?.application?.path}
       />
 
-      <FilterFields form={form} />
+      <FilterFields form={form} defaultFilters={wallpaper?.filters} />
 
-      <SourceField form={form} />
+      <SourceField
+        form={form}
+        defaultSourcePath={wallpaper?.source?.location}
+      />
 
       <button type="submit" class={buttonClass({ class: "ml-auto mb-4" })}>
         保存

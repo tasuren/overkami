@@ -21,7 +21,7 @@ export default function SourceField(props: {
 }) {
   const { form, defaultSourcePath } = props;
 
-  const [_, setType] = createSignal<WallpaperSource["type"]>("Picture");
+  const [type, setType] = createSignal<WallpaperSource["type"]>("Picture");
 
   const selectFile = async () => {
     let filter = undefined;
@@ -68,7 +68,7 @@ export default function SourceField(props: {
       <Field
         of={form}
         name="source.location"
-        validate={[required("壁紙に使うHTMLファイルを指定してください。")]}
+        validate={[required("壁紙に使うファイルを指定してください。")]}
       >
         {(field, props) => {
           const { base, error } = fieldClass();
@@ -79,18 +79,37 @@ export default function SourceField(props: {
             if (fileName) {
               fileName = await basename(fileName);
             } else {
-              fileName = "クリックで壁紙を選択";
+              fileName = "クリックでファイルを選択";
             }
 
             buttonElement.innerText = fileName;
           });
 
+          let title = undefined;
+          switch (type()) {
+            case "Picture":
+              title = "壁紙に使う画像ファイル";
+              break;
+            case "Video":
+              title = "壁紙に使う動画ファイル";
+              break;
+            case "LocalWebPage":
+              title = "壁紙に使うHTMLファイル";
+              break;
+          }
+
           return (
             <div class={base()}>
               <label for={props.name} class="text-sm">
-                壁紙のパス
+                {title}
               </label>
-              <input {...props} id={props.name} type="text" hidden />
+              <input
+                {...props}
+                id={props.name}
+                type="text"
+                value={defaultSourcePath}
+                hidden
+              />
 
               <button
                 type="button"
