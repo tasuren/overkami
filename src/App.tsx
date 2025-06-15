@@ -19,7 +19,12 @@ export function Main() {
             const wallpaperView = view();
             if (wallpaperView.type !== "wallpaper") return;
 
-            return <WallpaperView wallpaper={wallpaperView.wallpaper} />;
+            return (
+              <WallpaperView
+                wallpaper={wallpaperView.wallpaper}
+                index={wallpaperView.index}
+              />
+            );
           }}
         </Match>
       </Switch>
@@ -46,7 +51,7 @@ function App() {
       <div
         class={cl(
           "w-screen h-screen",
-          "text-dark dark:text-light",
+          "text-light-text dark:text-dark-text",
           "bg-light dark:bg-dark",
         )}
       >

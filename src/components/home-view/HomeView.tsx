@@ -14,7 +14,9 @@ export function HomeView() {
       <Show when={wallpapers().length > 0} fallback={<NothingFound />}>
         <div class="px-14 py-10 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
           <For each={wallpapers()}>
-            {(wallpaper) => <WallpaperCard wallpaper={wallpaper} />}
+            {(wallpaper, index) => (
+              <WallpaperCard wallpaper={wallpaper} index={index()} />
+            )}
           </For>
         </div>
       </Show>
@@ -26,9 +28,14 @@ export function HomeView() {
 
 function AddButton() {
   const [, setView] = useView();
+  const [wallpapers] = useWallpapers();
 
   const onClick = () => {
-    setView({ type: "wallpaper", wallpaper: undefined });
+    setView({
+      type: "wallpaper",
+      wallpaper: undefined,
+      index: wallpapers().length,
+    });
   };
 
   return (
@@ -46,12 +53,13 @@ function AddButton() {
 
 export function WallpaperCard(props: {
   wallpaper: Wallpaper;
+  index: number;
 }) {
-  const { wallpaper } = props;
+  const { wallpaper, index } = props;
   const [, setView] = useView();
 
   const onClick = () => {
-    setView({ type: "wallpaper", wallpaper });
+    setView({ type: "wallpaper", wallpaper, index });
   };
 
   return (

@@ -3,8 +3,10 @@
 @theme {
   --color-dark: oklch(0.3316 0.0247 22.68);
   --color-light: oklch(0.8199 0.0585 23.03);
+  --color-dark-text: oklch(0.8199 0.0585 23.03);
   --color-card: oklch(0.3463 0.048 22.68);
   --color-primary: oklch(0.4337 0.1082 22.68);
+  --color-error: #E9685C;
 }
 
 /*

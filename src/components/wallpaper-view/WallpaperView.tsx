@@ -7,8 +7,9 @@ import WallpaperForm from "./WallpaperForm";
 
 export default function WallpaperView(props: {
   wallpaper: Wallpaper | undefined;
+  index: number;
 }) {
-  const { wallpaper } = props;
+  const { wallpaper, index } = props;
   const [, setView] = useView();
 
   return (
@@ -35,7 +36,7 @@ export default function WallpaperView(props: {
         class="px-16 py-8 mt-[48px] overflow-y-auto"
         style="height: calc(100vh - 48px * 2);"
       >
-        <WallpaperForm wallpaper={wallpaper} />
+        <WallpaperForm wallpaper={wallpaper} index={index} />
       </div>
     </div>
   );

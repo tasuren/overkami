@@ -3,6 +3,8 @@ import {
   type SubmitHandler,
   createFormStore,
 } from "@modular-forms/solid";
+import Save from "lucide-solid/icons/save";
+import Trash2 from "lucide-solid/icons/trash-2";
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Filter, Wallpaper, WallpaperSource } from "../../lib/binding";
 import { buttonClass } from "../ui";
@@ -27,15 +29,31 @@ export function useWallpaperForm() {
 
 export default function WallpaperForm(props: {
   wallpaper: Wallpaper | undefined;
+  index: number;
 }) {
-  const { wallpaper } = props;
+  const { wallpaper, index } = props;
 
   const form = useWallpaperForm();
   const [, setWallpapers] = useWallpapers();
   const [, setView] = useView();
 
   const handleSubmit: SubmitHandler<WallpaperForm> = (values) => {
-    setWallpapers((prev) => [...prev, values]);
+    if (wallpaper === undefined) {
+      // If no wallpaper is provided, we are creating a new one.
+      setWallpapers((prev) => [...prev, values]);
+    } else {
+      setWallpapers((prev) => {
+        const updated = [...prev];
+        updated[index] = values;
+        return updated;
+      });
+    }
+
+    setView({ type: "home" });
+  };
+
+  const deleteWallpaper = () => {
+    setWallpapers((prev) => prev.filter((_, i) => i !== index));
     setView({ type: "home" });
   };
 
@@ -55,9 +73,22 @@ export default function WallpaperForm(props: {
         defaultSourcePath={wallpaper?.source?.location}
       />
 
-      <button type="submit" class={buttonClass({ class: "ml-auto mb-4" })}>
-        保存
-      </button>
+      <div class="my-4 flex gap-2">
+        <button type="submit" class={buttonClass({ withIcon: true })}>
+          <Save />
+          保存
+        </button>
+
+        <button
+          type="button"
+          class={buttonClass({ color: "error", withIcon: true })}
+          onClick={deleteWallpaper}
+          hidden={wallpaper === undefined}
+        >
+          <Trash2 />
+          削除
+        </button>
+      </div>
     </Form>
   );
 }

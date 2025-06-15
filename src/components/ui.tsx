@@ -13,6 +13,10 @@ export const buttonClass = tv({
   variants: {
     color: {
       primary: "bg-primary hover:bg-primary/70",
+      error: [
+        "text-error border border-error shadow-none",
+        "bg-transparent hover:bg-error/10",
+      ],
     },
     size: {
       sm: "h-8 px-3 py-1",
@@ -20,6 +24,9 @@ export const buttonClass = tv({
     },
     disabled: {
       true: "opacity-60 bg-primary pointer-events-none",
+    },
+    withIcon: {
+      true: "flex gap-2",
     },
   },
   defaultVariants: {
