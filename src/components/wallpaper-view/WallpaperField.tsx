@@ -259,7 +259,7 @@ export function FilterFields(props: {
   );
 }
 
-export default function WindowNameFilterSelect(
+function WindowNameFilterSelect(
   props: FieldElementProps<WallpaperForm, `filters.${number}.strategy`> & {
     name: string;
     value: StringFilterStrategy;
