@@ -33,7 +33,7 @@ export default function WallpaperView(props: {
       </div>
 
       <div
-        class="px-16 py-8 mt-[48px] overflow-y-auto"
+        class="px-16 py-2 mt-[48px] overflow-y-auto"
         style="height: calc(100vh - 48px * 2);"
       >
         <WallpaperForm wallpaper={wallpaper} index={index} />
