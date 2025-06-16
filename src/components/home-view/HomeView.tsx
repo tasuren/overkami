@@ -112,6 +112,7 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
         <img
           src={convertFileSrc(wallpaper.source.location)}
           alt="🖼"
+          draggable="false"
           class="w-full h-full object-cover rounded-lg"
         />
       );
@@ -120,6 +121,7 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
         <video
           src={convertFileSrc(wallpaper.source.location)}
           class="w-full h-full object-cover rounded-lg"
+          draggable="false"
           autoplay
           loop
           muted
