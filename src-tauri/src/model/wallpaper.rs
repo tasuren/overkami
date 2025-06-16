@@ -52,12 +52,18 @@ mod instance {
                 .expect("WebViewのウィンドウの作成に失敗しました。");
 
                 window.set_opacity(self.config.opacity);
+                window
+                    .set_always_on_top(true)
+                    .expect("Failed to set always on top");
+                window
+                    .set_ignore_cursor_events(true)
+                    .expect("Failed to set ignore cursor events");
 
                 self.windows.push(window);
             }
         }
 
-        pub async fn on_app_create(&mut self, application: ApplicationProcess) {
+        pub async fn on_new_app(&mut self, application: ApplicationProcess) {
             if application.path != self.config.application.path {
                 return;
             }
