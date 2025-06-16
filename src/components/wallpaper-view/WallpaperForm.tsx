@@ -40,16 +40,18 @@ export default function WallpaperForm(props: {
   const [, setView] = useView();
 
   const handleSubmit: SubmitHandler<WallpaperForm> = (values) => {
+    const newWallpaper: Wallpaper = {
+      ...values,
+      opacity: Number.parseFloat(values.opacity) / 100,
+    };
+
     if (wallpaper === undefined) {
       // If no wallpaper is provided, we are creating a new one.
-      setWallpapers((prev) => [...prev, values]);
+      setWallpapers((prev) => [...prev, newWallpaper]);
     } else {
       setWallpapers((prev) => {
         const updated = [...prev];
-        updated[index] = {
-          ...values,
-          opacity: Number.parseFloat(values.opacity) / 100,
-        };
+        updated[index] = newWallpaper;
         return updated;
       });
     }
