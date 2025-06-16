@@ -19,7 +19,7 @@ export type Error =
     };
 
 export type Application = {
-  name?: string;
+  name: string | null;
   path: string;
 };
 
@@ -93,8 +93,8 @@ export async function saveConfig(config: Config): Promise<void> {
 }
 
 export interface ApplicationWindow {
-  windowTitle?: string;
-  name?: string;
+  windowTitle: string | null;
+  name: string | null;
   path: string;
 }
 

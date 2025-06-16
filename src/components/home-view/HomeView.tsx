@@ -1,6 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { basename } from "@tauri-apps/api/path";
 import Plus from "lucide-solid/icons/plus";
-import { For, Show } from "solid-js";
+import { For, Show, createEffect, createSignal } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding";
 import { cl } from "../../lib/utils";
@@ -12,7 +13,13 @@ export function HomeView() {
   return (
     <>
       <Show when={wallpapers().length > 0} fallback={<NothingFound />}>
-        <div class="px-14 py-10 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 h-full">
+        <div
+          class={cl(
+            "px-14 py-10 h-full",
+            "grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5",
+            "gap-2 overflow-auto",
+          )}
+        >
           <For each={wallpapers()}>
             {(wallpaper, index) => (
               <WallpaperCard wallpaper={wallpaper} index={index()} />
@@ -62,22 +69,35 @@ export function WallpaperCard(props: {
     setView({ type: "wallpaper", wallpaper, index });
   };
 
+  const [displayAppName, setDisplayAppName] = createSignal(
+    wallpaper.application.name,
+  );
+
+  createEffect(async () => {
+    if (displayAppName() === null) {
+      setDisplayAppName(await basename(wallpaper.application.path));
+    }
+  });
+
   return (
     <button
       type="button"
-      class={cl(
-        "h-44 p-4 rounded-xl cursor-pointer",
-        "bg-card hover:bg-card/70 active:scale-95 transition",
-        "flex flex-col",
-      )}
       onClick={onClick}
+      class={cl("relative h-44 cursor-pointer", "active:scale-95 transition")}
     >
-      <div class="p-2 grow">
-        <Thumbnail wallpaper={wallpaper} />
+      <div class="h-44">
+        <div class="w-full h-full">
+          <Thumbnail wallpaper={wallpaper} />
+        </div>
       </div>
-      <div class="space-y-1">
-        <div class="xl">{wallpaper.name}</div>
-        <div class="text-sm">{wallpaper.application.name}</div>
+
+      <div class="absolute bottom-0 left-0 backdrop-blur-lg w-full h-2/5 rounded-b-xl">
+        <div class="h-full text-left flex flex-col justify-evenly px-3 py-2">
+          <div class="font-mono text-xl">{wallpaper.name}</div>
+          <div class={textMutedClass({ class: "font-mono" })}>
+            {displayAppName()}
+          </div>
+        </div>
       </div>
     </button>
   );
@@ -92,14 +112,14 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
         <img
           src={convertFileSrc(wallpaper.source.location)}
           alt="🖼"
-          class="object-cover"
+          class="w-full h-full object-cover rounded-xl"
         />
       );
     case "Video":
       return (
         <video
           src={convertFileSrc(wallpaper.source.location)}
-          class="object-cover"
+          class="w-full h-full object-cover rounded-xl"
           autoplay
           loop
           muted
@@ -116,7 +136,6 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
       return <iframe title={wallpaper.name} src={wallpaper.source.location} />;
   }
 }
-
 function NothingFound() {
   return (
     <div class="h-full flex justify-center items-center">

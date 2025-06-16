@@ -17,7 +17,7 @@ import SourceField from "./SourceField";
 export type WallpaperForm = {
   name: string;
   application: {
-    name: string | undefined;
+    name: string | null;
     path: string;
   };
   filters: Filter[];
