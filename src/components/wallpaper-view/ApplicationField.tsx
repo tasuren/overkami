@@ -80,7 +80,7 @@ function ApplicationSelect(
   ]);
   const [options, setOptions] = createSignal<ApplicationWindow[]>();
 
-  const onSelect = () => {
+  const onAppSelect = () => {
     for (const option of options() || []) {
       if (option.path !== field.value) continue;
 
@@ -112,13 +112,24 @@ function ApplicationSelect(
 
   return (
     <div class="flex items-center gap-2 w-96">
+      <Field of={form} name="application.name">
+        {(field, props) => (
+          <input
+            {...props}
+            type="text"
+            value={field.value || undefined}
+            hidden
+          />
+        )}
+      </Field>
+
       <div class={base()}>
         <select
           {...selectProps}
           class={select({ disabled: options() === undefined })}
           id={selectProps.name}
           disabled={options() === undefined}
-          onSelect={onSelect}
+          onChange={onAppSelect}
         >
           <option value="" disabled selected={defaultAppPath === undefined}>
             <Show when={options() === undefined} fallback="アプリを選択">

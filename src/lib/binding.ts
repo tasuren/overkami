@@ -87,7 +87,6 @@ export async function saveConfig(config: Config): Promise<void> {
   try {
     return await invoke("save_config", { config });
   } catch (error) {
-    console.error(1, error);
     errorMessage(error as Error);
   }
 }
