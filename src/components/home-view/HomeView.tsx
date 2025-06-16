@@ -91,7 +91,7 @@ export function WallpaperCard(props: {
         </div>
       </div>
 
-      <div class="absolute bottom-0 left-0 backdrop-blur-lg w-full h-2/5 rounded-b-xl">
+      <div class="absolute bottom-0 left-0 backdrop-blur-lg w-full h-2/5 rounded-b-lg">
         <div class="h-full text-left flex flex-col justify-evenly px-3 py-2">
           <div class="font-mono text-xl">{wallpaper.name}</div>
           <div class={textMutedClass({ class: "font-mono" })}>
@@ -112,14 +112,14 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
         <img
           src={convertFileSrc(wallpaper.source.location)}
           alt="🖼"
-          class="w-full h-full object-cover rounded-xl"
+          class="w-full h-full object-cover rounded-lg"
         />
       );
     case "Video":
       return (
         <video
           src={convertFileSrc(wallpaper.source.location)}
-          class="w-full h-full object-cover rounded-xl"
+          class="w-full h-full object-cover rounded-lg"
           autoplay
           loop
           muted
