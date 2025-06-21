@@ -1,8 +1,6 @@
 mod commands;
 mod config;
-mod model;
 mod os;
-mod service;
 mod utils;
 mod wallpaper;
 

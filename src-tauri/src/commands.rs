@@ -5,24 +5,20 @@ pub struct Error {
 }
 
 pub mod config {
-    use tauri::{async_runtime::Mutex, Manager};
+    use tauri::Manager;
 
     use super::Error;
-    use crate::model::config::Config;
+    use crate::config::{Config, ConfigPathState, ConfigState};
 
     #[tauri::command]
     pub async fn get_config(app: tauri::AppHandle) -> serde_json::Value {
-        let config = app.state::<Mutex<Config>>();
+        let config = app.state::<ConfigState>();
         let config = config.lock().await;
 
         serde_json::to_value(&*config).expect("Failed to parse config to JSON format")
     }
 
-    #[tauri::command]
-    pub async fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), Error> {
-        // Save the config to the file.
-        let config_path = app.state::<crate::config::ConfigPath>();
-
+    pub async fn write_config(config_path: &ConfigPathState, config: &Config) -> Result<(), Error> {
         let data = serde_json::to_vec_pretty(&config).map_err(|e| Error {
             message: "設定ファイルのデータに失敗しました。".to_owned(),
             detail: e.to_string(),
@@ -31,12 +27,21 @@ pub mod config {
         async_fs::write(&**config_path, data)
             .await
             .map_err(|e| Error {
-                message: "設定ファイルのの書き込に失敗しました。".to_owned(),
+                message: "設定ファイルの書き込に失敗しました。".to_owned(),
                 detail: e.to_string(),
             })?;
 
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), Error> {
+        // Save the config to the file.
+        let config_path = app.state::<ConfigPathState>();
+        write_config(&config_path, &config).await?;
+
         // Update internal state.
-        let state = app.state::<Mutex<Config>>();
+        let state = app.state::<ConfigState>();
         *state.lock().await = config;
 
         Ok(())

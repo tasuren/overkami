@@ -25,12 +25,13 @@ serde_json = "1"
 dunce = "1.0.5"
 percent-encoding = "2.3.1"
 sysinfo = "0.35.2"
-window-observer = { git = "https://github.com/tasuren/window-observer-rs.git" }
+window-observer = { git = "https://github.com/tasuren/window-observer-rs.git", features = ["macos-id"] }
 window-getter = { git = "https://github.com/tasuren/window-getter-rs.git" }
 tauri-plugin-dialog = "2"
 applications = "0.3.1"
 anyhow = "1.0.98"
 async-fs = "2.1.2"
+pollster = "0.4.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.1"
