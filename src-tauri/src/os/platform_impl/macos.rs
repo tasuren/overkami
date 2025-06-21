@@ -13,9 +13,11 @@ pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
 }
 
 impl super::WindowExt for WebviewWindow {
-    fn set_opacity(&self, opacity: f64) {
+    fn set_opacity(&self, opacity: f64) -> Result<()> {
         let ns_window = get_ns_window(self);
         unsafe { ns_window.setAlphaValue(opacity) };
+
+        Ok(())
     }
 
     fn set_order_above(&self, relative_to: WindowId) -> Result<()> {
