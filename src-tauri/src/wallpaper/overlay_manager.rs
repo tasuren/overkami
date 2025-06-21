@@ -24,7 +24,6 @@ impl OverlayManager {
     ) -> Option<Self> {
         let (tx, rx) = mpsc::unbounded_channel();
 
-        println!("start actual observer");
         let observer = match WindowObserver::start(
             pid,
             tx,
@@ -64,12 +63,9 @@ fn spawn_order_management_task(
     mut rx: mpsc::UnboundedReceiver<(window_observer::Window, Event)>,
     wallpaper_windows: WallpaperWindows,
 ) {
-    println!("spawn observer task");
     tauri::async_runtime::spawn(async move {
-        println!("aaa");
         while let Some((window, event)) = rx.recv().await {
             let window: Option<Window> = window.try_into().expect("Failed to convert window");
-            println!("{event:?}");
 
             if let Some(window) = window {
                 tauri::async_runtime::spawn(manage_order(
@@ -90,12 +86,10 @@ async fn manage_order(
     wallpaper_windows: WallpaperWindows,
 ) {
     let wallpaper_windows = wallpaper_windows.lock().await;
-    println!("{event:?}");
     let Some(wallpaper_window) = wallpaper_windows.get(&window.id()) else {
         return;
     };
 
-    println!("aaa");
     match event {
         Event::Moved => {
             let bounds = window.bounds().expect("Failed to get window bounds");

@@ -101,7 +101,6 @@ impl WallpaperInstance {
         .expect("Failed to spawn windows getter");
 
         if !windows.is_empty() {
-            println!("{}", windows.len());
             self.add_wallpaper_windows(&windows).await;
         }
 
@@ -111,7 +110,6 @@ impl WallpaperInstance {
                 OverlayManager::start(self.app.clone(), Arc::clone(&self.windows), pid as _).await
             else {
                 // If the overlay manager returns `None`, it means that pid is not valid.
-                eprintln!("PID is not valid, so skip process {}.", pid);
                 continue;
             };
 
