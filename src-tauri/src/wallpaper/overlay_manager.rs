@@ -1,27 +1,32 @@
 use std::sync::Arc;
 
-use tauri::{async_runtime, AppHandle};
+use tauri::AppHandle;
 use window_getter::Window;
 use window_observer::{tokio::sync::mpsc, Event, WindowObserver};
 
-use crate::os::WindowExt;
+use crate::{
+    os::WindowExt,
+    utils::{adjust_position, adjust_size},
+};
 
 use super::WallpaperWindows;
 
 pub struct OverlayManager {
     observer: WindowObserver,
+    pid: u32,
 }
 
 impl OverlayManager {
     pub async fn start(
         app: AppHandle,
         wallpaper_windows: WallpaperWindows,
-        app_pid: u32,
+        pid: u32,
     ) -> Option<Self> {
         let (tx, rx) = mpsc::unbounded_channel();
 
+        println!("start actual observer");
         let observer = match WindowObserver::start(
-            app_pid,
+            pid,
             tx,
             window_observer::smallvec![
                 Event::Resized,
@@ -39,7 +44,11 @@ impl OverlayManager {
 
         spawn_order_management_task(app, rx, wallpaper_windows);
 
-        Some(Self { observer })
+        Some(Self { observer, pid })
+    }
+
+    pub fn pid(&self) -> u32 {
+        self.pid
     }
 
     pub async fn stop(self) {
@@ -55,9 +64,12 @@ fn spawn_order_management_task(
     mut rx: mpsc::UnboundedReceiver<(window_observer::Window, Event)>,
     wallpaper_windows: WallpaperWindows,
 ) {
+    println!("spawn observer task");
     tauri::async_runtime::spawn(async move {
+        println!("aaa");
         while let Some((window, event)) = rx.recv().await {
             let window: Option<Window> = window.try_into().expect("Failed to convert window");
+            println!("{event:?}");
 
             if let Some(window) = window {
                 tauri::async_runtime::spawn(manage_order(
@@ -78,21 +90,27 @@ async fn manage_order(
     wallpaper_windows: WallpaperWindows,
 ) {
     let wallpaper_windows = wallpaper_windows.lock().await;
+    println!("{event:?}");
     let Some(wallpaper_window) = wallpaper_windows.get(&window.id()) else {
         return;
     };
 
+    println!("aaa");
     match event {
         Event::Moved => {
             let bounds = window.bounds().expect("Failed to get window bounds");
             wallpaper_window
-                .set_position(tauri::LogicalPosition::new(bounds.x(), bounds.y()))
+                .set_position(adjust_position(wallpaper_window, bounds.x(), bounds.y()))
                 .expect("Failed to set wallpaper window position");
         }
         Event::Resized => {
             let bounds = window.bounds().expect("Failed to get window bounds");
             wallpaper_window
-                .set_size(tauri::LogicalSize::new(bounds.width(), bounds.height()))
+                .set_size(adjust_size(
+                    wallpaper_window,
+                    bounds.width(),
+                    bounds.height(),
+                ))
                 .expect("Failed to set wallpaper window size");
         }
         Event::Activated => {

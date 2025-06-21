@@ -2,7 +2,7 @@ mod application_observer;
 mod instance;
 mod overlay_manager;
 
-pub use instance::{WallpaperConfig, WallpaperInstance, WallpaperWindows};
+pub use instance::{WallpaperInstance, WallpaperWindows};
 pub use overlay_manager::OverlayManager;
 pub use setup::setup_wallpapers;
 pub use state::WallpaperInstanceState;
@@ -20,7 +20,10 @@ mod state {
 }
 
 mod setup {
+    use std::collections::HashMap;
+
     use pollster::FutureExt;
+    use smallvec::{smallvec, SmallVec};
     use tauri::{async_runtime, App, AppHandle, Manager};
 
     use super::{state::set_wallpaper_instance_state, WallpaperInstance, WallpaperInstanceState};
@@ -48,27 +51,27 @@ mod setup {
         let mut instances = state.blocking_lock();
 
         let monitor = ApplicationMonitor::new();
-        let windows = window_getter::get_windows().expect("Failed to get windows");
+        let mut pids = HashMap::<usize, SmallVec<[u32; 5]>>::new();
 
-        for window in windows {
-            let Some(pid) = window.owner_pid().ok() else {
-                continue;
-            };
+        for app in monitor.get_application_processes() {
+            for (i, instance) in instances.iter_mut().enumerate() {
+                let config = instance.config();
+                let config = config.blocking_lock();
 
-            for instance in instances.iter_mut() {
-                if let Some(app) = monitor.get_application_process(pid as _) {
-                    {
-                        let config = instance.config();
-                        let config = config.blocking_lock();
-
-                        if app.path != config.application.path {
-                            continue;
-                        }
+                if app.path == config.application.path {
+                    if let Some(pids) = pids.get_mut(&i) {
+                        pids.push(app.pid);
+                    } else {
+                        pids.insert(i, smallvec![app.pid]);
                     }
-
-                    instance.start(app).block_on();
-                };
+                }
             }
+        }
+
+        // Start window overlays
+        for (i, pids) in pids {
+            let instance = instances.get_mut(i).unwrap();
+            instance.start(pids).block_on();
         }
     }
 }

@@ -1,12 +1,14 @@
 use std::{collections::HashMap, sync::Arc};
 
+use smallvec::SmallVec;
 use tauri::{async_runtime::Mutex, AppHandle, WebviewWindow, WebviewWindowBuilder};
 use window_getter::{Window, WindowId};
 
 use super::OverlayManager;
 use crate::{
     config::Wallpaper,
-    os::{ApplicationProcess, WindowExt},
+    os::WindowExt,
+    utils::{adjust_position, adjust_size},
 };
 
 pub type WallpaperWindows = Arc<Mutex<HashMap<WindowId, WebviewWindow>>>;
@@ -16,7 +18,7 @@ pub struct WallpaperInstance {
     app: AppHandle,
     config: WallpaperConfig,
     windows: WallpaperWindows,
-    overlay: Option<OverlayManager>,
+    overlays: SmallVec<[OverlayManager; 5]>,
 }
 
 impl WallpaperInstance {
@@ -27,7 +29,7 @@ impl WallpaperInstance {
             app,
             config: Arc::new(Mutex::new(config)),
             windows,
-            overlay: None,
+            overlays: SmallVec::new(),
         }
     }
 
@@ -40,71 +42,102 @@ impl WallpaperInstance {
         let config = self.config.lock().await;
 
         for target_window in target_windows {
-            let window_id = target_window.id();
             let Some(bounds) = target_window.bounds().ok() else {
                 continue;
             };
 
+            // On windows, some windows have zero width and height.
+            // These windows don't need be set wallpaper.
+            if bounds.width() == 0. || bounds.height() == 0. {
+                continue;
+            }
+
             let window = WebviewWindowBuilder::new(
                 &self.app,
-                format!("wallpaper-{}-{}", config.name, windows.len()),
+                format!("wallpaper-{}-{}", config.name, target_window.id().as_u32()),
                 settings::get_wallpaper_url(&config.source),
             )
             .decorations(false)
-            .position(bounds.x(), bounds.y())
-            .inner_size(bounds.width(), bounds.height())
             .resizable(false)
             .transparent(true)
+            .skip_taskbar(true)
             .build()
-            .expect("WebViewのウィンドウの作成に失敗しました。");
+            .expect("Failed to create wallpaper window");
 
-            window.set_opacity(config.opacity);
+            let position = adjust_position(&window, bounds.x(), bounds.y());
+            let size = adjust_size(&window, bounds.width(), bounds.height());
 
+            window
+                .set_position(position)
+                .expect("Failed to set window position");
+            window.set_size(size).expect("Failed to set window size");
+
+            window.set_opacity(config.opacity).unwrap();
             window
                 .set_ignore_cursor_events(true)
                 .expect("Failed to set ignore cursor events");
 
-            windows.insert(window_id, window);
+            windows.insert(target_window.id(), window);
         }
     }
 
     /// Start the wallpaper instance.
     /// It should be called when the target application is started.
-    pub async fn start(&mut self, application: ApplicationProcess) {
-        let app_pid = application.pid as i32;
-        let windows = tauri::async_runtime::spawn_blocking(move || {
-            window_getter::get_windows()
+    pub async fn start(&mut self, pids: SmallVec<[u32; 5]>) {
+        let (windows, pids) = tauri::async_runtime::spawn_blocking(move || {
+            let windows = window_getter::get_windows()
                 .expect("Failed to get windows")
                 .into_iter()
-                .filter(|window| window.owner_pid().is_ok_and(|pid| pid == app_pid))
-                .collect::<Vec<window_getter::Window>>()
+                .filter(|window| {
+                    window
+                        .owner_pid()
+                        .is_ok_and(|pid| pids.contains(&(pid as _)))
+                })
+                .collect::<Vec<window_getter::Window>>();
+
+            (windows, pids)
         })
         .await
-        .expect("Failed to get windows");
+        .expect("Failed to spawn windows getter");
 
         if !windows.is_empty() {
+            println!("{}", windows.len());
             self.add_wallpaper_windows(&windows).await;
         }
 
         // Create overlay manager for tracing window position change.
-        let Some(overlay) =
-            OverlayManager::start(self.app.clone(), Arc::clone(&self.windows), application.pid)
-                .await
-        else {
-            // If the overlay manager returns `None`, it means that pid is not valid.
-            self.stop().await;
+        for pid in pids {
+            let Some(overlay) =
+                OverlayManager::start(self.app.clone(), Arc::clone(&self.windows), pid as _).await
+            else {
+                // If the overlay manager returns `None`, it means that pid is not valid.
+                eprintln!("PID is not valid, so skip process {}.", pid);
+                continue;
+            };
 
-            return;
-        };
-        self.overlay = Some(overlay)
+            self.overlays.push(overlay);
+        }
     }
 
     /// Stop the wallpaper instance.
     /// It should be called when the target application is closed.
-    pub async fn stop(&mut self) {
-        if let Some(overlay) = self.overlay.take() {
+    pub async fn stop(&mut self, pid: u32) {
+        for (i, overlay) in self.overlays.iter().enumerate() {
+            if overlay.pid() == pid {
+                let overlay = self.overlays.remove(i);
+                overlay.stop().await;
+
+                break;
+            }
+        }
+    }
+
+    pub async fn stop_all(&mut self) {
+        let overlays = std::mem::take(&mut self.overlays);
+
+        for overlay in overlays.into_iter() {
             overlay.stop().await;
-        };
+        }
 
         let windows = std::mem::take(&mut *self.windows.lock().await);
 
