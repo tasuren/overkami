@@ -3053,6 +3053,7 @@ dependencies = [
  "dunce",
  "objc2 0.6.1",
  "objc2-app-kit",
+ "objc2-core-graphics",
  "percent-encoding",
  "pollster",
  "serde",
@@ -3062,6 +3063,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
+ "tokio",
  "window-getter",
  "window-observer",
 ]

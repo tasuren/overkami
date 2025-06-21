@@ -1,5 +1,6 @@
 node_modules
 dist
+.cargo
 
 # OS
 .DS_Store

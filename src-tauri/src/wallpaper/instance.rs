@@ -39,9 +39,9 @@ impl WallpaperInstance {
         let mut windows = self.windows.lock().await;
         let config = self.config.lock().await;
 
-        for window in target_windows {
-            let window_id = window.id();
-            let Some(bounds) = window.bounds().ok() else {
+        for target_window in target_windows {
+            let window_id = target_window.id();
+            let Some(bounds) = target_window.bounds().ok() else {
                 continue;
             };
 
@@ -53,18 +53,16 @@ impl WallpaperInstance {
             .decorations(false)
             .position(bounds.x(), bounds.y())
             .inner_size(bounds.width(), bounds.height())
+            .resizable(false)
             .transparent(true)
             .build()
             .expect("WebViewのウィンドウの作成に失敗しました。");
 
             window.set_opacity(config.opacity);
-            window
-                .set_always_on_top(true)
-                .expect("Failed to set always on top");
+
             window
                 .set_ignore_cursor_events(true)
                 .expect("Failed to set ignore cursor events");
-            println!("aa");
 
             windows.insert(window_id, window);
         }
@@ -89,14 +87,15 @@ impl WallpaperInstance {
         }
 
         // Create overlay manager for tracing window position change.
-        let Some(overlay) = OverlayManager::start(Arc::clone(&self.windows), application.pid).await
+        let Some(overlay) =
+            OverlayManager::start(self.app.clone(), Arc::clone(&self.windows), application.pid)
+                .await
         else {
             // If the overlay manager returns `None`, it means that pid is not valid.
             self.stop().await;
 
             return;
         };
-        println!("ccc");
         self.overlay = Some(overlay)
     }
 
@@ -107,7 +106,7 @@ impl WallpaperInstance {
             overlay.stop().await;
         };
 
-        let windows = std::mem::replace(&mut *self.windows.lock().await, HashMap::new());
+        let windows = std::mem::take(&mut *self.windows.lock().await);
 
         for window in windows.into_values() {
             window

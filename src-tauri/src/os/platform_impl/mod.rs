@@ -1,8 +1,12 @@
+use anyhow::Result;
+use window_getter::WindowId;
+
 #[cfg(target_os = "macos")]
-mod macos;
+pub mod macos;
 #[cfg(target_os = "windows")]
-mod macos;
+mod windows;
 
 pub trait WindowExt {
     fn set_opacity(&self, opacity: f64);
+    fn set_order_above(&self, relative_to: WindowId) -> Result<()>;
 }

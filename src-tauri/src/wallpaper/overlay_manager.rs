@@ -1,22 +1,34 @@
 use std::sync::Arc;
 
+use tauri::{async_runtime, AppHandle};
 use window_getter::Window;
 use window_observer::{tokio::sync::mpsc, Event, WindowObserver};
 
-use super::{WallpaperConfig, WallpaperWindows};
+use crate::os::WindowExt;
+
+use super::WallpaperWindows;
 
 pub struct OverlayManager {
     observer: WindowObserver,
 }
 
 impl OverlayManager {
-    pub async fn start(wallpaper_windows: WallpaperWindows, app_pid: u32) -> Option<Self> {
+    pub async fn start(
+        app: AppHandle,
+        wallpaper_windows: WallpaperWindows,
+        app_pid: u32,
+    ) -> Option<Self> {
         let (tx, rx) = mpsc::unbounded_channel();
 
         let observer = match WindowObserver::start(
             app_pid,
             tx,
-            window_observer::smallvec![Event::Resized, Event::Moved, Event::Activated],
+            window_observer::smallvec![
+                Event::Resized,
+                Event::Moved,
+                Event::Activated,
+                Event::Deactivated
+            ],
         )
         .await
         {
@@ -25,7 +37,7 @@ impl OverlayManager {
             Err(e) => panic!("Failed to start window observer: {e:?}"),
         };
 
-        spawn_order_management_task(rx, wallpaper_windows);
+        spawn_order_management_task(app, rx, wallpaper_windows);
 
         Some(Self { observer })
     }
@@ -39,6 +51,7 @@ impl OverlayManager {
 }
 
 fn spawn_order_management_task(
+    app: AppHandle,
     mut rx: mpsc::UnboundedReceiver<(window_observer::Window, Event)>,
     wallpaper_windows: WallpaperWindows,
 ) {
@@ -48,6 +61,7 @@ fn spawn_order_management_task(
 
             if let Some(window) = window {
                 tauri::async_runtime::spawn(manage_order(
+                    app.clone(),
                     event,
                     window,
                     Arc::clone(&wallpaper_windows),
@@ -57,7 +71,12 @@ fn spawn_order_management_task(
     });
 }
 
-async fn manage_order(event: Event, window: Window, wallpaper_windows: WallpaperWindows) {
+async fn manage_order(
+    app: AppHandle,
+    event: Event,
+    window: Window,
+    wallpaper_windows: WallpaperWindows,
+) {
     let wallpaper_windows = wallpaper_windows.lock().await;
     let Some(wallpaper_window) = wallpaper_windows.get(&window.id()) else {
         return;
@@ -85,6 +104,19 @@ async fn manage_order(event: Event, window: Window, wallpaper_windows: Wallpaper
             wallpaper_window
                 .set_always_on_top(false)
                 .expect("Failed to set always on top");
+
+            #[cfg(target_os = "macos")]
+            {
+                wallpaper_window
+                    .set_order_above(window.id())
+                    .expect("Failed to set order above");
+
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+
+            wallpaper_window
+                .set_order_above(window.id())
+                .expect("Failed to set order above");
         }
         _ => {}
     }
