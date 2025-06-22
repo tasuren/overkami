@@ -1,0 +1,180 @@
+use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder};
+use window_getter::{Window, WindowId};
+
+use crate::{
+    config::WallpaperSource,
+    os::WindowExt,
+    utils::{adjust_position, adjust_size},
+    EventManagerState,
+};
+
+/// Represents an overlay window for a wallpaper.
+///
+/// This struct has responsibility for managing overlay window.
+/// e.g. position, size, opacity, source, and opacity or source configuration updates.
+pub struct Overlay {
+    window: WebviewWindow,
+}
+
+impl Overlay {
+    pub fn new(
+        app: AppHandle,
+        target_window: Window,
+        name: &str,
+        source: &WallpaperSource,
+        opacity: f64,
+    ) -> Self {
+        let window = WebviewWindowBuilder::new(
+            &app,
+            format!("wallpaper-{}-{}", name, target_window.id().as_u32()),
+            source::get_wallpaper_url(source),
+        )
+        .decorations(false)
+        .resizable(false)
+        .transparent(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .build()
+        .expect("Failed to create wallpaper window");
+
+        window
+            .set_ignore_cursor_events(true)
+            .expect("Failed to ignore cursor events");
+        let overlay = Self { window };
+
+        // Set initial position and size
+        overlay.on_move(&target_window);
+        overlay.on_resize(&target_window);
+        update_window::update_opacity(&overlay.window, opacity);
+
+        // Listen for updates of config
+        app.state::<EventManagerState>().listen_apply_wallpaper({
+            let window = overlay.window.clone();
+
+            move |payload| {
+                if let Some(opacity) = payload.opacity {
+                    update_window::update_opacity(&window, opacity);
+                }
+
+                if let Some(source) = payload.source {
+                    update_window::update_source(&window, source);
+                }
+            }
+        });
+
+        overlay
+    }
+
+    pub fn on_move(&self, target_window: &Window) {
+        let bounds = target_window
+            .bounds()
+            .expect("Failed to get target window bounds");
+        let position = adjust_position(&self.window, bounds.x(), bounds.y());
+
+        self.window
+            .set_position(position)
+            .expect("Failed to set wallpaper window position");
+    }
+
+    pub fn on_resize(&self, target_window: &Window) {
+        let bounds = target_window
+            .bounds()
+            .expect("Failed to get target window bounds");
+        let size = adjust_size(&self.window, bounds.width(), bounds.height());
+
+        self.window
+            .set_size(size)
+            .expect("Failed to set wallpaper window size");
+    }
+
+    pub fn on_activate(&self) {
+        self.window
+            .set_always_on_top(true)
+            .expect("Failed to set always on top");
+    }
+
+    pub async fn on_deactivate(&self, target_window_id: WindowId) {
+        self.window
+            .set_always_on_top(false)
+            .expect("Failed to set always on top");
+
+        #[cfg(target_os = "macos")]
+        {
+            // On macOS, we can't set the order above immediately.
+            // So we need to wait a bit.
+            // TODO: Find a better way to handle this.
+
+            self.window
+                .set_order_above(target_window_id)
+                .expect("Failed to set order above");
+
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+
+        self.window
+            .set_order_above(target_window_id)
+            .expect("Failed to set order above");
+    }
+
+    pub fn close(&self) {
+        self.window
+            .close()
+            .expect("Failed to close wallpaper window");
+    }
+}
+
+mod update_window {
+    use tauri::WebviewWindow;
+
+    use crate::{config::WallpaperSource, os::WindowExt};
+
+    pub fn update_source(window: &WebviewWindow, source: WallpaperSource) {
+        let url = super::source::get_wallpaper_url(&source);
+
+        window
+            .eval(format!("window.location.replace('{url}');"))
+            .expect("Failed to update wallpaper window URL");
+    }
+
+    pub fn update_opacity(window: &WebviewWindow, opacity: f64) {
+        window
+            .set_opacity(opacity)
+            .expect("Failed to set wallpaper window opacity");
+    }
+}
+
+mod source {
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    use tauri::{Url, WebviewUrl};
+
+    use crate::{config::WallpaperSource, utils::convert_file_src};
+
+    /// ビルトインの壁紙を使う際に必要なデータを用意する。
+    /// これはHTMLを指定する形式の壁紙には対応していない。それはカスタム壁紙であり、ビルトイン壁紙ではない。
+    pub fn get_wallpaper_url(source: &WallpaperSource) -> WebviewUrl {
+        match source {
+            WallpaperSource::Picture { location } => {
+                let path = utf8_percent_encode(
+                    location.to_str().expect("Failed to read picture location"),
+                    NON_ALPHANUMERIC,
+                );
+
+                WebviewUrl::App(format!("?wallpaper=picture&path={path}").into())
+            }
+            WallpaperSource::Video { location } => {
+                let path = utf8_percent_encode(
+                    location.to_str().expect("Failed to read picture location"),
+                    NON_ALPHANUMERIC,
+                );
+
+                WebviewUrl::App(format!("?wallpaper=video&path={path}").into())
+            }
+            WallpaperSource::LocalWebPage { location } => {
+                WebviewUrl::External(Url::parse(&convert_file_src(location).unwrap()).unwrap())
+            }
+            WallpaperSource::RemoteWebPage { location } => {
+                WebviewUrl::External(Url::parse(location).unwrap())
+            }
+        }
+    }
+}

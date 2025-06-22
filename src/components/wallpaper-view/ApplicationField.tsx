@@ -9,10 +9,8 @@ import {
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
 import { For, Show, createSignal, onMount, splitProps } from "solid-js";
-import {
-  type ApplicationWindow,
-  getApplicationWindows,
-} from "../../lib/binding";
+import { getApplicationWindows } from "../../lib/binding/command_os";
+import type { ApplicationWindow } from "../../lib/binding/payload_os";
 import {
   fieldClass,
   iconButtonClass,

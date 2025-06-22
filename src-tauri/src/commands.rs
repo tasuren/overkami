@@ -8,7 +8,7 @@ pub mod config {
     use tauri::Manager;
 
     use super::Error;
-    use crate::config::{Config, ConfigPathState, ConfigState};
+    use crate::{config::Config, ConfigPathState, ConfigState};
 
     #[tauri::command]
     pub async fn get_config(app: tauri::AppHandle) -> serde_json::Value {
@@ -53,7 +53,7 @@ pub mod application_window {
 
     use serde::{Deserialize, Serialize};
 
-    use crate::os::ApplicationMonitor;
+    use crate::os::application_monitor::get_application_process;
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -89,7 +89,7 @@ pub mod application_window {
             }
             added.insert(pid);
 
-            let Some(process) = ApplicationMonitor::new().get_application_process(pid as _) else {
+            let Some(process) = get_application_process(pid as _) else {
                 continue;
             };
 

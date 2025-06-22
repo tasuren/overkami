@@ -9,10 +9,7 @@ import {
 } from "@modular-forms/solid";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import { For, createEffect, onCleanup } from "solid-js";
-import {
-  STRING_FILTER_STRATEGIES,
-  type StringFilterStrategy,
-} from "../../lib/binding";
+import { STRING_FILTER_STRATEGIES, type StringFilterStrategy } from "../../lib/binding/payload_config";
 import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 

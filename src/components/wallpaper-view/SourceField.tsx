@@ -11,7 +11,7 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import { createSignal, onMount } from "solid-js";
-import type { WallpaperSource } from "../../lib/binding";
+import type { WallpaperSource } from "../../lib/binding/payload_config";
 import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 

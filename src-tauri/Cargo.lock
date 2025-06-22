@@ -3065,6 +3065,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tokio",
+ "uuid",
  "window-getter",
  "window-observer",
  "windows 0.61.3",

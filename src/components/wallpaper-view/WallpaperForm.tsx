@@ -6,7 +6,11 @@ import {
 import Save from "lucide-solid/icons/save";
 import Trash2 from "lucide-solid/icons/trash-2";
 import { useView, useWallpapers } from "../../GlobalState";
-import type { Filter, Wallpaper, WallpaperSource } from "../../lib/binding";
+import type {
+  Filter,
+  Wallpaper,
+  WallpaperSource,
+} from "../../lib/binding/payload_config";
 import { buttonClass } from "../ui";
 import ApplicationField from "./ApplicationField";
 import FilterFields from "./FilterFields";

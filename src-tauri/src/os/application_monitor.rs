@@ -1,4 +1,8 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+    sync::{LazyLock, Mutex},
+};
 
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 
@@ -14,37 +18,36 @@ fn get_system() -> System {
     System::new_with_specifics(get_system_specifics())
 }
 
-pub struct ApplicationMonitor {
-    system: System,
+static SYSTEM: LazyLock<Mutex<System>> = LazyLock::new(|| Mutex::new(get_system()));
+
+fn refresh() {
+    SYSTEM.lock().unwrap().refresh_processes_specifics(
+        sysinfo::ProcessesToUpdate::All,
+        true,
+        get_process_specifics(),
+    );
 }
 
-impl ApplicationMonitor {
-    pub fn new() -> Self {
-        Self {
-            system: get_system(),
-        }
-    }
+pub fn get_application_processes<T>(mut filter: impl FnMut(&Path) -> bool) -> T
+where
+    T: FromIterator<ApplicationProcess>,
+{
+    SYSTEM
+        .lock()
+        .unwrap()
+        .processes()
+        .iter()
+        .filter_map(|(pid, process)| ApplicationProcess::from_sysinfo(pid.as_u32(), process))
+        .filter(|app| filter(app.path.as_ref()))
+        .collect()
+}
 
-    pub fn refresh(&mut self) {
-        self.system.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::All,
-            true,
-            get_process_specifics(),
-        );
-    }
-
-    pub fn get_application_processes(&self) -> impl Iterator<Item = ApplicationProcess> + '_ {
-        self.system
-            .processes()
-            .iter()
-            .filter_map(|(pid, process)| ApplicationProcess::from_sysinfo(pid.as_u32(), process))
-    }
-
-    pub fn get_application_process(&self, pid: u32) -> Option<ApplicationProcess> {
-        self.system
-            .process(sysinfo::Pid::from_u32(pid))
-            .and_then(|process| ApplicationProcess::from_sysinfo(pid, process))
-    }
+pub fn get_application_process(pid: u32) -> Option<ApplicationProcess> {
+    SYSTEM
+        .lock()
+        .unwrap()
+        .process(sysinfo::Pid::from_u32(pid))
+        .and_then(|process| ApplicationProcess::from_sysinfo(pid, process))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -71,5 +74,33 @@ impl ApplicationProcess {
             .map(|name| name.to_owned());
 
         Some(Self::new(pid, name, path.to_owned()))
+    }
+}
+
+pub mod auto_refresh {
+    use std::{
+        sync::{atomic,  OnceLock},
+        thread::JoinHandle,
+    };
+
+    static STOP_AUTO_REFRESH: atomic::AtomicBool = atomic::AtomicBool::new(false);
+    static AUTO_REFRESH_TASK: OnceLock<JoinHandle<()>> = OnceLock::new();
+
+    pub fn start() {
+        let handle = std::thread::spawn(|| loop {
+            if STOP_AUTO_REFRESH.load(atomic::Ordering::Relaxed) {
+                break;
+            }
+
+            super::refresh();
+
+            std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+        });
+
+        AUTO_REFRESH_TASK.set(handle).unwrap();
+    }
+
+    pub fn stop() {
+        STOP_AUTO_REFRESH.store(true, atomic::Ordering::Relaxed);
     }
 }

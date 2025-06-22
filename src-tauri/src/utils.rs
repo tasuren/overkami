@@ -19,6 +19,7 @@ pub fn convert_file_src(path: impl AsRef<std::path::Path>) -> std::io::Result<St
 mod scale_factor {
     use tauri::{LogicalPosition, LogicalSize, WebviewWindow};
 
+    #[cfg(target_os = "windows")]
     fn scale_factor(window: &WebviewWindow) -> f64 {
         window.scale_factor().expect("Failed to get scale factor")
     }

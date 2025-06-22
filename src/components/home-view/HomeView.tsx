@@ -3,7 +3,7 @@ import { basename } from "@tauri-apps/api/path";
 import Plus from "lucide-solid/icons/plus";
 import { For, Show, createResource } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
-import type { Wallpaper } from "../../lib/binding";
+import type { Wallpaper } from "../../lib/binding/payload_config";
 import { cl } from "../../lib/utils";
 import { buttonClass, textMutedClass } from "../ui";
 

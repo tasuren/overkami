@@ -1,4 +1,4 @@
-import type { Wallpaper } from "./binding";
+import type { Wallpaper } from "./binding/payload_config";
 
 export interface HomeView {
   type: "home";

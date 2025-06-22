@@ -1,6 +1,5 @@
 pub use model::*;
 pub use setup::setup_config;
-pub use state::{ConfigPathState, ConfigState};
 
 mod model {
     pub use application::*;
@@ -46,6 +45,7 @@ mod model {
         use std::path::PathBuf;
 
         use serde::{Deserialize, Serialize};
+        use uuid::Uuid;
 
         #[derive(Debug, Clone, Serialize, Deserialize)]
         #[serde(tag = "type")]
@@ -75,6 +75,8 @@ mod model {
 
         #[derive(Debug, Clone, Serialize, Deserialize)]
         pub struct Wallpaper {
+            #[serde(default = "uuid::Uuid::new_v4")]
+            pub id: Uuid,
             pub name: String,
             pub application: super::Application,
             pub filters: Vec<Filter>,
@@ -84,7 +86,7 @@ mod model {
     }
 }
 
-mod state {
+pub mod state {
     use std::path::PathBuf;
 
     use tauri::{async_runtime::Mutex, Manager};
@@ -107,7 +109,7 @@ mod state {
         }
     }
 
-    pub fn set_config_path_state(app: &tauri::AppHandle, path: std::path::PathBuf) {
+    pub(super) fn set_config_path_state(app: &tauri::AppHandle, path: std::path::PathBuf) {
         app.manage(ConfigPathState(path));
     }
 }

@@ -1,7 +1,7 @@
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import { Show } from "solid-js";
 import { useView } from "../../GlobalState";
-import type { Wallpaper } from "../../lib/binding";
+import type { Wallpaper } from "../../lib/binding/payload_config";
 import { iconButtonClass, iconClass } from "../ui";
 import WallpaperForm from "./WallpaperForm";
 

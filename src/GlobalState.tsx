@@ -5,13 +5,9 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
-import {
-  type Config,
-  type Wallpaper,
-  getConfig,
-  saveConfig,
-} from "./lib/binding";
+import type { Config, Wallpaper } from "./lib/binding/payload_config";
 import type { View } from "./lib/view";
+import { getConfig, saveConfig } from "./lib/binding/command_config";
 
 export interface GlobalState {
   wallpapers: () => Wallpaper[];

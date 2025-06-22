@@ -1,10 +1,17 @@
 mod commands;
 mod config;
+mod event_manager;
 mod os;
 mod utils;
 mod wallpaper;
 
+pub use config::state::{ConfigPathState, ConfigState};
+pub use event_manager::state::EventManagerState;
+
 fn setup(app: &tauri::App) {
+    os::application_monitor::auto_refresh::start();
+
+    event_manager::setup_event_manager(app);
     config::setup_config(app);
     wallpaper::setup_wallpapers(app);
 }
