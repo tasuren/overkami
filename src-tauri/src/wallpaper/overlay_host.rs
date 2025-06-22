@@ -1,4 +1,7 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use tauri::{
     async_runtime::{self, Mutex},
@@ -80,7 +83,7 @@ impl OverlayHost {
                 let overlay = Overlay::new(
                     app.clone(),
                     window.clone(),
-                    &config.name,
+                    config.id,
                     &config.source,
                     config.opacity,
                 );

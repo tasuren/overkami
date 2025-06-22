@@ -1,4 +1,5 @@
 use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder};
+use uuid::Uuid;
 use window_getter::{Window, WindowId};
 
 use crate::{
@@ -20,13 +21,13 @@ impl Overlay {
     pub fn new(
         app: AppHandle,
         target_window: Window,
-        name: &str,
+        wallpaper_id: Uuid,
         source: &WallpaperSource,
         opacity: f64,
     ) -> Self {
         let window = WebviewWindowBuilder::new(
             &app,
-            format!("wallpaper-{}-{}", name, target_window.id().as_u32()),
+            format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32()),
             source::get_wallpaper_url(source),
         )
         .decorations(false)

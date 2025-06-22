@@ -51,16 +51,6 @@ impl WallpaperHost {
         &self.config
     }
 
-    pub async fn setup_initial_windows(&self, pid: u32, windows: &[window_getter::Window]) {
-        let config = self.config.lock().await;
-
-        if let Some(overlay_host) =
-            OverlayHost::start(self.app.clone(), pid, &config, &windows).await
-        {
-            self.overlay_hosts.lock().await.push(overlay_host);
-        }
-    }
-
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
@@ -133,7 +123,6 @@ mod application_updates {
 mod config_updates {
     use std::sync::Arc;
 
-    use pollster::FutureExt;
     use tauri::AppHandle;
 
     use super::{manage_overlay_hosts::setup_overlay_hosts, OverlayHosts, SharedWallpaperConfig};
@@ -194,7 +183,7 @@ mod config_updates {
         let old_overlay_hosts = std::mem::take(&mut *overlay_hosts.lock().await);
 
         for overlay_host in old_overlay_hosts {
-            overlay_host.stop().block_on();
+            overlay_host.stop().await;
         }
 
         let config = config.lock().await;
