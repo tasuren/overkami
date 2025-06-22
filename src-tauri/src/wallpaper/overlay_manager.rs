@@ -119,6 +119,10 @@ async fn manage_order(
 
             #[cfg(target_os = "macos")]
             {
+                // On macOS, we can't set the order above immediately.
+                // So we need to wait a bit.
+                // TODO: Find a better way to handle this.
+
                 wallpaper_window
                     .set_order_above(window.id())
                     .expect("Failed to set order above");
