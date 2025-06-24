@@ -46,7 +46,7 @@ impl OverlayHost {
         let observer = observer::start_observer(tx, pid).await?;
 
         let overlays: Overlays = Default::default();
-        observer::spawn_overlay_management_task(rx, Arc::clone(&overlays));
+        observer::spawn_overlay_management_task(Arc::clone(&filters), Arc::clone(&overlays), rx);
 
         // Listen for configuration changes.
         let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
@@ -132,7 +132,7 @@ mod observer {
     use window_getter::Window;
     use window_observer::{Event, WindowObserver};
 
-    use crate::wallpaper::overlay_host::Overlays;
+    use crate::wallpaper::overlay_host::{FiltersState, Overlays};
 
     pub async fn start_observer(
         tx: UnboundedSender<(window_observer::Window, Event)>,
@@ -166,21 +166,36 @@ mod observer {
     }
 
     pub fn spawn_overlay_management_task(
-        mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
+        filters: FiltersState,
         overlays: Overlays,
+        mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
     ) {
         tauri::async_runtime::spawn(async move {
             while let Some((window, event)) = rx.recv().await {
                 let window: Option<Window> = window.try_into().expect("Failed to convert window");
 
                 if let Some(window) = window {
-                    manage_overlay(event, window, Arc::clone(&overlays)).await;
+                    manage_overlay(Arc::clone(&filters), Arc::clone(&overlays), event, window)
+                        .await;
                 }
             }
         });
     }
 
-    async fn manage_overlay(event: Event, window: Window, overlays: Overlays) {
+    async fn manage_overlay(
+        filters: FiltersState,
+        overlays: Overlays,
+        event: Event,
+        window: Window,
+    ) {
+        if let Ok(title) = window.title() {
+            if !super::filter::wallpaper_filter(title, &filters.lock().await) {
+                return;
+            };
+        } else {
+            return;
+        }
+
         let overlays = overlays.lock().await;
         let Some(overlay) = overlays.get(&window.id()) else {
             return;
@@ -195,33 +210,33 @@ mod observer {
             _ => {}
         }
     }
+}
 
-    mod filter {
-        use crate::config::{Filter, StringFilterStrategy};
+mod filter {
+    use crate::config::{Filter, StringFilterStrategy};
 
-        pub fn string_filter(
-            target: impl AsRef<str>,
-            search: impl AsRef<str>,
-            strategy: &StringFilterStrategy,
-        ) -> bool {
-            let target = target.as_ref();
-            let search = search.as_ref();
+    pub fn string_filter(
+        target: impl AsRef<str>,
+        search: impl AsRef<str>,
+        strategy: &StringFilterStrategy,
+    ) -> bool {
+        let target = target.as_ref();
+        let search = search.as_ref();
 
-            match strategy {
-                StringFilterStrategy::Prefix => target.starts_with(search),
-                StringFilterStrategy::Suffix => target.ends_with(search),
-                StringFilterStrategy::Contains => target.contains(search),
-                StringFilterStrategy::Exact => target == search,
+        match strategy {
+            StringFilterStrategy::Prefix => target.starts_with(search),
+            StringFilterStrategy::Suffix => target.ends_with(search),
+            StringFilterStrategy::Contains => target.contains(search),
+            StringFilterStrategy::Exact => target == search,
+        }
+    }
+
+    pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
+        filters.iter().all(|filter| match (&window_name, filter) {
+            (Some(window_name), Filter::WindowName { name, strategy }) => {
+                string_filter(window_name, name, strategy)
             }
-        }
-
-        pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
-            filters.iter().all(|filter| match (&window_name, filter) {
-                (Some(window_name), Filter::WindowName { name, strategy }) => {
-                    string_filter(window_name, name, strategy)
-                }
-                _ => false,
-            })
-        }
+            _ => false,
+        })
     }
 }

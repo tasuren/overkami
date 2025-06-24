@@ -1,4 +1,4 @@
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use objc2::rc::Retained;
 use objc2_app_kit::NSWindow;
 use tauri::WebviewWindow;
@@ -13,6 +13,10 @@ pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
 }
 
 impl super::WindowExt for WebviewWindow {
+    fn setup_platform_specific(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn set_opacity(&self, opacity: f64) -> Result<()> {
         let ns_window = get_ns_window(self);
         unsafe { ns_window.setAlphaValue(opacity) };
@@ -39,7 +43,11 @@ impl super::WindowExt for WebviewWindow {
     }
 }
 
+/// Implementations of private API Core Graphics Services bindings.
 mod core_graphics_services {
+    #![allow(non_upper_case_globals)]
+    #![allow(dead_code)]
+
     use std::ffi::c_int;
 
     use objc2_core_graphics::{CGError, CGWindowID};

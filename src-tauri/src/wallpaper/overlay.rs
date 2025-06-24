@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Listener, Manager, WebviewWindow, WebviewWindowBuilder};
 use uuid::Uuid;
 use window_getter::{Window, WindowId};
 
@@ -15,6 +15,7 @@ use crate::{
 /// e.g. position, size, opacity, source, and opacity or source configuration updates.
 pub struct Overlay {
     window: WebviewWindow,
+    listener: u32,
 }
 
 impl Overlay {
@@ -25,43 +26,29 @@ impl Overlay {
         source: &WallpaperSource,
         opacity: f64,
     ) -> Self {
-        let window = WebviewWindowBuilder::new(
-            &app,
-            format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32()),
-            source::get_wallpaper_url(source),
-        )
-        .decorations(false)
-        .resizable(false)
-        .transparent(true)
-        .skip_taskbar(true)
-        .focused(false)
-        .build()
-        .expect("Failed to create wallpaper window");
+        let window = create_window(&app, &wallpaper_id, &target_window, source);
 
-        window
-            .set_ignore_cursor_events(true)
-            .expect("Failed to ignore cursor events");
-        let overlay = Self { window };
+        // Listen for updates of config
+        let listener = app.state::<EventManagerState>().listen_apply_wallpaper({
+            let window = window.clone();
+
+            move |payload| {
+                if let Some(opacity) = payload.opacity {
+                    update_opacity(&window, opacity);
+                }
+
+                if let Some(source) = payload.source {
+                    update_source(&window, source);
+                }
+            }
+        });
+
+        let overlay = Self { window, listener };
 
         // Set initial position and size
         overlay.on_move(&target_window);
         overlay.on_resize(&target_window);
-        update_window::update_opacity(&overlay.window, opacity);
-
-        // Listen for updates of config
-        app.state::<EventManagerState>().listen_apply_wallpaper({
-            let window = overlay.window.clone();
-
-            move |payload| {
-                if let Some(opacity) = payload.opacity {
-                    update_window::update_opacity(&window, opacity);
-                }
-
-                if let Some(source) = payload.source {
-                    update_window::update_source(&window, source);
-                }
-            }
-        });
+        update_opacity(&overlay.window, opacity);
 
         overlay
     }
@@ -118,30 +105,55 @@ impl Overlay {
     }
 
     pub fn close(&self) {
+        self.window.app_handle().unlisten(self.listener);
+
         self.window
             .close()
             .expect("Failed to close wallpaper window");
     }
 }
 
-mod update_window {
-    use tauri::WebviewWindow;
+pub fn create_window(
+    app: &AppHandle,
+    wallpaper_id: &Uuid,
+    target_window: &Window,
+    source: &WallpaperSource,
+) -> WebviewWindow {
+    let window = WebviewWindowBuilder::new(
+        app,
+        format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32()),
+        source::get_wallpaper_url(source),
+    )
+    .decorations(false)
+    .resizable(false)
+    .transparent(true)
+    .skip_taskbar(true)
+    .focused(false)
+    .build()
+    .expect("Failed to create wallpaper window");
 
-    use crate::{config::WallpaperSource, os::WindowExt};
+    window
+        .set_ignore_cursor_events(true)
+        .expect("Failed to ignore cursor events");
+    window
+        .setup_platform_specific()
+        .expect("Failed to setup platform specific settings");
 
-    pub fn update_source(window: &WebviewWindow, source: WallpaperSource) {
-        let url = super::source::get_wallpaper_url(&source);
+    window
+}
 
-        window
-            .eval(format!("window.location.replace('{url}');"))
-            .expect("Failed to update wallpaper window URL");
-    }
+pub fn update_source(window: &WebviewWindow, source: WallpaperSource) {
+    let url = source::get_wallpaper_url(&source);
 
-    pub fn update_opacity(window: &WebviewWindow, opacity: f64) {
-        window
-            .set_opacity(opacity)
-            .expect("Failed to set wallpaper window opacity");
-    }
+    window
+        .eval(format!("window.location.replace('{url}');"))
+        .expect("Failed to update wallpaper window URL");
+}
+
+pub fn update_opacity(window: &WebviewWindow, opacity: f64) {
+    window
+        .set_opacity(opacity)
+        .expect("Failed to set wallpaper window opacity");
 }
 
 mod source {

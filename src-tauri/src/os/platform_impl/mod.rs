@@ -6,6 +6,7 @@ pub mod macos;
 mod windows;
 
 pub trait WindowExt {
+    fn setup_platform_specific(&self) -> anyhow::Result<()>;
     fn set_opacity(&self, opacity: f64) -> anyhow::Result<()>;
     fn set_order_above(&self, relative_to: WindowId) -> anyhow::Result<()>;
 }
