@@ -20,7 +20,7 @@ fn get_system() -> System {
 
 static SYSTEM: LazyLock<Mutex<System>> = LazyLock::new(|| Mutex::new(get_system()));
 
-fn refresh() {
+pub fn refresh_blocking() {
     SYSTEM.lock().unwrap().refresh_processes_specifics(
         sysinfo::ProcessesToUpdate::All,
         true,
@@ -79,28 +79,30 @@ impl ApplicationProcess {
 
 pub mod auto_refresh {
     use std::{
-        sync::{atomic,  OnceLock},
+        sync::{atomic, OnceLock},
         thread::JoinHandle,
     };
 
     static STOP_AUTO_REFRESH: atomic::AtomicBool = atomic::AtomicBool::new(false);
     static AUTO_REFRESH_TASK: OnceLock<JoinHandle<()>> = OnceLock::new();
 
-    pub fn start() {
+    pub fn start() -> anyhow::Result<()> {
+        if AUTO_REFRESH_TASK.get().is_some() {
+            anyhow::bail!("Auto-refresh task is already running");
+        }
+
         let handle = std::thread::spawn(|| loop {
             if STOP_AUTO_REFRESH.load(atomic::Ordering::Relaxed) {
                 break;
             }
 
-            super::refresh();
+            super::refresh_blocking();
 
             std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
         });
 
         AUTO_REFRESH_TASK.set(handle).unwrap();
-    }
 
-    pub fn stop() {
-        STOP_AUTO_REFRESH.store(true, atomic::Ordering::Relaxed);
+        Ok(())
     }
 }

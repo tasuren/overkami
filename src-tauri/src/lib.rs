@@ -10,7 +10,7 @@ pub use config::state::{ConfigPathState, ConfigState};
 pub use event_manager::state::EventManagerState;
 
 fn setup(app: &mut tauri::App) {
-    os::application_monitor::auto_refresh::start();
+    os::application_monitor::auto_refresh::start().unwrap();
 
     event_manager::setup_event_manager(app);
     config::setup_config(app);

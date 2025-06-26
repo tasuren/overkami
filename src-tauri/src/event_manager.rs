@@ -1,4 +1,7 @@
 use tauri::{AppHandle, Emitter, Listener};
+use uuid::Uuid;
+
+use crate::config::Wallpaper;
 
 pub struct EventManager {
     app: AppHandle,
@@ -11,10 +14,8 @@ impl EventManager {
 
     const APPLY_WALLPAPER_EVENT: &str = "apply-wallpaper";
 
-    pub fn emit_apply_wallpaper(&self, data: payload::ApplyWallpaper) {
-        self.app
-            .emit(Self::APPLY_WALLPAPER_EVENT, data)
-            .expect("Failed to emit apply-wallpaper event");
+    pub fn emit_apply_wallpaper(&self, data: payload::ApplyWallpaper) -> anyhow::Result<()> {
+        Ok(self.app.emit(Self::APPLY_WALLPAPER_EVENT, data)?)
     }
 
     pub fn listen_apply_wallpaper<F: Fn(payload::ApplyWallpaper) + Send + 'static>(
@@ -22,10 +23,37 @@ impl EventManager {
         callback: F,
     ) -> u32 {
         self.app.listen(Self::APPLY_WALLPAPER_EVENT, move |event| {
-            let data: payload::ApplyWallpaper = serde_json::from_str(event.payload())
-                .expect("Failed to deserialize apply-wallpaper payload from event");
+            let data: payload::ApplyWallpaper = serde_json::from_str(event.payload()).unwrap();
 
             callback(data);
+        })
+    }
+
+    const ADD_WALLPAPER_EVENT: &str = "add-wallpaper";
+
+    pub fn emit_add_wallpaper(&self, data: Wallpaper) -> anyhow::Result<()> {
+        Ok(self.app.emit(Self::ADD_WALLPAPER_EVENT, data)?)
+    }
+
+    pub fn listen_add_wallpaper<F: Fn(Wallpaper) + Send + 'static>(&self, callback: F) -> u32 {
+        self.app.listen(Self::ADD_WALLPAPER_EVENT, move |event| {
+            let data: Wallpaper = serde_json::from_str(event.payload()).unwrap();
+
+            callback(data);
+        })
+    }
+
+    const REMOVE_WALLPAPER_EVENT: &str = "remove-wallpaper";
+
+    pub fn emit_remove_wallpaper(&self, id: Uuid) -> anyhow::Result<()> {
+        Ok(self.app.emit(Self::REMOVE_WALLPAPER_EVENT, id)?)
+    }
+
+    pub fn listen_remove_wallpaper<F: Fn(Uuid) + Send + 'static>(&self, callback: F) -> u32 {
+        self.app.listen(Self::REMOVE_WALLPAPER_EVENT, move |event| {
+            let id: Uuid = serde_json::from_str(event.payload()).unwrap();
+
+            callback(id);
         })
     }
 }

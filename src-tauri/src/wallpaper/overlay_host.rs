@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use tauri::{
     async_runtime::{self, Mutex},
@@ -26,7 +23,6 @@ pub type FiltersState = Arc<Mutex<Vec<Filter>>>;
 pub struct OverlayHost {
     app: AppHandle,
     pid: u32,
-    filters: FiltersState,
     observer: WindowObserver,
     overlays: Overlays,
     event_listener: u32,
@@ -64,7 +60,6 @@ impl OverlayHost {
         let overlay_host = Self {
             app: app.clone(),
             pid,
-            filters,
             observer,
             overlays,
             event_listener,

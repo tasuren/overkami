@@ -4,7 +4,7 @@ use std::{
     sync::{atomic, LazyLock},
 };
 
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 use tauri::async_runtime::{Mutex, Sender};
 use uuid::Uuid;
 
@@ -19,7 +19,8 @@ pub enum ApplicationEvent {
 }
 
 pub type ListenerTx = Sender<ApplicationEvent>;
-pub type ApplicationListeners = HashMap<PathBuf, SmallVec<[(ListenerTx, Uuid); 4]>>;
+pub type WallpaperTxMap = HashMap<Uuid, ListenerTx>;
+pub type ApplicationListeners = HashMap<PathBuf, WallpaperTxMap>;
 
 static APPLICATION_LISTENERS: LazyLock<Mutex<ApplicationListeners>> =
     LazyLock::new(Default::default);
@@ -36,28 +37,29 @@ pub async fn listen_application(tx: ListenerTx, target_app_path: PathBuf, wallpa
 
     let mut listeners = APPLICATION_LISTENERS.lock().await;
 
-    if let Some(listeners) = listeners.get_mut(&target_app_path) {
-        listeners.push((tx, wallpaper_id));
+    if let Some(tx_map) = listeners.get_mut(&target_app_path) {
+        tx_map.insert(wallpaper_id, tx);
     } else {
-        listeners.insert(target_app_path, smallvec![(tx, wallpaper_id)]);
+        listeners.insert(target_app_path, HashMap::from([(wallpaper_id, tx)]));
     };
 }
 
-pub async fn unlisten_application(target_app_path: &PathBuf, wallpaper_id: Uuid) {
+pub async fn unlisten_application(
+    target_app_path: &PathBuf,
+    wallpaper_id: Uuid,
+) -> Option<ListenerTx> {
     let mut listeners = APPLICATION_LISTENERS.lock().await;
 
-    if let Some(target_app_listeners) = listeners.get_mut(target_app_path) {
-        let index = target_app_listeners
-            .iter()
-            .position(|(_, id)| *id == wallpaper_id);
+    if let Some(tx_map) = listeners.get_mut(target_app_path) {
+        let tx = tx_map.remove(&wallpaper_id);
 
-        if let Some(index) = index {
-            let _ = target_app_listeners.remove(index);
-
-            if target_app_listeners.is_empty() {
-                listeners.remove(target_app_path);
-            }
+        if tx_map.is_empty() {
+            listeners.remove(target_app_path);
         }
+
+        tx
+    } else {
+        None
     }
 }
 
@@ -85,20 +87,20 @@ async fn observe_applications() {
         // Send events to listeners.
         async fn send_event(event: ApplicationEvent, process: &ApplicationProcess) {
             let mut listeners = APPLICATION_LISTENERS.lock().await;
-            let Some(listeners) = listeners.get_mut(&process.path) else {
+            let Some(tx_map) = listeners.get_mut(&process.path) else {
                 return;
             };
 
-            let mut remove = SmallVec::<[usize; 3]>::new();
-            for (i, (listener, _)) in listeners.iter().enumerate() {
-                if listener.send(event).await.is_err() {
-                    remove.push(i);
+            let mut remove = SmallVec::<[Uuid; 3]>::new();
+            for (key, tx) in tx_map.iter() {
+                if tx.send(event).await.is_err() {
+                    remove.push(*key);
                 };
             }
 
             // Remove listeners that is dead.
-            for &i in remove.iter().rev() {
-                listeners.remove(i);
+            for key in remove.iter() {
+                tx_map.remove(key);
             }
         }
 

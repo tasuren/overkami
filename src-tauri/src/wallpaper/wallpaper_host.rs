@@ -1,14 +1,10 @@
 use std::sync::Arc;
 
-use tauri::{async_runtime::Mutex, AppHandle, Manager};
+use tauri::{async_runtime::Mutex, AppHandle, Listener, Manager};
 
 use crate::{
-    config::Wallpaper,
-    os::application_observer::unlisten_application,
-    wallpaper::{
-        overlay_host::OverlayHost, wallpaper_host::application_updates::setup_application_updates,
-    },
-    EventManagerState,
+    config::Wallpaper, os::application_observer::unlisten_application,
+    wallpaper::overlay_host::OverlayHost, EventManagerState,
 };
 
 pub type OverlayHosts = Arc<Mutex<Vec<OverlayHost>>>;
@@ -17,7 +13,6 @@ pub type SharedWallpaperConfig = Arc<Mutex<Wallpaper>>;
 pub struct WallpaperHost {
     app: AppHandle,
     config: SharedWallpaperConfig,
-    overlay_hosts: OverlayHosts,
     event_listener: u32,
 }
 
@@ -28,36 +23,36 @@ impl WallpaperHost {
         let config = Arc::new(Mutex::new(config));
 
         // Listen for application process changes and set up overlay hosts.
-        setup_application_updates(app.clone(), Arc::clone(&overlay_hosts), Arc::clone(&config))
-            .await;
+        application_updates::setup_event_listener(
+            app.clone(),
+            Arc::clone(&overlay_hosts),
+            Arc::clone(&config),
+        )
+        .await;
 
         // Listen for configuration updates and apply them.
         let event_listener = config_updates::setup_event_listener(
-            app.clone(),
             &event_manager_state,
             Arc::clone(&config),
-            Arc::clone(&overlay_hosts),
+            overlay_hosts,
         );
 
         Self {
             app,
             config,
-            overlay_hosts,
             event_listener,
         }
-    }
-
-    pub fn config(&self) -> &SharedWallpaperConfig {
-        &self.config
     }
 
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
         unlisten_application(&config.application.path, config.id).await;
+        self.app.unlisten(self.event_listener);
     }
 }
 
+/// Handle application rise and fall events.
 mod application_updates {
     use tauri::{async_runtime, AppHandle};
 
@@ -71,7 +66,7 @@ mod application_updates {
 
     use super::OverlayHosts;
 
-    pub async fn setup_application_updates(
+    pub async fn setup_event_listener(
         app: tauri::AppHandle,
         overlay_hosts: OverlayHosts,
         config: SharedWallpaperConfig,
@@ -90,7 +85,7 @@ mod application_updates {
         });
     }
 
-    pub async fn on_application_event(
+    async fn on_application_event(
         app: &AppHandle,
         overlay_hosts: &OverlayHosts,
         config: &SharedWallpaperConfig,
@@ -120,16 +115,17 @@ mod application_updates {
     }
 }
 
+/// Handles configuration updates for the wallpaper host.
 mod config_updates {
     use std::sync::Arc;
 
-    use tauri::AppHandle;
-
-    use super::{manage_overlay_hosts::setup_overlay_hosts, OverlayHosts, SharedWallpaperConfig};
-    use crate::event_manager::{payload::ApplyWallpaper, EventManager};
+    use super::{OverlayHosts, SharedWallpaperConfig};
+    use crate::{
+        event_manager::{payload::ApplyWallpaper, EventManager},
+        os::application_observer::{listen_application, unlisten_application},
+    };
 
     pub fn setup_event_listener(
-        app: AppHandle,
         event_manager: &EventManager,
         config: SharedWallpaperConfig,
         overlay_hosts: OverlayHosts,
@@ -137,29 +133,38 @@ mod config_updates {
         event_manager.listen_apply_wallpaper(move |payload| {
             let overlay_hosts = Arc::clone(&overlay_hosts);
             let config = Arc::clone(&config);
-            let app = app.clone();
 
             tauri::async_runtime::spawn(async move {
-                apply_wallpaper(&app, config, overlay_hosts, payload).await;
+                apply_wallpaper(config, overlay_hosts, payload).await;
             });
         })
     }
 
     pub async fn apply_wallpaper(
-        app: &AppHandle,
         config: SharedWallpaperConfig,
         overlay_hosts: OverlayHosts,
         payload: ApplyWallpaper,
     ) {
+        let mut config = config.lock().await;
+
         if let Some(application) = payload.application {
-            config.lock().await.application = application;
+            // If the application path has changed, we need to update the application listener.
+
+            let old_app = std::mem::replace(&mut config.application, application);
 
             // When the application is updated, we need to clear the overlay hosts.
             // Then we will set up new overlay hosts with the updated configuration.
-            reset_overlay_hosts(app.clone(), overlay_hosts, &config).await;
-        }
+            let old_overlay_hosts = std::mem::take(&mut *overlay_hosts.lock().await);
 
-        let mut config = config.lock().await;
+            for overlay_host in old_overlay_hosts {
+                overlay_host.stop().await;
+            }
+
+            // Register the new application listener due to application change.
+            if let Some(tx) = unlisten_application(&old_app.path, config.id).await {
+                listen_application(tx, config.application.path.clone(), config.id).await;
+            };
+        }
 
         if let Some(filters) = payload.filters {
             config.filters = filters;
@@ -172,56 +177,5 @@ mod config_updates {
         if let Some(source) = payload.source {
             config.source = source;
         }
-    }
-
-    async fn reset_overlay_hosts(
-        app: AppHandle,
-        overlay_hosts: OverlayHosts,
-        config: &SharedWallpaperConfig,
-    ) {
-        let config = Arc::clone(config);
-        let old_overlay_hosts = std::mem::take(&mut *overlay_hosts.lock().await);
-
-        for overlay_host in old_overlay_hosts {
-            overlay_host.stop().await;
-        }
-
-        let config = config.lock().await;
-        let new_overlay_hosts = setup_overlay_hosts(&app, &config).await;
-
-        *overlay_hosts.lock().await = new_overlay_hosts;
-    }
-}
-
-mod manage_overlay_hosts {
-    use std::collections::HashSet;
-
-    use tauri::AppHandle;
-
-    use crate::{
-        config::Wallpaper,
-        os::{
-            application_monitor::{get_application_processes, ApplicationProcess},
-            windows::get_windows,
-        },
-        wallpaper::overlay_host::OverlayHost,
-    };
-
-    pub async fn setup_overlay_hosts(app: &AppHandle, config: &Wallpaper) -> Vec<OverlayHost> {
-        let processes: Vec<ApplicationProcess> =
-            get_application_processes(|path| config.application.path == path);
-
-        let mut overlay_hosts = Vec::new();
-        let pids = processes.into_iter().map(|p| p.pid).collect::<HashSet<_>>();
-        let windows = get_windows().await;
-
-        for pid in pids {
-            if let Some(overlay_host) = OverlayHost::start(app.clone(), pid, config, &windows).await
-            {
-                overlay_hosts.push(overlay_host);
-            };
-        }
-
-        overlay_hosts
     }
 }

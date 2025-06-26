@@ -1,0 +1,75 @@
+use std::collections::HashMap;
+
+use tauri::{
+    async_runtime::{self, Mutex},
+    Manager,
+};
+use uuid::Uuid;
+
+use crate::{event_manager::EventManager, wallpaper::wallpaper_host::WallpaperHost, ConfigState};
+
+pub type WallpaperHosts = Mutex<HashMap<Uuid, WallpaperHost>>;
+
+fn manage_wallpaper_hosts(app: &tauri::App, hosts: HashMap<Uuid, WallpaperHost>) {
+    app.manage(Mutex::new(hosts));
+}
+
+pub fn setup_wallpapers(app: &tauri::App) {
+    // Initialize the wallpaper hosts.
+    let hosts = async_runtime::block_on({
+        let app = app.handle().clone();
+
+        async move {
+            let config = app.state::<ConfigState>();
+            let config = config.lock().await;
+
+            let mut hosts = HashMap::new();
+
+            for wallpaper in config.wallpapers.iter() {
+                let host = WallpaperHost::new(app.clone(), wallpaper.clone()).await;
+                hosts.insert(wallpaper.id, host);
+            }
+
+            hosts
+        }
+    });
+    manage_wallpaper_hosts(app, hosts);
+
+    setup_wallpaper_management(app);
+}
+
+pub fn setup_wallpaper_management(app: &tauri::App) {
+    let event_manager = app.state::<EventManager>();
+
+    // Listen for adding new wallpaper configuration.
+    event_manager.listen_add_wallpaper({
+        let app = app.handle().clone();
+
+        move |wallpaper| {
+            let app = app.clone();
+
+            async_runtime::spawn(async move {
+                let id = wallpaper.id;
+                let host = WallpaperHost::new(app.clone(), wallpaper).await;
+                app.state::<WallpaperHosts>().lock().await.insert(id, host);
+            });
+        }
+    });
+
+    event_manager.listen_remove_wallpaper({
+        let app = app.handle().clone();
+
+        move |id| {
+            let app = app.clone();
+
+            async_runtime::spawn(async move {
+                let hosts = app.state::<WallpaperHosts>();
+                let mut hosts = hosts.lock().await;
+
+                if let Some(host) = hosts.remove(&id) {
+                    host.stop().await;
+                };
+            });
+        }
+    });
+}
