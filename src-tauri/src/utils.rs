@@ -16,6 +16,8 @@ pub fn convert_file_src(path: impl AsRef<std::path::Path>) -> std::io::Result<St
     Ok(format!("{base}{encoded}"))
 }
 
+/// Adjusts the size and position of a window based on the scale factor of the current platform.
+/// Windows will return physical window rect so we need to convert it to logical version on windows.
 mod scale_factor {
     use tauri::{LogicalPosition, LogicalSize, WebviewWindow};
 
