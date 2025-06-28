@@ -55,7 +55,9 @@ impl OverlayHost {
                 let filters = Arc::clone(&filters);
 
                 async_runtime::spawn(async move {
-                    apply_config::apply_changes(&filters, data).await;
+                    if let Some(new) = data.filters {
+                        let _ = std::mem::replace(&mut *filters.lock().await, new);
+                    }
                 });
             }
         });
@@ -85,7 +87,8 @@ impl OverlayHost {
                     &config.source,
                     config.opacity,
                     app.clone(),
-                ).await;
+                )
+                .await;
 
                 overlays.insert(window_id, overlay);
             }
@@ -108,17 +111,6 @@ impl OverlayHost {
 
         for overlay in self.overlays.lock().await.values() {
             overlay.close();
-        }
-    }
-}
-
-mod apply_config {
-    use super::FiltersState;
-    use crate::event_manager::payload::ApplyWallpaper;
-
-    pub async fn apply_changes(filters: &FiltersState, data: ApplyWallpaper) {
-        if let Some(new) = data.filters {
-            let _ = std::mem::replace(&mut *filters.lock().await, new);
         }
     }
 }
