@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Emitter, Listener};
 use uuid::Uuid;
 
-use crate::{config::Wallpaper, event_manager::payload::AddWallpaper};
+use crate::event_manager::payload::AddWallpaper;
 
 pub struct EventManager {
     app: AppHandle,

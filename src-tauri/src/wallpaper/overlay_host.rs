@@ -22,7 +22,7 @@ pub type FiltersState = Arc<Mutex<Vec<Filter>>>;
 /// This struct is responsible for observing window events
 /// and managing overlays based on the provided filters.
 pub struct OverlayHost {
-    wallpaper_id: Uuid,
+    _wallpaper_id: Uuid,
     pid: u32,
     observer: WindowObserver,
     overlays: Overlays,
@@ -61,7 +61,7 @@ impl OverlayHost {
         });
 
         let overlay_host = Self {
-            wallpaper_id,
+            _wallpaper_id: wallpaper_id,
             pid,
             observer,
             overlays,
