@@ -205,7 +205,6 @@ mod observer {
             Event::Resized => overlay.on_resize(&window),
             Event::Activated => overlay.on_activate(),
             Event::Deactivated => overlay.on_deactivate(window.id()).await,
-
             _ => {}
         }
     }
