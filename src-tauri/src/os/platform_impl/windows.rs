@@ -9,6 +9,10 @@ use windows::Win32::{
 };
 
 impl super::WindowExt for WebviewWindow {
+    fn setup_platform_specific(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn set_opacity(&self, opacity: f64) -> anyhow::Result<()> {
         let hwnd = self.hwnd().unwrap();
         let current = unsafe { GetWindowLongPtrW(hwnd, GWL_EXSTYLE) } as u32;
