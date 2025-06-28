@@ -119,9 +119,11 @@ mod observer {
     use std::sync::Arc;
 
     use pollster::FutureExt;
-    use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
     use window_getter::Window;
-    use window_observer::{Event, WindowObserver};
+    use window_observer::{
+        tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender},
+        Event, WindowObserver,
+    };
 
     use crate::wallpaper::overlay_host::{FiltersState, Overlays};
 
