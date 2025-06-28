@@ -10,21 +10,27 @@ pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
     unsafe { Retained::retain_autoreleased(ptr as *mut NSWindow).unwrap() }
 }
 
-mod window {
+mod webview_window {
     use anyhow::{Context, Result};
-    use tauri::WebviewWindow;
+    use tauri::{Manager, WebviewWindow};
     use window_getter::WindowId;
 
     use super::core_graphics_services;
 
-    impl super::super::WebviewWindowPlatformExt for WebviewWindow {
+    impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
         fn setup_platform_specific(&self) -> anyhow::Result<()> {
             Ok(())
         }
 
         fn set_opacity(&self, opacity: f64) -> Result<()> {
-            let ns_window = super::get_ns_window(self);
-            unsafe { ns_window.setAlphaValue(opacity) };
+            let app = self.app_handle().clone();
+            let window = self.clone();
+
+            app.run_on_main_thread(move || {
+                let ns_window = super::get_ns_window(&window);
+                unsafe { ns_window.setAlphaValue(opacity) };
+            })
+            .context("Failed to start opacity setting on main thread")?;
 
             Ok(())
         }
@@ -47,8 +53,12 @@ mod window {
             Ok(())
         }
     }
+}
 
-    impl super::super::WindowPlatformExt for window_getter::Window {
+mod window {
+    use anyhow::Context as _;
+
+    impl crate::os::WindowPlatformExt for window_getter::Window {
         fn is_frontmost(&self) -> anyhow::Result<bool> {
             let app =
                 unsafe { objc2_app_kit::NSWorkspace::sharedWorkspace().frontmostApplication() };
