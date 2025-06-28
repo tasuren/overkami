@@ -84,7 +84,7 @@ export default function WallpaperForm(props: {
 
       <OpacityField
         form={form}
-        defaultOpacity={(wallpaper?.opacity || 0.7) * 100}
+        defaultOpacity={(wallpaper?.opacity || 0.3) * 100}
       />
 
       <div class="my-4 flex gap-2">

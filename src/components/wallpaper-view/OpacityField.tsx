@@ -4,7 +4,7 @@ import type { WallpaperForm } from "./WallpaperForm";
 
 export default function OpacityField(props: {
   form: FormStore<WallpaperForm>;
-  defaultOpacity?: number;
+  defaultOpacity: number;
 }) {
   const { form, defaultOpacity } = props;
 
@@ -22,7 +22,7 @@ export default function OpacityField(props: {
             min={0}
             max={100}
             step={1}
-            value={defaultOpacity ?? 100}
+            value={defaultOpacity}
             class={inputClass({ class: "w-24" })}
           />
           <div class={error()}>{field.error}</div>
