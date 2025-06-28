@@ -27,7 +27,7 @@ impl Overlay {
         opacity: f64,
         app: AppHandle,
     ) -> Self {
-        let window = create_window(&app, &wallpaper_id, &target_window, source);
+        let window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
 
         // Listen for updates of config
         let listener = app.state::<EventManagerState>().listen_apply_wallpaper({
@@ -43,7 +43,6 @@ impl Overlay {
         // Set initial position and size
         overlay.on_move(&target_window);
         overlay.on_resize(&target_window);
-        overlay.window.set_opacity(opacity).unwrap();
 
         // Set overlay order.
         overlay.on_order_change(target_window.id()).await;
@@ -120,6 +119,7 @@ pub fn create_window(
     wallpaper_id: &Uuid,
     target_window: &Window,
     source: &WallpaperSource,
+    opacity: f64,
 ) -> WebviewWindow {
     let window = WebviewWindowBuilder::new(
         app,
@@ -134,12 +134,18 @@ pub fn create_window(
     .build()
     .expect("Failed to create wallpaper window");
 
-    window
-        .set_ignore_cursor_events(true)
-        .expect("Failed to ignore cursor events");
+    window.set_ignore_cursor_events(true).unwrap();
     window
         .setup_platform_specific()
         .expect("Failed to setup platform specific settings");
+    window.set_opacity(opacity).unwrap();
+
+    #[cfg(target_os = "macos")]
+    {
+        use crate::os::platform_impl::macos::custom_feature;
+
+        custom_feature::setup_collection_behavior(window.clone());
+    }
 
     window
 }

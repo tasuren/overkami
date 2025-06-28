@@ -43,6 +43,30 @@ impl super::WindowExt for WebviewWindow {
     }
 }
 
+pub mod custom_feature {
+    use objc2_app_kit::NSWindowCollectionBehavior;
+    use tauri::{Manager, WebviewWindow};
+
+    pub fn setup_collection_behavior(window: WebviewWindow) {
+        let app = window.app_handle().clone();
+
+        app.run_on_main_thread(move || {
+            let ns_window = super::get_ns_window(&window);
+
+            unsafe {
+                ns_window.setCollectionBehavior(
+                    NSWindowCollectionBehavior::Auxiliary
+                        | NSWindowCollectionBehavior::Transient
+                        | NSWindowCollectionBehavior::CanJoinAllSpaces
+                        | NSWindowCollectionBehavior::FullScreenAllowsTiling
+                        | NSWindowCollectionBehavior::IgnoresCycle,
+                );
+            }
+        })
+        .unwrap();
+    }
+}
+
 /// Implementations of private API Core Graphics Services bindings.
 mod core_graphics_services {
     #![allow(non_upper_case_globals)]
