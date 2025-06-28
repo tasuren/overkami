@@ -19,7 +19,7 @@ pub struct Overlay {
 }
 
 impl Overlay {
-    pub fn new(
+    pub async fn new(
         wallpaper_id: Uuid,
         target_window: Window,
         source: &WallpaperSource,
@@ -49,6 +49,9 @@ impl Overlay {
         overlay.on_move(&target_window);
         overlay.on_resize(&target_window);
         update_opacity(&overlay.window, opacity);
+
+        // Set overlay order.
+        overlay.on_order_change(target_window.id()).await;
 
         overlay
     }
@@ -86,6 +89,10 @@ impl Overlay {
             .set_always_on_top(false)
             .expect("Failed to set always on top");
 
+        self.on_order_change(target_window_id).await;
+    }
+
+    pub async fn on_order_change(&self, target_window_id: WindowId) {
         #[cfg(target_os = "macos")]
         {
             // On macOS, we can't set the order above immediately.

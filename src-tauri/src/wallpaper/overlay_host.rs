@@ -85,7 +85,7 @@ impl OverlayHost {
                     &config.source,
                     config.opacity,
                     app.clone(),
-                );
+                ).await;
 
                 overlays.insert(window_id, overlay);
             }
