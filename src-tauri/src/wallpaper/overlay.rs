@@ -131,6 +131,7 @@ pub fn create_window(
     .transparent(true)
     .skip_taskbar(true)
     .focused(false)
+    .always_on_bottom(true) // To keep it down. We'll set always on top later.
     .build()
     .expect("Failed to create wallpaper window");
 
@@ -146,6 +147,8 @@ pub fn create_window(
 
         custom_feature::setup_collection_behavior(window.clone());
     }
+
+    println!("{:?}", target_window.title());
 
     match target_window.is_frontmost() {
         Err(e) => eprintln!(
