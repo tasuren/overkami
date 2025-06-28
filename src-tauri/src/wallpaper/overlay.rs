@@ -5,7 +5,7 @@ use window_getter::{Window, WindowId};
 use crate::{
     config::WallpaperSource,
     event_manager::payload::ApplyWallpaper,
-    os::WindowExt,
+    os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
     EventManagerState,
 };
@@ -145,6 +145,15 @@ pub fn create_window(
         use crate::os::platform_impl::macos::custom_feature;
 
         custom_feature::setup_collection_behavior(window.clone());
+    }
+
+    match target_window.is_frontmost() {
+        Err(e) => eprintln!(
+            "Failed to check if window {:?} is frontmost: {e}",
+            target_window.id()
+        ),
+        Ok(true) => window.set_always_on_top(true).unwrap(),
+        _ => {}
     }
 
     window

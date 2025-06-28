@@ -8,7 +8,7 @@ use windows::Win32::{
     },
 };
 
-impl super::WindowExt for WebviewWindow {
+impl super::WebviewWindowPlatformExt for WebviewWindow {
     fn setup_platform_specific(&self) -> anyhow::Result<()> {
         Ok(())
     }

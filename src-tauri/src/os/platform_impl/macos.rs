@@ -1,8 +1,6 @@
-use anyhow::Result;
 use objc2::rc::Retained;
 use objc2_app_kit::NSWindow;
 use tauri::WebviewWindow;
-use window_getter::WindowId;
 
 pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
     let ptr = window.ns_window().expect("Failed to get NSWindow");
@@ -12,34 +10,53 @@ pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
     unsafe { Retained::retain_autoreleased(ptr as *mut NSWindow).unwrap() }
 }
 
-impl super::WindowExt for WebviewWindow {
-    fn setup_platform_specific(&self) -> anyhow::Result<()> {
-        Ok(())
-    }
+mod window {
+    use anyhow::{Context, Result};
+    use tauri::WebviewWindow;
+    use window_getter::WindowId;
 
-    fn set_opacity(&self, opacity: f64) -> Result<()> {
-        let ns_window = get_ns_window(self);
-        unsafe { ns_window.setAlphaValue(opacity) };
+    use super::core_graphics_services;
 
-        Ok(())
-    }
-
-    fn set_order_above(&self, relative_to: WindowId) -> Result<()> {
-        let ns_window = get_ns_window(self);
-        let window_id = unsafe { ns_window.windowNumber() };
-
-        let result = core_graphics_services::cgs_order_window(
-            core_graphics_services::cgs_default_connection_for_thread(),
-            window_id as _,
-            core_graphics_services::kCGSOrderAbove,
-            *relative_to.inner(),
-        );
-
-        if let Err(error) = result {
-            anyhow::bail!("Failed to set window order above: {:?}", error);
+    impl super::super::WebviewWindowPlatformExt for WebviewWindow {
+        fn setup_platform_specific(&self) -> anyhow::Result<()> {
+            Ok(())
         }
 
-        Ok(())
+        fn set_opacity(&self, opacity: f64) -> Result<()> {
+            let ns_window = super::get_ns_window(self);
+            unsafe { ns_window.setAlphaValue(opacity) };
+
+            Ok(())
+        }
+
+        fn set_order_above(&self, relative_to: WindowId) -> Result<()> {
+            let ns_window = super::get_ns_window(self);
+            let window_id = unsafe { ns_window.windowNumber() };
+
+            let result = core_graphics_services::cgs_order_window(
+                core_graphics_services::cgs_default_connection_for_thread(),
+                window_id as _,
+                core_graphics_services::kCGSOrderAbove,
+                *relative_to.inner(),
+            );
+
+            if let Err(error) = result {
+                anyhow::bail!("Failed to set window order above: {:?}", error);
+            }
+
+            Ok(())
+        }
+    }
+
+    impl super::super::WindowPlatformExt for window_getter::Window {
+        fn is_frontmost(&self) -> anyhow::Result<bool> {
+            let app =
+                unsafe { objc2_app_kit::NSWorkspace::sharedWorkspace().frontmostApplication() };
+            let Some(app) = app else { return Ok(false) };
+
+            let pid = self.owner_pid().context("Failed to get owner PID")?;
+            Ok(pid == unsafe { app.processIdentifier() })
+        }
     }
 }
 
