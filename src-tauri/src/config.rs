@@ -2,8 +2,11 @@ pub use model::*;
 pub use setup::setup_config;
 
 mod model {
+    use std::collections::HashMap;
+
     pub use application::*;
     use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
     pub use wallpaper::*;
 
     const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -11,14 +14,14 @@ mod model {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub version: String,
-        pub wallpapers: Vec<Wallpaper>,
+        pub wallpapers: HashMap<Uuid, Wallpaper>,
     }
 
     impl Default for Config {
         fn default() -> Self {
             Self {
                 version: VERSION.to_owned(),
-                wallpapers: Vec::new(),
+                wallpapers: HashMap::new(),
             }
         }
     }
@@ -45,7 +48,6 @@ mod model {
         use std::path::PathBuf;
 
         use serde::{Deserialize, Serialize};
-        use uuid::Uuid;
 
         #[derive(Debug, Clone, Serialize, Deserialize)]
         #[serde(tag = "type")]
@@ -75,8 +77,6 @@ mod model {
 
         #[derive(Debug, Clone, Serialize, Deserialize)]
         pub struct Wallpaper {
-            #[serde(default = "uuid::Uuid::new_v4")]
-            pub id: Uuid,
             pub name: String,
             pub application: super::Application,
             pub filters: Vec<Filter>,

@@ -12,7 +12,10 @@ export function HomeView() {
 
   return (
     <>
-      <Show when={wallpapers().length > 0} fallback={<NothingFound />}>
+      <Show
+        when={Object.entries(wallpapers()).length > 0}
+        fallback={<NothingFound />}
+      >
         <div
           class={cl(
             "px-14 py-10 h-full",
@@ -20,9 +23,9 @@ export function HomeView() {
             "gap-2 overflow-auto",
           )}
         >
-          <For each={wallpapers()}>
-            {(wallpaper, index) => (
-              <WallpaperCard wallpaper={wallpaper} index={index()} />
+          <For each={Object.entries(wallpapers())}>
+            {([id, wallpaper]) => (
+              <WallpaperCard id={id} wallpaper={wallpaper} />
             )}
           </For>
         </div>
@@ -35,13 +38,12 @@ export function HomeView() {
 
 function AddButton() {
   const [, setView] = useView();
-  const [wallpapers] = useWallpapers();
 
   const onClick = () => {
     setView({
       type: "wallpaper",
+      id: crypto.randomUUID(),
       wallpaper: undefined,
-      index: wallpapers().length,
     });
   };
 
@@ -59,14 +61,14 @@ function AddButton() {
 }
 
 export function WallpaperCard(props: {
+  id: string;
   wallpaper: Wallpaper;
-  index: number;
 }) {
-  const { wallpaper, index } = props;
+  const { wallpaper, id } = props;
   const [, setView] = useView();
 
   const onClick = () => {
-    setView({ type: "wallpaper", wallpaper, index });
+    setView({ type: "wallpaper", wallpaper, id });
   };
 
   const [sourceDisplay] = createResource(async () => {

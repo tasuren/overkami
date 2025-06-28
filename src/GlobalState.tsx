@@ -5,13 +5,13 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
-import type { Config, Wallpaper } from "./lib/binding/payload_config";
-import type { View } from "./lib/view";
 import { getConfig, saveConfig } from "./lib/binding/command_config";
+import type { Config, Wallpapers } from "./lib/binding/payload_config";
+import type { View } from "./lib/view";
 
 export interface GlobalState {
-  wallpapers: () => Wallpaper[];
-  setWallpapers: (update: (prev: Wallpaper[]) => void) => void;
+  wallpapers: () => Wallpapers;
+  setWallpapers: (update: (prev: Wallpapers) => void) => void;
   view: () => View;
   setView: (view: View) => void;
 }
@@ -21,9 +21,7 @@ const initialConfig = await getConfig();
 
 export function GlobalStateProvider(props: ParentProps) {
   let config: Config = initialConfig;
-  const [wallpapers, setWallpapers] = createSignal<Wallpaper[]>([], {
-    equals: false,
-  });
+  const [wallpapers, setWallpapers] = createSignal<Wallpapers>({});
   const [view, setView] = createSignal<View>({ type: "home" });
 
   createEffect(async () => {

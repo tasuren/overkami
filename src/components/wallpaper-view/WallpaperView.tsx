@@ -6,10 +6,10 @@ import { iconButtonClass, iconClass } from "../ui";
 import WallpaperForm from "./WallpaperForm";
 
 export default function WallpaperView(props: {
+  id: string;
   wallpaper: Wallpaper | undefined;
-  index: number;
 }) {
-  const { wallpaper, index } = props;
+  const { wallpaper, id } = props;
   const [, setView] = useView();
 
   return (
@@ -36,7 +36,7 @@ export default function WallpaperView(props: {
         class="px-16 py-2 mt-[48px] overflow-y-auto"
         style="height: calc(100vh - 48px * 2);"
       >
-        <WallpaperForm wallpaper={wallpaper} index={index} />
+        <WallpaperForm id={id} wallpaper={wallpaper} />
       </div>
     </div>
   );

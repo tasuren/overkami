@@ -34,10 +34,10 @@ export function useWallpaperForm() {
 }
 
 export default function WallpaperForm(props: {
+  id: string;
   wallpaper: Wallpaper | undefined;
-  index: number;
 }) {
-  const { wallpaper, index } = props;
+  const { wallpaper, id } = props;
 
   const form = useWallpaperForm();
   const [, setWallpapers] = useWallpapers();
@@ -49,22 +49,20 @@ export default function WallpaperForm(props: {
       opacity: Number.parseFloat(values.opacity) / 100,
     };
 
-    if (wallpaper === undefined) {
-      // If no wallpaper is provided, we are creating a new one.
-      setWallpapers((prev) => [...prev, newWallpaper]);
-    } else {
-      setWallpapers((prev) => {
-        const updated = [...prev];
-        updated[index] = newWallpaper;
-        return updated;
-      });
-    }
+    // If no wallpaper is provided, we are creating a new one.
+    setWallpapers((wallpapers) => {
+      wallpapers[id] = newWallpaper;
+      return wallpapers;
+    });
 
     setView({ type: "home" });
   };
 
   const deleteWallpaper = () => {
-    setWallpapers((prev) => prev.filter((_, i) => i !== index));
+    setWallpapers((wallpapers) => {
+      delete wallpapers[id];
+      return wallpapers;
+    });
     setView({ type: "home" });
   };
 

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use tauri::{async_runtime::Mutex, AppHandle, Listener, Manager};
+use uuid::Uuid;
 
 use crate::{
     config::Wallpaper, os::application_observer::unlisten_application,
@@ -11,35 +12,39 @@ pub type OverlayHosts = Arc<Mutex<Vec<OverlayHost>>>;
 pub type SharedWallpaperConfig = Arc<Mutex<Wallpaper>>;
 
 pub struct WallpaperHost {
-    app: AppHandle,
+    id: Uuid,
     config: SharedWallpaperConfig,
+    app: AppHandle,
     event_listener: u32,
 }
 
 impl WallpaperHost {
-    pub async fn new(app: AppHandle, config: Wallpaper) -> Self {
+    pub async fn new(id: Uuid, config: Wallpaper, app: AppHandle) -> Self {
         let event_manager_state = app.state::<EventManagerState>();
         let overlay_hosts: OverlayHosts = Default::default();
         let config = Arc::new(Mutex::new(config));
 
         // Listen for application process changes and set up overlay hosts.
         application_updates::setup_event_listener(
-            app.clone(),
-            Arc::clone(&overlay_hosts),
+            id,
             Arc::clone(&config),
+            Arc::clone(&overlay_hosts),
+            app.clone(),
         )
         .await;
 
         // Listen for configuration updates and apply them.
         let event_listener = config_updates::setup_event_listener(
-            &event_manager_state,
+            id,
             Arc::clone(&config),
             overlay_hosts,
+            &event_manager_state,
         );
 
         Self {
-            app,
+            id,
             config,
+            app,
             event_listener,
         }
     }
@@ -47,7 +52,7 @@ impl WallpaperHost {
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
-        unlisten_application(&config.application.path, config.id).await;
+        unlisten_application(&config.application.path, self.id).await;
         self.app.unlisten(self.event_listener);
     }
 }
@@ -55,6 +60,7 @@ impl WallpaperHost {
 /// Handle application rise and fall events.
 mod application_updates {
     use tauri::{async_runtime, AppHandle};
+    use uuid::Uuid;
 
     use crate::{
         os::{
@@ -67,36 +73,39 @@ mod application_updates {
     use super::OverlayHosts;
 
     pub async fn setup_event_listener(
-        app: tauri::AppHandle,
-        overlay_hosts: OverlayHosts,
+        wallpaper_id: uuid::Uuid,
         config: SharedWallpaperConfig,
+        overlay_hosts: OverlayHosts,
+        app: tauri::AppHandle,
     ) {
         let (tx, mut rx) = async_runtime::channel(100);
 
         {
             let config = config.lock().await;
-            listen_application(tx, config.application.path.clone(), config.id).await;
+            listen_application(tx, config.application.path.clone(), wallpaper_id).await;
         }
 
         async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
-                on_application_event(&app, &overlay_hosts, &config, event).await;
+                on_application_event(wallpaper_id, &config, event, &overlay_hosts, &app).await;
             }
         });
     }
 
     async fn on_application_event(
-        app: &AppHandle,
-        overlay_hosts: &OverlayHosts,
+        wallpaper_id: Uuid,
         config: &SharedWallpaperConfig,
         event: ApplicationEvent,
+        overlay_hosts: &OverlayHosts,
+        app: &AppHandle,
     ) {
         match event {
             ApplicationEvent::Added(pid) => {
                 let config = config.lock().await;
                 let windows = get_windows().await;
 
-                let overlay_host = OverlayHost::start(app.clone(), pid, &config, &windows).await;
+                let overlay_host =
+                    OverlayHost::start(wallpaper_id, pid, &config, &windows, app.clone()).await;
 
                 if let Some(overlay_host) = overlay_host {
                     overlay_hosts.lock().await.push(overlay_host);
@@ -119,6 +128,8 @@ mod application_updates {
 mod config_updates {
     use std::sync::Arc;
 
+    use uuid::Uuid;
+
     use super::{OverlayHosts, SharedWallpaperConfig};
     use crate::{
         event_manager::{payload::ApplyWallpaper, EventManager},
@@ -126,21 +137,23 @@ mod config_updates {
     };
 
     pub fn setup_event_listener(
-        event_manager: &EventManager,
+        wallpaper_id: Uuid,
         config: SharedWallpaperConfig,
         overlay_hosts: OverlayHosts,
+        event_manager: &EventManager,
     ) -> u32 {
         event_manager.listen_apply_wallpaper(move |payload| {
             let overlay_hosts = Arc::clone(&overlay_hosts);
             let config = Arc::clone(&config);
 
             tauri::async_runtime::spawn(async move {
-                apply_wallpaper(config, overlay_hosts, payload).await;
+                apply_wallpaper(wallpaper_id, config, overlay_hosts, payload).await;
             });
         })
     }
 
     pub async fn apply_wallpaper(
+        wallpaper_id: Uuid,
         config: SharedWallpaperConfig,
         overlay_hosts: OverlayHosts,
         payload: ApplyWallpaper,
@@ -161,8 +174,8 @@ mod config_updates {
             }
 
             // Register the new application listener due to application change.
-            if let Some(tx) = unlisten_application(&old_app.path, config.id).await {
-                listen_application(tx, config.application.path.clone(), config.id).await;
+            if let Some(tx) = unlisten_application(&old_app.path, wallpaper_id).await {
+                listen_application(tx, config.application.path.clone(), wallpaper_id).await;
             };
         }
 

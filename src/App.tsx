@@ -21,8 +21,8 @@ export function Main() {
 
             return (
               <WallpaperView
+                id={wallpaperView.id}
                 wallpaper={wallpaperView.wallpaper}
-                index={wallpaperView.index}
               />
             );
           }}

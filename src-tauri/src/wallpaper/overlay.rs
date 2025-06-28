@@ -20,11 +20,11 @@ pub struct Overlay {
 
 impl Overlay {
     pub fn new(
-        app: AppHandle,
-        target_window: Window,
         wallpaper_id: Uuid,
+        target_window: Window,
         source: &WallpaperSource,
         opacity: f64,
+        app: AppHandle,
     ) -> Self {
         let window = create_window(&app, &wallpaper_id, &target_window, source);
 

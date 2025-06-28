@@ -6,8 +6,8 @@ export interface HomeView {
 
 export interface WallpaperView {
   type: "wallpaper";
+  id: string;
   wallpaper: Wallpaper | undefined;
-  index: number;
 }
 
 export type View = HomeView | WallpaperView;

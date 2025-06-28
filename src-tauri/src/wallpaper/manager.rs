@@ -25,9 +25,9 @@ pub fn setup_wallpapers(app: &tauri::App) {
 
             let mut hosts = HashMap::new();
 
-            for wallpaper in config.wallpapers.iter() {
-                let host = WallpaperHost::new(app.clone(), wallpaper.clone()).await;
-                hosts.insert(wallpaper.id, host);
+            for (id, wallpaper) in config.wallpapers.iter() {
+                let host = WallpaperHost::new(*id, wallpaper.clone(), app.clone()).await;
+                hosts.insert(*id, host);
             }
 
             hosts
@@ -45,13 +45,15 @@ pub fn setup_wallpaper_management(app: &tauri::App) {
     event_manager.listen_add_wallpaper({
         let app = app.handle().clone();
 
-        move |wallpaper| {
+        move |data| {
             let app = app.clone();
 
             async_runtime::spawn(async move {
-                let id = wallpaper.id;
-                let host = WallpaperHost::new(app.clone(), wallpaper).await;
-                app.state::<WallpaperHosts>().lock().await.insert(id, host);
+                let host = WallpaperHost::new(data.id, data.wallpaper, app.clone()).await;
+                app.state::<WallpaperHosts>()
+                    .lock()
+                    .await
+                    .insert(data.id, host);
             });
         }
     });

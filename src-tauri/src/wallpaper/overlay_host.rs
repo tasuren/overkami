@@ -4,6 +4,7 @@ use tauri::{
     async_runtime::{self, Mutex},
     AppHandle, Listener, Manager,
 };
+use uuid::Uuid;
 use window_getter::{Window, WindowId};
 use window_observer::{tokio::sync::mpsc, WindowObserver};
 
@@ -21,19 +22,21 @@ pub type FiltersState = Arc<Mutex<Vec<Filter>>>;
 /// This struct is responsible for observing window events
 /// and managing overlays based on the provided filters.
 pub struct OverlayHost {
-    app: AppHandle,
+    wallpaper_id: Uuid,
     pid: u32,
     observer: WindowObserver,
     overlays: Overlays,
     event_listener: u32,
+    app: AppHandle,
 }
 
 impl OverlayHost {
     pub async fn start(
-        app: AppHandle,
+        wallpaper_id: Uuid,
         pid: u32,
         config: &Wallpaper,
         windows: &[Window],
+        app: AppHandle,
     ) -> Option<Self> {
         let filters = Arc::new(Mutex::new(config.filters.clone()));
 
@@ -58,11 +61,12 @@ impl OverlayHost {
         });
 
         let overlay_host = Self {
-            app: app.clone(),
+            wallpaper_id,
             pid,
             observer,
             overlays,
             event_listener,
+            app: app.clone(),
         };
 
         // Initialize overlays for existing windows.
@@ -76,11 +80,11 @@ impl OverlayHost {
 
                 let window_id = window.id();
                 let overlay = Overlay::new(
-                    app.clone(),
+                    wallpaper_id,
                     window.clone(),
-                    config.id,
                     &config.source,
                     config.opacity,
+                    app.clone(),
                 );
 
                 overlays.insert(window_id, overlay);

@@ -13,9 +13,6 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
         }
     });
 
-    #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-
     let menu = MenuBuilder::new(app)
         .about_with_text("overkamiについて", None)
         .text("settings", "設定")

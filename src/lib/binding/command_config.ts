@@ -8,6 +8,7 @@ export async function getConfig(): Promise<Config> {
 }
 
 export async function saveConfig(config: Config): Promise<void> {
+  console.log(config);
   try {
     return await invoke("save_config", { config });
   } catch (error) {

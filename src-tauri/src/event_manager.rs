@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Emitter, Listener};
 use uuid::Uuid;
 
-use crate::config::Wallpaper;
+use crate::{config::Wallpaper, event_manager::payload::AddWallpaper};
 
 pub struct EventManager {
     app: AppHandle,
@@ -31,13 +31,13 @@ impl EventManager {
 
     const ADD_WALLPAPER_EVENT: &str = "add-wallpaper";
 
-    pub fn emit_add_wallpaper(&self, data: Wallpaper) -> anyhow::Result<()> {
+    pub fn emit_add_wallpaper(&self, data: AddWallpaper) -> anyhow::Result<()> {
         Ok(self.app.emit(Self::ADD_WALLPAPER_EVENT, data)?)
     }
 
-    pub fn listen_add_wallpaper<F: Fn(Wallpaper) + Send + 'static>(&self, callback: F) -> u32 {
+    pub fn listen_add_wallpaper<F: Fn(AddWallpaper) + Send + 'static>(&self, callback: F) -> u32 {
         self.app.listen(Self::ADD_WALLPAPER_EVENT, move |event| {
-            let data: Wallpaper = serde_json::from_str(event.payload()).unwrap();
+            let data: AddWallpaper = serde_json::from_str(event.payload()).unwrap();
 
             callback(data);
         })
@@ -61,7 +61,7 @@ impl EventManager {
 pub mod payload {
     use serde::{Deserialize, Serialize};
 
-    use crate::config::{Application, Filter, WallpaperSource};
+    use crate::config::{Application, Filter, Wallpaper, WallpaperSource};
 
     /// Represents the payload for applying wallpaper settings.
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,6 +70,13 @@ pub mod payload {
         pub filters: Option<Vec<Filter>>,
         pub opacity: Option<f64>,
         pub source: Option<WallpaperSource>,
+    }
+
+    /// Represents the payload for adding a new wallpaper configuration.
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct AddWallpaper {
+        pub id: uuid::Uuid,
+        pub wallpaper: Wallpaper,
     }
 }
 

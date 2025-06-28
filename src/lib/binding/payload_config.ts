@@ -54,7 +54,9 @@ export type Wallpaper = {
   opacity: number;
 };
 
+export type Wallpapers = { [key: string]: Wallpaper };
+
 export type Config = {
   version: string;
-  wallpapers: Wallpaper[];
+  wallpapers: Wallpapers;
 };
