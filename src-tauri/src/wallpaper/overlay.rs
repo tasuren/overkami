@@ -4,6 +4,7 @@ use window_getter::{Window, WindowId};
 
 use crate::{
     config::WallpaperSource,
+    event_manager::payload::ApplyWallpaper,
     os::WindowExt,
     utils::{adjust_position, adjust_size},
     EventManagerState,
@@ -33,13 +34,7 @@ impl Overlay {
             let window = window.clone();
 
             move |payload| {
-                if let Some(opacity) = payload.opacity {
-                    update_opacity(&window, opacity);
-                }
-
-                if let Some(source) = payload.source {
-                    update_source(&window, source);
-                }
+                on_apply_wallpaper(&window, payload);
             }
         });
 
@@ -48,7 +43,7 @@ impl Overlay {
         // Set initial position and size
         overlay.on_move(&target_window);
         overlay.on_resize(&target_window);
-        update_opacity(&overlay.window, opacity);
+        overlay.window.set_opacity(opacity).unwrap();
 
         // Set overlay order.
         overlay.on_order_change(target_window.id()).await;
@@ -149,18 +144,20 @@ pub fn create_window(
     window
 }
 
-pub fn update_source(window: &WebviewWindow, source: WallpaperSource) {
-    let url = source::get_wallpaper_url(&source);
+pub fn on_apply_wallpaper(window: &WebviewWindow, payload: ApplyWallpaper) {
+    if let Some(opacity) = payload.opacity {
+        window
+            .set_opacity(opacity)
+            .expect("Failed to set wallpaper window opacity");
+    }
 
-    window
-        .eval(format!("window.location.replace('{url}');"))
-        .expect("Failed to update wallpaper window URL");
-}
+    if let Some(source) = payload.source {
+        let url = source::get_wallpaper_url(&source);
 
-pub fn update_opacity(window: &WebviewWindow, opacity: f64) {
-    window
-        .set_opacity(opacity)
-        .expect("Failed to set wallpaper window opacity");
+        window
+            .eval(format!("window.location.replace('{url}');"))
+            .expect("Failed to update wallpaper window URL");
+    }
 }
 
 mod source {
