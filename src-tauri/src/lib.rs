@@ -65,7 +65,7 @@ mod panic_hook {
         std::panic::set_hook(Box::new(move |info| {
             app.dialog()
                 .message(
-                    "overkamiにて、致命的なエラーが発生しましたので、overkamiを修了します。\n\
+                    "overkamiにて、致命的なエラーが発生しましたので、overkamiを終了します。\n\
                     エラーの詳細はログに出力されます。",
                 )
                 .title("致命的なエラーが発生")
