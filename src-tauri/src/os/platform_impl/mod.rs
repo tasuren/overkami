@@ -8,6 +8,7 @@ mod windows;
 #[cfg(target_os = "macos")]
 pub use macos::custom_feature;
 #[cfg(target_os = "windows")]
+#[allow(unused_imports)]
 pub use windows::custom_feature;
 
 pub trait WebviewWindowPlatformExt {

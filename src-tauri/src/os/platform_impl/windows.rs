@@ -59,4 +59,4 @@ mod window {
     }
 }
 
-mod custom_feature {}
+pub mod custom_feature {}
