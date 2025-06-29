@@ -47,12 +47,7 @@ impl OverlayHost {
         let observer = observer::start_observer(tx, pid).await?;
 
         let overlays: Overlays = Default::default();
-        observer::spawn_overlay_management_task(
-            pid,
-            Arc::clone(&filters),
-            Arc::clone(&overlays),
-            rx,
-        );
+        observer::spawn_overlay_management_task(pid, Arc::clone(&overlays), rx);
 
         // Listen for configuration changes.
         let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
@@ -84,7 +79,6 @@ impl OverlayHost {
 
         // Initialize overlays for existing windows.
         let mut overlays = overlay_host.overlays.lock().await;
-        let filters = filters.lock().await;
 
         for window in windows {
             if let Ok(window_pid) = window.owner_pid() {
@@ -92,47 +86,19 @@ impl OverlayHost {
                     continue;
                 }
 
-                let window_title = match window.title() {
-                    Ok(title) => title,
-                    Err(e) => {
-                        log::info!(
-                            "Failed to get title for {:?}, skipping overlay creation. Detail: {e}",
-                            window.id()
-                        );
-                        continue;
-                    }
-                };
-
-                match window.bounds() {
-                    Ok(bounds) => {
-                        if bounds.width() == 0. || bounds.height() == 0. {
-                            // On windows, some window has no width and height so skip it.
-
-                            continue;
-                        }
-                    }
-                    Err(e) => {
-                        log::info!(
-                            "Failed to get window bounds for {:?}, skipping overlay creation. Detail: {e}",
-                            window.id()
-                        );
-                        continue;
-                    }
-                };
-
-                if !filter::wallpaper_filter(window_title, &filters) {
-                    continue;
-                }
-
                 let window_id = window.id();
-                let overlay = Overlay::new(
+                let Some(overlay) = Overlay::new(
                     wallpaper_id,
                     window.clone(),
                     &config.source,
                     config.opacity,
                     app.clone(),
+                    Arc::clone(&filters),
                 )
-                .await;
+                .await
+                else {
+                    continue;
+                };
 
                 overlays.insert(window_id, overlay);
             }
@@ -169,7 +135,7 @@ mod observer {
         Event, WindowObserver,
     };
 
-    use crate::wallpaper::overlay_host::{FiltersState, Overlays};
+    use crate::wallpaper::overlay_host::Overlays;
 
     pub async fn start_observer(
         tx: UnboundedSender<(window_observer::Window, Event)>,
@@ -210,7 +176,6 @@ mod observer {
 
     pub fn spawn_overlay_management_task(
         pid: u32,
-        filters: FiltersState,
         overlays: Overlays,
         mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
     ) {
@@ -221,14 +186,7 @@ mod observer {
                 if let Some(window) = window {
                     log::debug!("Received event: {event:?} for window: {window:?}");
 
-                    manage_overlay(
-                        pid,
-                        Arc::clone(&filters),
-                        Arc::clone(&overlays),
-                        event,
-                        window,
-                    )
-                    .await;
+                    manage_overlay(pid, Arc::clone(&overlays), event, window).await;
                 } else {
                     log::warn!(
                         "Received event for an invalid `window_getter::Window` from PID {pid}\
@@ -239,25 +197,7 @@ mod observer {
         });
     }
 
-    async fn manage_overlay(
-        pid: u32,
-        filters: FiltersState,
-        overlays: Overlays,
-        event: Event,
-        window: Window,
-    ) {
-        if let Ok(title) = window.title() {
-            if !super::filter::wallpaper_filter(title, &filters.lock().await) {
-                return;
-            };
-        } else {
-            log::warn!(
-                "Failed to get title for window {:?}, skipping overlay management.",
-                window.id()
-            );
-            return;
-        }
-
+    async fn manage_overlay(pid: u32, overlays: Overlays, event: Event, window: Window) {
         let overlays = overlays.lock().await;
         let Some(overlay) = overlays.get(&window.id()) else {
             log::warn!(
@@ -268,41 +208,6 @@ mod observer {
             return;
         };
 
-        match event {
-            Event::Moved => overlay.on_move(&window),
-            Event::Resized => overlay.on_resize(&window),
-            Event::Activated => overlay.on_activate(),
-            Event::Deactivated => overlay.on_deactivate(window.id()).await,
-            _ => {}
-        }
-    }
-}
-
-mod filter {
-    use crate::config::{Filter, StringFilterStrategy};
-
-    pub fn string_filter(
-        target: impl AsRef<str>,
-        search: impl AsRef<str>,
-        strategy: &StringFilterStrategy,
-    ) -> bool {
-        let target = target.as_ref();
-        let search = search.as_ref();
-
-        match strategy {
-            StringFilterStrategy::Prefix => target.starts_with(search),
-            StringFilterStrategy::Suffix => target.ends_with(search),
-            StringFilterStrategy::Contains => target.contains(search),
-            StringFilterStrategy::Exact => target == search,
-        }
-    }
-
-    pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
-        filters.iter().all(|filter| match (&window_name, filter) {
-            (Some(window_name), Filter::WindowName { name, strategy }) => {
-                string_filter(window_name, name, strategy)
-            }
-            _ => false,
-        })
+        overlay.handle_target_window_event(event, &window).await;
     }
 }

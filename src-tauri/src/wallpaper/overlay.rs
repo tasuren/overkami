@@ -1,12 +1,14 @@
 use tauri::{AppHandle, Listener, Manager, WebviewWindow, WebviewWindowBuilder};
 use uuid::Uuid;
-use window_getter::{Window, WindowId};
+use window_getter::Window;
+use window_observer::Event;
 
 use crate::{
-    config::WallpaperSource,
+    config::{Filter, WallpaperSource},
     event_manager::payload::ApplyWallpaper,
     os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
+    wallpaper::overlay_host::FiltersState,
     EventManagerState,
 };
 
@@ -15,89 +17,167 @@ use crate::{
 /// This struct has responsibility for managing overlay window.
 /// e.g. position, size, opacity, source, and opacity or source configuration updates.
 pub struct Overlay {
-    window: WebviewWindow,
+    target_window: Window,
+    overlay_window: WebviewWindow,
     listener: u32,
 }
 
 impl Overlay {
+    /// Check if the overlay should be created for the given target window.
+    pub async fn should_handle(target_window: &Window, filters: &[Filter]) -> bool {
+        match target_window.title() {
+            Ok(title) => {
+                if !filter::wallpaper_filter(title, filters) {
+                    return false;
+                }
+            }
+            Err(e) => {
+                log::info!(
+                    "Failed to get title for {:?}, ignoring it. Detail: {e}",
+                    target_window.id()
+                );
+
+                return false;
+            }
+        }
+
+        let bounds = match target_window.bounds() {
+            Ok(bounds) => bounds,
+            Err(e) => {
+                log::info!(
+                    "Failed to get window bounds for {:?}, ignoreing it. Detail: {e}",
+                    target_window.id()
+                );
+
+                return false;
+            }
+        };
+
+        // On windows, some windows may have zero width or height.
+        if bounds.width() == 0. || bounds.height() == 0. {
+            log::info!(
+                "{:?} has no width or height, no overlay will be created.",
+                target_window.id()
+            );
+
+            return false;
+        }
+
+        true
+    }
+
     pub async fn new(
         wallpaper_id: Uuid,
         target_window: Window,
         source: &WallpaperSource,
         opacity: f64,
         app: AppHandle,
-    ) -> Self {
+        filters: FiltersState,
+    ) -> Option<Self> {
+        if !Self::should_handle(&target_window, &filters.lock().await).await {
+            return None;
+        }
+
         log::info!(
             "Creating overlay for wallpaper ID {wallpaper_id} and target window {:?}",
             target_window.id()
         );
 
-        let window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
+        let overlay_window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
 
         // Listen for updates of config
         let listener = app.state::<EventManagerState>().listen_apply_wallpaper({
-            let window = window.clone();
+            let overlay_window = overlay_window.clone();
 
             move |payload| {
-                on_apply_wallpaper(&window, payload);
+                on_apply_wallpaper(&overlay_window, payload);
             }
         });
 
-        let overlay = Self { window, listener };
+        let overlay = Self {
+            target_window,
+            overlay_window,
+            listener,
+        };
+
+        // Set initial overlay order.
+        match overlay.target_window.is_frontmost() {
+            Err(e) => log::info!(
+                "Failed to check if window {:?} is frontmost, skipping always on top. Detail: {e}",
+                overlay.target_window.id()
+            ),
+            Ok(true) => overlay.on_activate(),
+            Ok(false) => overlay.on_deactivate().await,
+        }
 
         // Set initial position and size
-        overlay.on_move(&target_window);
-        overlay.on_resize(&target_window);
+        overlay.on_move(overlay.target_window.bounds().unwrap());
+        overlay.on_resize(overlay.target_window.bounds().unwrap());
 
-        // Set overlay order.
-        overlay.on_order_change(target_window.id()).await;
-
-        overlay
+        Some(overlay)
     }
 
-    pub fn on_move(&self, target_window: &Window) {
-        let bounds = target_window.bounds().unwrap();
-        let position = adjust_position(&self.window, bounds.x(), bounds.y());
+    pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
+        log::info!(
+            "Handling event {event:?} for target window {:?} on overlay {:?}",
+            target_window.id(),
+            self.overlay_window.label()
+        );
 
-        self.window.set_position(position).unwrap();
+        match event {
+            Event::Moved => self.on_move(target_window.bounds().unwrap()),
+            Event::Resized => self.on_resize(target_window.bounds().unwrap()),
+            Event::Activated => self.on_activate(),
+            Event::Deactivated => self.on_deactivate().await,
+            _ => {}
+        }
     }
 
-    pub fn on_resize(&self, target_window: &Window) {
-        let bounds = target_window.bounds().unwrap();
-        let size = adjust_size(&self.window, bounds.width(), bounds.height());
+    pub fn on_move(&self, bounds: window_getter::Bounds) {
+        let position = adjust_position(&self.overlay_window, bounds.x(), bounds.y());
 
-        self.window.set_size(size).unwrap();
+        self.overlay_window.set_position(position).unwrap();
+    }
+
+    pub fn on_resize(&self, bounds: window_getter::Bounds) {
+        let size = adjust_size(&self.overlay_window, bounds.width(), bounds.height());
+
+        self.overlay_window.set_size(size).unwrap();
     }
 
     pub fn on_activate(&self) {
-        self.window.set_always_on_top(true).unwrap();
+        self.overlay_window.set_always_on_top(true).unwrap();
     }
 
-    pub async fn on_deactivate(&self, target_window_id: WindowId) {
-        self.window.set_always_on_top(false).unwrap();
+    pub async fn on_deactivate(&self) {
+        self.overlay_window.set_always_on_top(false).unwrap();
 
-        self.on_order_change(target_window_id).await;
+        self.on_order_change().await;
     }
 
-    pub async fn on_order_change(&self, target_window_id: WindowId) {
+    pub async fn on_order_change(&self) {
         #[cfg(target_os = "macos")]
         {
             // On macOS, we can't set the order above immediately.
             // So we need to wait a bit.
-            // TODO: Find a better way to handle this.
+            // TODO: Find a better way to handle this problem.
 
-            self.window.set_order_above(target_window_id).unwrap();
+            self.overlay_window
+                .set_order_above(self.target_window.id())
+                .unwrap();
 
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
 
-        self.window.set_order_above(target_window_id).unwrap();
+        self.overlay_window
+            .set_order_above(self.target_window.id())
+            .unwrap();
     }
 
     pub fn close(&self) {
-        self.window.app_handle().unlisten(self.listener);
+        self.overlay_window.app_handle().unlisten(self.listener);
 
-        self.window.close().unwrap();
+        self.overlay_window.close().unwrap();
     }
 }
 
@@ -108,19 +188,18 @@ pub fn create_window(
     source: &WallpaperSource,
     opacity: f64,
 ) -> WebviewWindow {
-    let window = WebviewWindowBuilder::new(
-        app,
-        format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32()),
-        source::get_wallpaper_url(source),
-    )
-    .decorations(false)
-    .resizable(false)
-    .transparent(true)
-    .skip_taskbar(true)
-    .focused(false)
-    .always_on_bottom(true) // To keep it down. We'll set always on top later.
-    .build()
-    .unwrap();
+    let label = format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32());
+    log::info!("Creating overlay window with label: {label}");
+
+    let window = WebviewWindowBuilder::new(app, label, source::get_wallpaper_url(source))
+        .decorations(false)
+        .resizable(false)
+        .transparent(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .always_on_bottom(true) // To keep it down. We'll set always on top later.
+        .build()
+        .unwrap();
 
     window.set_ignore_cursor_events(true).unwrap();
     window.setup_platform_specific().unwrap();
@@ -131,15 +210,6 @@ pub fn create_window(
         use crate::os::platform_impl::macos::custom_feature;
 
         custom_feature::setup_collection_behavior(window.clone());
-    }
-
-    match target_window.is_frontmost() {
-        Err(e) => eprintln!(
-            "Failed to check if window {:?} is frontmost: {e}",
-            target_window.id()
-        ),
-        Ok(true) => window.set_always_on_top(true).unwrap(),
-        _ => {}
     }
 
     window
@@ -196,5 +266,34 @@ mod source {
                 WebviewUrl::External(Url::parse(location).unwrap())
             }
         }
+    }
+}
+
+mod filter {
+    use crate::config::{Filter, StringFilterStrategy};
+
+    pub fn string_filter(
+        target: impl AsRef<str>,
+        search: impl AsRef<str>,
+        strategy: &StringFilterStrategy,
+    ) -> bool {
+        let target = target.as_ref();
+        let search = search.as_ref();
+
+        match strategy {
+            StringFilterStrategy::Prefix => target.starts_with(search),
+            StringFilterStrategy::Suffix => target.ends_with(search),
+            StringFilterStrategy::Contains => target.contains(search),
+            StringFilterStrategy::Exact => target == search,
+        }
+    }
+
+    pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
+        filters.iter().all(|filter| match (&window_name, filter) {
+            (Some(window_name), Filter::WindowName { name, strategy }) => {
+                string_filter(window_name, name, strategy)
+            }
+            _ => false,
+        })
     }
 }
