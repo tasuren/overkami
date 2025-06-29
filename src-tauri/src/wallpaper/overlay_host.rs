@@ -212,8 +212,6 @@ mod observer {
                     );
 
                     manage_overlay(
-                        wallpaper_id,
-                        pid,
                         Arc::clone(&overlays),
                         event,
                         target_window,
@@ -233,22 +231,12 @@ mod observer {
     }
 
     async fn manage_overlay(
-        wallpaper_id: Uuid,
-        pid: u32,
         overlays: Overlays,
         event: Event,
         window: Window,
     ) {
         let overlays = overlays.lock().await;
         let Some(overlay) = overlays.get(&window.id()) else {
-            log::warn!(
-                "Unknown window event is received: \
-                target_window = {:?}, \
-                wallpaper_id = {wallpaper_id}, \
-                pid = {pid}",
-                window.id()
-            );
-
             return;
         };
 
