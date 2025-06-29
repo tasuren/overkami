@@ -112,7 +112,14 @@ mod application_updates {
                     .await
                     .expect("Failed to start overlay host");
 
-                overlay_hosts.lock().await.push(overlay_host);
+                if let Some(overlay_host) = overlay_host {
+                    overlay_hosts.lock().await.push(overlay_host);
+                } else {
+                    log::info!(
+                        "Overlay host creation is skipped: \
+                        wallpaper_id = {wallpaper_id}, pid = {pid}"
+                    );
+                }
             }
             ApplicationEvent::Removed(pid) => {
                 let mut overlay_hosts = overlay_hosts.lock().await;

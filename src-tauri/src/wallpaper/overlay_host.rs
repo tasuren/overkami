@@ -38,7 +38,7 @@ impl OverlayHost {
         pid: u32,
         config: &Wallpaper,
         app: AppHandle,
-    ) -> anyhow::Result<Self> {
+    ) -> anyhow::Result<Option<Self>> {
         log::info!(
             "Starting new overlay host: wallpaper_id = {}, pid = {}",
             wallpaper_id,
@@ -49,9 +49,12 @@ impl OverlayHost {
 
         // Initialize the observer and overlays.
         let (tx, rx) = mpsc::unbounded_channel();
-        let observer = observer::start_observer(wallpaper_id, pid, tx)
+        let Some(observer) = observer::start_observer(wallpaper_id, pid, tx)
             .await
-            .context("Failed to start observer")?;
+            .context("Failed to start observer")?
+        else {
+            return Ok(None);
+        };
 
         let overlays: Overlays = Default::default();
         observer::spawn_overlay_management_task(wallpaper_id, pid, Arc::clone(&overlays), rx);
@@ -92,7 +95,7 @@ impl OverlayHost {
             .create_windows(&filters, &config.source, config.opacity)
             .await;
 
-        Ok(overlay_host)
+        Ok(Some(overlay_host))
     }
 
     async fn create_windows(&self, filters: &FiltersState, source: &WallpaperSource, opacity: f64) {
@@ -163,28 +166,67 @@ mod observer {
         wallpaper_id: Uuid,
         pid: u32,
         tx: UnboundedSender<(window_observer::Window, Event)>,
-    ) -> anyhow::Result<WindowObserver> {
+    ) -> anyhow::Result<Option<WindowObserver>> {
         log::info!("Starting window observer: wallpaper_id = {wallpaper_id}, pid = {pid}");
 
         // `WindowObserver::start` future will not be `Send`, so we need to
         // spawn it on a blocking thread. Otherwise, we can't spawn tasks
         // that use this `start_observer` in the async runtime.
 
-        Ok(tauri::async_runtime::spawn_blocking(move || {
-            WindowObserver::start(
-                pid,
-                tx,
-                window_observer::smallvec![
-                    Event::Resized,
-                    Event::Moved,
-                    Event::Activated,
-                    Event::Deactivated
-                ],
-            )
-            .block_on()
+        tauri::async_runtime::spawn_blocking(move || {
+            let start = move || {
+                WindowObserver::start(
+                    pid,
+                    tx.clone(),
+                    window_observer::smallvec![
+                        Event::Resized,
+                        Event::Moved,
+                        Event::Activated,
+                        Event::Deactivated
+                    ],
+                )
+                .block_on()
+            };
+
+            #[cfg(target_os = "macos")]
+            {
+                let retry_timeout = std::time::Instant::now();
+
+                loop {
+                    if retry_timeout.elapsed() > std::time::Duration::from_secs(5) {
+                        log::info!(
+                            "Failed to start window observer because \
+                            it may does not support accessibility API: \
+                            wallpaper_id = {wallpaper_id}, pid = {pid}"
+                        );
+
+                        break Ok(None);
+                    }
+
+                    match start() {
+                        Err(window_observer::Error::InvalidProcessToObserve { .. }) => {
+                            // On macOS, the application that has just been launched
+                            // may not be ready to observe yet. So we need to retry.
+
+                            log::info!(
+                                "Retrying to start window observer: \
+                                wallpaper_id = {wallpaper_id}, pid = {pid}"
+                            );
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+
+                            continue;
+                        }
+                        observer => break observer.map(Some).map_err(|e| e.into()),
+                    }
+                }
+            }
+            #[cfg(target_os = "windows")]
+            {
+                start().map(Some).map_err(|e| e.into())
+            }
         })
         .await
-        .unwrap()?)
+        .unwrap()
     }
 
     pub fn spawn_overlay_management_task(
