@@ -17,7 +17,6 @@ use crate::{
 };
 
 pub type Overlays = Arc<Mutex<HashMap<WindowId, Overlay>>>;
-pub type FiltersState = Arc<Mutex<Vec<Filter>>>;
 
 /// Manages overlay windows for a specific process ID.
 ///
@@ -45,8 +44,6 @@ impl OverlayHost {
             pid
         );
 
-        let filters = Arc::new(Mutex::new(config.filters.clone()));
-
         // Initialize the observer and overlays.
         let (tx, rx) = mpsc::unbounded_channel();
         let Some(observer) = observer::start_observer(wallpaper_id, pid, tx)
@@ -57,15 +54,17 @@ impl OverlayHost {
         };
 
         let overlays: Overlays = Default::default();
-        observer::spawn_overlay_management_task(wallpaper_id, pid, Arc::clone(&overlays), rx);
+        observer::spawn_overlay_management_task(
+            wallpaper_id,
+            pid,
+            Arc::clone(&overlays),
+            rx,
+            app.clone(),
+        );
 
         // Listen for configuration changes.
         let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
-            let filters = Arc::clone(&filters);
-
             move |data| {
-                let filters = Arc::clone(&filters);
-
                 async_runtime::spawn(async move {
                     if let Some(new) = data.filters {
                         log::info!(
@@ -74,8 +73,6 @@ impl OverlayHost {
                             pid = {pid}, \
                             filters = {new:?}"
                         );
-
-                        let _ = std::mem::replace(&mut *filters.lock().await, new);
                     }
                 });
             }
@@ -92,13 +89,13 @@ impl OverlayHost {
 
         // Initialize overlays for existing windows.
         overlay_host
-            .create_windows(&filters, &config.source, config.opacity)
+            .create_windows(&config.filters, &config.source, config.opacity)
             .await;
 
         Ok(Some(overlay_host))
     }
 
-    async fn create_windows(&self, filters: &FiltersState, source: &WallpaperSource, opacity: f64) {
+    async fn create_windows(&self, filters: &[Filter], source: &WallpaperSource, opacity: f64) {
         let mut overlays = self.overlays.lock().await;
 
         for window in get_windows().await {
@@ -113,8 +110,8 @@ impl OverlayHost {
                     window.clone(),
                     source,
                     opacity,
+                    filters,
                     self.app.clone(),
-                    Arc::clone(filters),
                 )
                 .await
                 else {
@@ -153,6 +150,7 @@ mod observer {
     use std::sync::Arc;
 
     use pollster::FutureExt;
+    use tauri::{AppHandle, Manager};
     use uuid::Uuid;
     use window_getter::Window;
     use window_observer::{
@@ -160,7 +158,10 @@ mod observer {
         Event, WindowObserver,
     };
 
-    use crate::wallpaper::overlay_host::Overlays;
+    use crate::{
+        wallpaper::{overlay::Overlay, overlay_host::Overlays},
+        ConfigState,
+    };
 
     pub async fn start_observer(
         wallpaper_id: Uuid,
@@ -234,6 +235,7 @@ mod observer {
         pid: u32,
         overlays: Overlays,
         mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
+        app: AppHandle,
     ) {
         tauri::async_runtime::spawn(async move {
             while let Some((target_window, event)) = rx.recv().await {
@@ -249,7 +251,14 @@ mod observer {
                         target_window.id()
                     );
 
-                    manage_overlay(Arc::clone(&overlays), event, target_window).await;
+                    manage_overlay(
+                        wallpaper_id,
+                        event,
+                        target_window,
+                        Arc::clone(&overlays),
+                        app.clone(),
+                    )
+                    .await;
                 } else {
                     log::error!(
                         "Received window event but window is invalid as \
@@ -263,9 +272,43 @@ mod observer {
         });
     }
 
-    async fn manage_overlay(overlays: Overlays, event: Event, window: Window) {
-        let overlays = overlays.lock().await;
+    async fn manage_overlay(
+        wallpaper_id: Uuid,
+        event: Event,
+        window: Window,
+        overlays: Overlays,
+        app: AppHandle,
+    ) {
+        let mut overlays = overlays.lock().await;
+
         let Some(overlay) = overlays.get(&window.id()) else {
+            let config = app.state::<ConfigState>();
+            let config = config.lock().await;
+            let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {
+                log::warn!(
+                    "No wallpaper found so skip overlay creation: \
+                    wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
+                    window.id()
+                );
+
+                return;
+            };
+
+            let window_id = window.id();
+            let overlay = Overlay::new(
+                wallpaper_id,
+                window,
+                &wallpaper.source,
+                wallpaper.opacity,
+                &wallpaper.filters,
+                app.clone(),
+            )
+            .await;
+
+            if let Some(overlay) = overlay {
+                overlays.insert(window_id, overlay);
+            }
+
             return;
         };
 
