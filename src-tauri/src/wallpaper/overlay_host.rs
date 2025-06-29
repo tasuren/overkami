@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use anyhow::Context;
 use tauri::{
     async_runtime::{self, Mutex},
     AppHandle, Listener, Manager,
@@ -37,7 +38,7 @@ impl OverlayHost {
         config: &Wallpaper,
         windows: &[Window],
         app: AppHandle,
-    ) -> Option<Self> {
+    ) -> anyhow::Result<Self> {
         log::info!(
             "Starting new overlay host: wallpaper_id = {}, pid = {}",
             wallpaper_id,
@@ -48,7 +49,9 @@ impl OverlayHost {
 
         // Initialize the observer and overlays.
         let (tx, rx) = mpsc::unbounded_channel();
-        let observer = observer::start_observer(wallpaper_id, pid, tx).await?;
+        let observer = observer::start_observer(wallpaper_id, pid, tx)
+            .await
+            .context("Failed to start observer")?;
 
         let overlays: Overlays = Default::default();
         observer::spawn_overlay_management_task(wallpaper_id, pid, Arc::clone(&overlays), rx);
@@ -112,7 +115,7 @@ impl OverlayHost {
         }
 
         drop(overlays);
-        Some(overlay_host)
+        Ok(overlay_host)
     }
 
     pub fn pid(&self) -> u32 {
@@ -120,6 +123,12 @@ impl OverlayHost {
     }
 
     pub async fn stop(self) {
+        log::info!(
+            "Stopping overlay host: wallpaper_id = {}, pid = {}",
+            self._wallpaper_id,
+            self.pid
+        );
+
         self.observer
             .stop()
             .await
@@ -149,14 +158,14 @@ mod observer {
         wallpaper_id: Uuid,
         pid: u32,
         tx: UnboundedSender<(window_observer::Window, Event)>,
-    ) -> Option<WindowObserver> {
+    ) -> anyhow::Result<WindowObserver> {
         log::info!("Starting window observer: wallpaper_id = {wallpaper_id}, pid = {pid}");
 
         // `WindowObserver::start` future will not be `Send`, so we need to
         // spawn it on a blocking thread. Otherwise, we can't spawn tasks
         // that use this `start_observer` in the async runtime.
 
-        let window_observer = tauri::async_runtime::spawn_blocking(move || {
+        Ok(tauri::async_runtime::spawn_blocking(move || {
             WindowObserver::start(
                 pid,
                 tx,
@@ -170,25 +179,7 @@ mod observer {
             .block_on()
         })
         .await
-        .unwrap();
-
-        match window_observer {
-            Ok(observer) => Some(observer),
-            Err(window_observer::Error::InvalidProcessID(pid)) => {
-                log::warn!(
-                    "Invalid process ID is provided:\
-                    wallpaper_id = {pid}, pid = {pid}"
-                );
-
-                None
-            }
-            Err(e) => panic!(
-                "Failed to start window observer: \
-                {e:?}, \
-                wallpaper_id = {wallpaper_id}, \
-                pid = {pid}"
-            ),
-        }
+        .unwrap()?)
     }
 
     pub fn spawn_overlay_management_task(
@@ -211,12 +202,7 @@ mod observer {
                         target_window.id()
                     );
 
-                    manage_overlay(
-                        Arc::clone(&overlays),
-                        event,
-                        target_window,
-                    )
-                    .await;
+                    manage_overlay(Arc::clone(&overlays), event, target_window).await;
                 } else {
                     log::error!(
                         "Received window event but window is invalid as \
@@ -230,11 +216,7 @@ mod observer {
         });
     }
 
-    async fn manage_overlay(
-        overlays: Overlays,
-        event: Event,
-        window: Window,
-    ) {
+    async fn manage_overlay(overlays: Overlays, event: Event, window: Window) {
         let overlays = overlays.lock().await;
         let Some(overlay) = overlays.get(&window.id()) else {
             return;

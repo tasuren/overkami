@@ -113,11 +113,11 @@ mod application_updates {
                 let windows = get_windows().await;
 
                 let overlay_host =
-                    OverlayHost::start(wallpaper_id, pid, &config, &windows, app.clone()).await;
+                    OverlayHost::start(wallpaper_id, pid, &config, &windows, app.clone())
+                        .await
+                        .expect("Failed to start overlay host");
 
-                if let Some(overlay_host) = overlay_host {
-                    overlay_hosts.lock().await.push(overlay_host);
-                }
+                overlay_hosts.lock().await.push(overlay_host);
             }
             ApplicationEvent::Removed(pid) => {
                 let mut overlay_hosts = overlay_hosts.lock().await;

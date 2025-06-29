@@ -12,6 +12,8 @@ pub use event_manager::state::EventManagerState;
 fn setup(app: &mut tauri::App) {
     log::info!("Starting overkami...");
 
+    panic_hook::setup_panic_hook(app);
+
     os::application_monitor::auto_refresh::start().unwrap();
 
     event_manager::setup_event_manager(app);
@@ -49,4 +51,29 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("Failed to run Tauri application");
+}
+
+mod panic_hook {
+    use tauri_plugin_dialog::DialogExt;
+
+    pub fn setup_panic_hook(app: &tauri::App) {
+        log_panics::init();
+
+        let default_panic = std::panic::take_hook();
+        let app = app.handle().clone();
+
+        std::panic::set_hook(Box::new(move |info| {
+            app.dialog()
+                .message(
+                    "overkamiにて、致命的なエラーが発生しましたので、overkamiを修了します。\n\
+                    エラーの詳細はログに出力されます。",
+                )
+                .title("致命的なエラーが発生")
+                .kind(tauri_plugin_dialog::MessageDialogKind::Error)
+                .show(|_| std::process::exit(1));
+
+            default_panic(info);
+            log::info!("You can use `RUST_BACKTRACE=full` to see the full backtrace.");
+        }));
+    }
 }
