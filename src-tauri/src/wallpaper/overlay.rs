@@ -160,7 +160,7 @@ impl Overlay {
                 .set_order_above(self.target_window.id())
                 .unwrap();
 
-            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
 
         self.overlay_window
