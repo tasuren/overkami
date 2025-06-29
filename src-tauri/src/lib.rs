@@ -10,6 +10,8 @@ pub use config::state::{ConfigPathState, ConfigState};
 pub use event_manager::state::EventManagerState;
 
 fn setup(app: &mut tauri::App) {
+    log::info!("Starting overkami...");
+
     os::application_monitor::auto_refresh::start().unwrap();
 
     event_manager::setup_event_manager(app);
@@ -24,11 +26,13 @@ fn setup(app: &mut tauri::App) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    log::info!("Starting overkami...");
-
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level_for("tao", log::LevelFilter::Warn)
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
