@@ -27,6 +27,11 @@ impl Overlay {
         opacity: f64,
         app: AppHandle,
     ) -> Self {
+        log::info!(
+            "Creating overlay for wallpaper ID {wallpaper_id} and target window {:?}",
+            target_window.id()
+        );
+
         let window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
 
         // Listen for updates of config
@@ -51,37 +56,25 @@ impl Overlay {
     }
 
     pub fn on_move(&self, target_window: &Window) {
-        let bounds = target_window
-            .bounds()
-            .expect("Failed to get target window bounds");
+        let bounds = target_window.bounds().unwrap();
         let position = adjust_position(&self.window, bounds.x(), bounds.y());
 
-        self.window
-            .set_position(position)
-            .expect("Failed to set wallpaper window position");
+        self.window.set_position(position).unwrap();
     }
 
     pub fn on_resize(&self, target_window: &Window) {
-        let bounds = target_window
-            .bounds()
-            .expect("Failed to get target window bounds");
+        let bounds = target_window.bounds().unwrap();
         let size = adjust_size(&self.window, bounds.width(), bounds.height());
 
-        self.window
-            .set_size(size)
-            .expect("Failed to set wallpaper window size");
+        self.window.set_size(size).unwrap();
     }
 
     pub fn on_activate(&self) {
-        self.window
-            .set_always_on_top(true)
-            .expect("Failed to set always on top");
+        self.window.set_always_on_top(true).unwrap();
     }
 
     pub async fn on_deactivate(&self, target_window_id: WindowId) {
-        self.window
-            .set_always_on_top(false)
-            .expect("Failed to set always on top");
+        self.window.set_always_on_top(false).unwrap();
 
         self.on_order_change(target_window_id).await;
     }
@@ -93,24 +86,18 @@ impl Overlay {
             // So we need to wait a bit.
             // TODO: Find a better way to handle this.
 
-            self.window
-                .set_order_above(target_window_id)
-                .expect("Failed to set order above");
+            self.window.set_order_above(target_window_id).unwrap();
 
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
 
-        self.window
-            .set_order_above(target_window_id)
-            .expect("Failed to set order above");
+        self.window.set_order_above(target_window_id).unwrap();
     }
 
     pub fn close(&self) {
         self.window.app_handle().unlisten(self.listener);
 
-        self.window
-            .close()
-            .expect("Failed to close wallpaper window");
+        self.window.close().unwrap();
     }
 }
 
@@ -133,12 +120,10 @@ pub fn create_window(
     .focused(false)
     .always_on_bottom(true) // To keep it down. We'll set always on top later.
     .build()
-    .expect("Failed to create wallpaper window");
+    .unwrap();
 
     window.set_ignore_cursor_events(true).unwrap();
-    window
-        .setup_platform_specific()
-        .expect("Failed to setup platform specific settings");
+    window.setup_platform_specific().unwrap();
     window.set_opacity(opacity).unwrap();
 
     #[cfg(target_os = "macos")]
@@ -162,17 +147,19 @@ pub fn create_window(
 
 pub fn on_apply_wallpaper(window: &WebviewWindow, payload: ApplyWallpaper) {
     if let Some(opacity) = payload.opacity {
-        window
-            .set_opacity(opacity)
-            .expect("Failed to set wallpaper window opacity");
+        log::info!("Update wallpaper overlay opacity to {opacity}");
+
+        window.set_opacity(opacity).unwrap();
     }
 
     if let Some(source) = payload.source {
+        log::info!("Update wallpaper overlay opacity to {source:?}");
+
         let url = source::get_wallpaper_url(&source);
 
         window
             .eval(format!("window.location.replace('{url}');"))
-            .expect("Failed to update wallpaper window URL");
+            .unwrap();
     }
 }
 
@@ -196,7 +183,7 @@ mod source {
             }
             WallpaperSource::Video { location } => {
                 let path = utf8_percent_encode(
-                    location.to_str().expect("Failed to read picture location"),
+                    location.to_str().expect("Failed to read video location"),
                     NON_ALPHANUMERIC,
                 );
 

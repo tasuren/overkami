@@ -15,7 +15,7 @@ pub mod config {
         let config = app.state::<ConfigState>();
         let config = config.lock().await;
 
-        serde_json::to_value(&*config).expect("Failed to parse config to JSON format")
+        serde_json::to_value(&*config).unwrap()
     }
 
     pub async fn write_config(config_path: &ConfigPathState, config: &Config) -> Result<(), Error> {
@@ -36,6 +36,8 @@ pub mod config {
 
     #[tauri::command]
     pub async fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), Error> {
+        log::info!("Saving configuration...");
+
         // Save the config to the file.
         let config_path = app.state::<ConfigPathState>();
         write_config(&config_path, &config).await?;

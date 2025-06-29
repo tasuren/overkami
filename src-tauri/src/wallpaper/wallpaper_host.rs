@@ -20,6 +20,8 @@ pub struct WallpaperHost {
 
 impl WallpaperHost {
     pub async fn new(id: Uuid, config: Wallpaper, app: AppHandle) -> Self {
+        log::info!("Creating wallpaper host for ID: {id}");
+
         let event_manager_state = app.state::<EventManagerState>();
         let overlay_hosts: OverlayHosts = Default::default();
         let config = Arc::new(Mutex::new(config));
@@ -87,6 +89,8 @@ mod application_updates {
 
         async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
+                log::debug!("Received application event for {wallpaper_id}: {event:?}");
+
                 on_application_event(wallpaper_id, &config, event, &overlay_hosts, &app).await;
             }
         });

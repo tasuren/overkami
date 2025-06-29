@@ -27,16 +27,20 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .on_menu_event(move |_app, event| match event.id().as_ref() {
-            "about" => {
-                window.show().unwrap();
-                window.set_focus().unwrap();
+        .on_menu_event(move |_app, event| {
+            println!("{event:?}");
+
+            match event.id().as_ref() {
+                "about" => {
+                    window.show().unwrap();
+                    window.set_focus().unwrap();
+                }
+                "settings" => {
+                    window.show().unwrap();
+                    window.set_focus().unwrap();
+                }
+                _ => {}
             }
-            "settings" => {
-                window.show().unwrap();
-                window.set_focus().unwrap();
-            }
-            _ => {}
         })
         .build(app)
         .expect("Failed to create tray icon");

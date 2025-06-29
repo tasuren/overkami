@@ -10,12 +10,9 @@ use crate::{event_manager::EventManager, wallpaper::wallpaper_host::WallpaperHos
 
 pub type WallpaperHosts = Mutex<HashMap<Uuid, WallpaperHost>>;
 
-fn manage_wallpaper_hosts(app: &tauri::App, hosts: HashMap<Uuid, WallpaperHost>) {
-    app.manage(Mutex::new(hosts));
-}
-
 pub fn setup_wallpapers(app: &tauri::App) {
-    // Initialize the wallpaper hosts.
+    log::info!("Initializing wallpaper hosts...");
+
     let hosts = async_runtime::block_on({
         let app = app.handle().clone();
 
@@ -33,15 +30,16 @@ pub fn setup_wallpapers(app: &tauri::App) {
             hosts
         }
     });
-    manage_wallpaper_hosts(app, hosts);
+
+    app.manage(Mutex::new(hosts));
 
     setup_wallpaper_management(app);
 }
 
+/// Sets up the event listeners for wallpaper addition or removal.
 pub fn setup_wallpaper_management(app: &tauri::App) {
     let event_manager = app.state::<EventManager>();
 
-    // Listen for adding new wallpaper configuration.
     event_manager.listen_add_wallpaper({
         let app = app.handle().clone();
 
@@ -49,6 +47,8 @@ pub fn setup_wallpaper_management(app: &tauri::App) {
             let app = app.clone();
 
             async_runtime::spawn(async move {
+                log::info!("Adding new wallpaper host for ID: {}", data.id);
+
                 let host = WallpaperHost::new(data.id, data.wallpaper, app.clone()).await;
                 app.state::<WallpaperHosts>()
                     .lock()
@@ -65,6 +65,8 @@ pub fn setup_wallpaper_management(app: &tauri::App) {
             let app = app.clone();
 
             async_runtime::spawn(async move {
+                log::info!("Removing wallpaper host for ID: {}", id);
+
                 let hosts = app.state::<WallpaperHosts>();
                 let mut hosts = hosts.lock().await;
 

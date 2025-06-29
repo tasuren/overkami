@@ -38,6 +38,8 @@ impl OverlayHost {
         windows: &[Window],
         app: AppHandle,
     ) -> Option<Self> {
+        log::info!("Starting new overlay host: {wallpaper_id} with PID {pid}");
+
         let filters = Arc::new(Mutex::new(config.filters.clone()));
 
         // Initialize the observer and overlays.
@@ -45,7 +47,12 @@ impl OverlayHost {
         let observer = observer::start_observer(tx, pid).await?;
 
         let overlays: Overlays = Default::default();
-        observer::spawn_overlay_management_task(Arc::clone(&filters), Arc::clone(&overlays), rx);
+        observer::spawn_overlay_management_task(
+            pid,
+            Arc::clone(&filters),
+            Arc::clone(&overlays),
+            rx,
+        );
 
         // Listen for configuration changes.
         let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
@@ -56,6 +63,10 @@ impl OverlayHost {
 
                 async_runtime::spawn(async move {
                     if let Some(new) = data.filters {
+                        log::info!(
+                            "Updating filters for overlay host\
+                            {wallpaper_id} (PID {pid}): {new:?}"
+                        );
                         let _ = std::mem::replace(&mut *filters.lock().await, new);
                     }
                 });
@@ -84,10 +95,9 @@ impl OverlayHost {
                 let window_title = match window.title() {
                     Ok(title) => title,
                     Err(e) => {
-                        eprintln!(
-                            "Failed to get title for {:?} so I'll skip it. Detail: {}",
-                            window.id(),
-                            e
+                        log::info!(
+                            "Failed to get title for {:?}, skipping overlay creation. Detail: {e}",
+                            window.id()
                         );
                         continue;
                     }
@@ -102,10 +112,9 @@ impl OverlayHost {
                         }
                     }
                     Err(e) => {
-                        eprintln!(
-                            "Failed to get window bounds for {:?} so I'll skip it. Detail: {}",
-                            window.id(),
-                            e
+                        log::info!(
+                            "Failed to get window bounds for {:?}, skipping overlay creation. Detail: {e}",
+                            window.id()
                         );
                         continue;
                     }
@@ -166,6 +175,8 @@ mod observer {
         tx: UnboundedSender<(window_observer::Window, Event)>,
         pid: u32,
     ) -> Option<WindowObserver> {
+        log::info!("Starting window observer for PID {pid}");
+
         // `WindowObserver::start` future will not be `Send`, so we need to
         // spawn it on a blocking thread. Otherwise, we can't spawn tasks
         // that use this `start_observer` in the async runtime.
@@ -184,33 +195,52 @@ mod observer {
             .block_on()
         })
         .await
-        .expect("Failed to start window observer");
+        .unwrap();
 
         match window_observer {
             Ok(observer) => Some(observer),
-            Err(window_observer::Error::InvalidProcessID(_)) => None,
+            Err(window_observer::Error::InvalidProcessID(pid)) => {
+                log::warn!("Failed to start window observer for PID {pid}: Invalid process ID");
+
+                None
+            }
             Err(e) => panic!("Failed to start window observer: {e:?}"),
         }
     }
 
     pub fn spawn_overlay_management_task(
+        pid: u32,
         filters: FiltersState,
         overlays: Overlays,
         mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
     ) {
         tauri::async_runtime::spawn(async move {
             while let Some((window, event)) = rx.recv().await {
-                let window: Option<Window> = window.try_into().expect("Failed to convert window");
+                let window: Option<Window> = window.try_into().ok().flatten();
 
                 if let Some(window) = window {
-                    manage_overlay(Arc::clone(&filters), Arc::clone(&overlays), event, window)
-                        .await;
+                    log::debug!("Received event: {event:?} for window: {window:?}");
+
+                    manage_overlay(
+                        pid,
+                        Arc::clone(&filters),
+                        Arc::clone(&overlays),
+                        event,
+                        window,
+                    )
+                    .await;
+                } else {
+                    log::warn!(
+                        "Received event for an invalid `window_getter::Window` from PID {pid}\
+                        : {event:?}"
+                    );
                 }
             }
         });
     }
 
     async fn manage_overlay(
+        pid: u32,
         filters: FiltersState,
         overlays: Overlays,
         event: Event,
@@ -221,14 +251,22 @@ mod observer {
                 return;
             };
         } else {
+            log::warn!(
+                "Failed to get title for window {:?}, skipping overlay management.",
+                window.id()
+            );
             return;
         }
 
         let overlays = overlays.lock().await;
         let Some(overlay) = overlays.get(&window.id()) else {
+            log::warn!(
+                "Unknown window event is received: PID {pid} WindowId {:?}",
+                window.id()
+            );
+
             return;
         };
-        println!("{:?} {:?}", event, window.title());
 
         match event {
             Event::Moved => overlay.on_move(&window),

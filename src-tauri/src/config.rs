@@ -118,7 +118,7 @@ mod setup {
     use std::path::PathBuf;
 
     use tauri::{App, Manager};
-    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
     use super::Config;
 
@@ -129,7 +129,7 @@ mod setup {
             PathBuf::from("../mock-env/config")
         } else {
             path.app_config_dir()
-                .expect("Failed to get app config directory")
+                .unwrap_or_else(|e| failed_to_get_app_config_directory(app, e.to_string()))
         };
 
         if !config_path.exists() {
@@ -159,36 +159,41 @@ mod setup {
         super::state::set_config_state(handle, config);
     }
 
-    fn failed_to_prepare_config_dir(app: &App, error: String) -> ! {
+    fn error_message(app: &App, message: &str) -> ! {
         app.dialog()
-            .message(format!(
-                "設定ファイルを配置するフォルダの作成に失敗しました。\n詳細: {error}"
-            ))
+            .message(message)
+            .kind(MessageDialogKind::Error)
             .buttons(MessageDialogButtons::Ok)
             .blocking_show();
 
         std::process::exit(1);
+    }
+
+    fn failed_to_get_app_config_directory(app: &App, error: String) -> ! {
+        error_message(
+            app,
+            &format!("設定ファイルを配置するフォルダの取得に失敗しました。\n詳細: {error}"),
+        )
+    }
+
+    fn failed_to_prepare_config_dir(app: &App, error: String) -> ! {
+        error_message(
+            app,
+            &format!("設定ファイルを配置するフォルダの作成に失敗しました。\n詳細: {error}"),
+        )
     }
 
     fn failed_to_read_config_file(app: &App, error: String) -> ! {
-        app.dialog()
-            .message(format!(
-                "設定ファイルの読み込みに失敗しました。\n詳細: {error}"
-            ))
-            .buttons(MessageDialogButtons::Ok)
-            .blocking_show();
-
-        std::process::exit(1);
+        error_message(
+            app,
+            &format!("設定ファイルの読み込みに失敗しました。\n詳細: {error}"),
+        )
     }
 
     fn failed_to_parse_config_file(app: &App, error: String) -> ! {
-        app.dialog()
-            .message(format!(
-                "設定ファイルのデータ構造が不適切です。\n詳細: {error}"
-            ))
-            .buttons(MessageDialogButtons::Ok)
-            .blocking_show();
-
-        std::process::exit(1);
+        error_message(
+            app,
+            &format!("設定ファイルのデータ構造が不適切です。\n詳細: {error}"),
+        )
     }
 }

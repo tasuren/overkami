@@ -35,6 +35,8 @@ pollster = "0.4.0"
 smallvec = "1.15.1"
 uuid = { version = "1.17.0", features = ["v4"] }
 tokio = { version = "1.45.1", default-features = false, features = ["time"] }
+tauri-plugin-log = "2"
+log = "0.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.1"
