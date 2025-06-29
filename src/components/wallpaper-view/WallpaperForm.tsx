@@ -4,6 +4,7 @@ import {
   createFormStore,
   getValues,
 } from "@modular-forms/solid";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import Save from "lucide-solid/icons/save";
 import Trash2 from "lucide-solid/icons/trash-2";
 import WandSparkles from "lucide-solid/icons/wand-sparkles";
@@ -105,7 +106,11 @@ export default function WallpaperForm(props: {
     }
   };
 
-  const deleteWallpaper = () => {
+  const deleteWallpaper = async () => {
+    if (!(await confirm("本当に壁紙を削除しますか？"))) {
+      return;
+    }
+
     setWallpapers((wallpapers) => {
       delete wallpapers[id];
       return wallpapers;
