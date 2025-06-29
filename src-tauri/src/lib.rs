@@ -70,7 +70,9 @@ mod panic_hook {
                 )
                 .title("致命的なエラーが発生")
                 .kind(tauri_plugin_dialog::MessageDialogKind::Error)
-                .show(|_| std::process::exit(1));
+                .show(|_| {});
+
+            app.exit(1);
 
             default_panic(info);
             log::info!("You can use `RUST_BACKTRACE=full` to see the full backtrace.");
