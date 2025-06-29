@@ -197,7 +197,6 @@ pub fn create_window(
         .transparent(true)
         .skip_taskbar(true)
         .focused(false)
-        .always_on_bottom(true) // To keep it down. We'll set always on top later.
         .build()
         .unwrap();
 

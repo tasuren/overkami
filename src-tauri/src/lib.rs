@@ -17,6 +17,9 @@ fn setup(app: &mut tauri::App) {
     wallpaper::setup_wallpapers(app);
 
     tray_icon::setup_tray_icon(app);
+
+    #[cfg(target_os = "macos")]
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
