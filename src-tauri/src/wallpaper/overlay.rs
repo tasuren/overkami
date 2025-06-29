@@ -148,8 +148,6 @@ pub fn create_window(
         custom_feature::setup_collection_behavior(window.clone());
     }
 
-    println!("{:?}", target_window.title());
-
     match target_window.is_frontmost() {
         Err(e) => eprintln!(
             "Failed to check if window {:?} is frontmost: {e}",

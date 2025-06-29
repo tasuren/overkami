@@ -73,10 +73,45 @@ impl OverlayHost {
 
         // Initialize overlays for existing windows.
         let mut overlays = overlay_host.overlays.lock().await;
+        let filters = filters.lock().await;
 
         for window in windows {
             if let Ok(window_pid) = window.owner_pid() {
                 if window_pid as u32 != pid {
+                    continue;
+                }
+
+                let window_title = match window.title() {
+                    Ok(title) => title,
+                    Err(e) => {
+                        eprintln!(
+                            "Failed to get title for {:?} so I'll skip it. Detail: {}",
+                            window.id(),
+                            e
+                        );
+                        continue;
+                    }
+                };
+
+                match window.bounds() {
+                    Ok(bounds) => {
+                        if bounds.width() == 0. || bounds.height() == 0. {
+                            // On windows, some window has no width and height so skip it.
+
+                            continue;
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "Failed to get window bounds for {:?} so I'll skip it. Detail: {}",
+                            window.id(),
+                            e
+                        );
+                        continue;
+                    }
+                };
+
+                if !filter::wallpaper_filter(window_title, &filters) {
                     continue;
                 }
 
@@ -193,6 +228,7 @@ mod observer {
         let Some(overlay) = overlays.get(&window.id()) else {
             return;
         };
+        println!("{:?} {:?}", event, window.title());
 
         match event {
             Event::Moved => overlay.on_move(&window),
