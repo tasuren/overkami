@@ -2085,7 +2085,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.61.2",
+ "windows-core 0.59.0",
 ]
 
 [[package]]
@@ -2900,7 +2900,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
 dependencies = [
- "proc-macro-crate 3.3.0",
+ "proc-macro-crate 2.0.0",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -4606,7 +4606,7 @@ dependencies = [
  "ntapi",
  "objc2-core-foundation",
  "objc2-io-kit",
- "windows 0.61.3",
+ "windows 0.59.0",
 ]
 
 [[package]]
@@ -5791,7 +5791,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -5803,7 +5803,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 [[package]]
 name = "window-getter"
 version = "0.1.0"
-source = "git+https://github.com/tasuren/window-getter-rs.git#f27259d9ff7f73df59b31020f70d9f2e8b1a961f"
+source = "git+https://github.com/tasuren/window-getter-rs.git#29943b8645a371003126f42f5c45a992332340f6"
 dependencies = [
  "objc2 0.6.1",
  "objc2-core-foundation",
@@ -5815,7 +5815,7 @@ dependencies = [
 [[package]]
 name = "window-observer"
 version = "0.1.0"
-source = "git+https://github.com/tasuren/window-observer-rs.git#534a8b5cc83ac00a24e12649d0811953021ddcb4"
+source = "git+https://github.com/tasuren/window-observer-rs.git#e2e9fbd26a9e24782e6294824e99768de9c5bb16"
 dependencies = [
  "accessibility",
  "accessibility-sys",
