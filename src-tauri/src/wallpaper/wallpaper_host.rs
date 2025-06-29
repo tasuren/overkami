@@ -54,7 +54,7 @@ impl WallpaperHost {
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
-        unlisten_application(&config.application.path, self.id).await;
+        unlisten_application(&config.application_path, self.id).await;
         self.app.unlisten(self.event_listener);
     }
 }
@@ -84,7 +84,7 @@ mod application_updates {
 
         {
             let config = config.lock().await;
-            listen_application(tx, config.application.path.clone(), wallpaper_id).await;
+            listen_application(tx, config.application_path.clone(), wallpaper_id).await;
         }
 
         async_runtime::spawn(async move {
@@ -164,10 +164,10 @@ mod config_updates {
     ) {
         let mut config = config.lock().await;
 
-        if let Some(application) = payload.application {
+        if let Some(application_path) = payload.application_path {
             // If the application path has changed, we need to update the application listener.
 
-            let old_app = std::mem::replace(&mut config.application, application);
+            let old_app_path = std::mem::replace(&mut config.application_path, application_path);
 
             // When the application is updated, we need to clear the overlay hosts.
             // Then we will set up new overlay hosts with the updated configuration.
@@ -178,8 +178,8 @@ mod config_updates {
             }
 
             // Register the new application listener due to application change.
-            if let Some(tx) = unlisten_application(&old_app.path, wallpaper_id).await {
-                listen_application(tx, config.application.path.clone(), wallpaper_id).await;
+            if let Some(tx) = unlisten_application(&old_app_path, wallpaper_id).await {
+                listen_application(tx, config.application_path.clone(), wallpaper_id).await;
             };
         }
 

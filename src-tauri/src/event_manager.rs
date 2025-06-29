@@ -59,14 +59,16 @@ impl EventManager {
 }
 
 pub mod payload {
+    use std::path::PathBuf;
+
     use serde::{Deserialize, Serialize};
 
-    use crate::config::{Application, Filter, Wallpaper, WallpaperSource};
+    use crate::config::{Filter, Wallpaper, WallpaperSource};
 
     /// Represents the payload for applying wallpaper settings.
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ApplyWallpaper {
-        pub application: Option<Application>,
+        pub application_path: Option<PathBuf>,
         pub filters: Option<Vec<Filter>>,
         pub opacity: Option<f64>,
         pub source: Option<WallpaperSource>,

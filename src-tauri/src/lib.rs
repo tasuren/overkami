@@ -24,6 +24,7 @@ pub fn run() {
     log::info!("Starting overkami...");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -35,7 +36,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::config::get_config,
             commands::config::save_config,
-            commands::application_window::get_application_windows
+            commands::application_window::get_application_windows,
+            #[cfg(target_os = "macos")]
+            commands::platform_custom_feature::set_document_edited
         ])
         .run(tauri::generate_context!())
         .expect("Failed to run Tauri application");

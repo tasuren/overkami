@@ -19,6 +19,7 @@
     "@tauri-apps/plugin-dialog": "~2.2.2",
     "@tauri-apps/plugin-log": "~2",
     "@tauri-apps/plugin-opener": "^2.2.7",
+    "@tauri-apps/plugin-os": "~2",
     "lucide-solid": "^0.515.0",
     "solid-js": "^1.9.7",
     "tailwind-variants": "^1.0.0",

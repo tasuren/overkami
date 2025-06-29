@@ -92,6 +92,16 @@ pub mod custom_feature {
         })
         .unwrap();
     }
+
+    pub fn set_document_edited(window: WebviewWindow, edited: bool) {
+        let app = window.app_handle().clone();
+
+        app.run_on_main_thread(move || {
+            let ns_window = super::get_ns_window(&window);
+            ns_window.setDocumentEdited(edited);
+        })
+        .unwrap();
+    }
 }
 
 /// Implementations of private API Core Graphics Services bindings.

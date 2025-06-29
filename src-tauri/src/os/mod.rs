@@ -2,7 +2,7 @@ pub mod application_monitor;
 pub mod application_observer;
 pub mod platform_impl;
 
-pub use platform_impl::{WebviewWindowPlatformExt, WindowPlatformExt};
+pub use platform_impl::*;
 
 pub mod windows {
     use window_getter::Window;

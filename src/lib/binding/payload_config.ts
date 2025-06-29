@@ -1,8 +1,3 @@
-export type Application = {
-  name: string | null;
-  path: string;
-};
-
 export type RemoteWebPageSource = {
   type: "RemoteWebPage";
   location: string;
@@ -48,7 +43,7 @@ export type Filter = WindowNameFilter;
 
 export type Wallpaper = {
   name: string;
-  application: Application;
+  applicationPath: string;
   filters: Filter[];
   source: WallpaperSource;
   opacity: number;

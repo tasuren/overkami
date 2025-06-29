@@ -1,9 +1,14 @@
 use window_getter::WindowId;
 
 #[cfg(target_os = "macos")]
-pub mod macos;
+mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
+
+#[cfg(target_os = "macos")]
+pub use macos::custom_feature;
+#[cfg(target_os = "windows")]
+pub use windows::custom_feature;
 
 pub trait WebviewWindowPlatformExt {
     fn setup_platform_specific(&self) -> anyhow::Result<()>;

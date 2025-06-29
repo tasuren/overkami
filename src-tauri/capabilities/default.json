@@ -2,14 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
+    "core:window:allow-hide",
     "dialog:default",
     "core:path:allow-basename",
-    "log:default"
+    "log:default",
+    "os:default"
   ]
 }

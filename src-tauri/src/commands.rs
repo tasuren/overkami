@@ -113,3 +113,12 @@ pub mod application_window {
         applications
     }
 }
+
+pub mod platform_custom_feature {
+    #[cfg(target_os = "macos")]
+    #[tauri::command]
+    pub fn set_document_edited(window: tauri::WebviewWindow, edited: bool) {
+        #[cfg(target_os = "macos")]
+        crate::os::platform_impl::custom_feature::set_document_edited(window, edited);
+    }
+}

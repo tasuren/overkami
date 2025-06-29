@@ -3,46 +3,22 @@ import {
   Field,
   FieldArray,
   type FormStore,
-  insert,
   required,
-  reset,
 } from "@modular-forms/solid";
 import ChevronDown from "lucide-solid/icons/chevron-down";
-import { For, createEffect, onCleanup } from "solid-js";
-import { STRING_FILTER_STRATEGIES, type StringFilterStrategy } from "../../lib/binding/payload_config";
+import { For } from "solid-js";
+import {
+  STRING_FILTER_STRATEGIES,
+  type StringFilterStrategy,
+} from "../../lib/binding/payload_config";
 import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
 export default function FilterFields(props: {
   form: FormStore<WallpaperForm>;
-  defaultFilters?: WallpaperForm["filters"];
 }) {
-  const { form, defaultFilters } = props;
+  const { form } = props;
   const { base, error } = fieldClass();
-
-  createEffect(() => {
-    if (defaultFilters !== undefined && defaultFilters.length > 0) {
-      for (const filter of defaultFilters) {
-        insert(form, "filters", {
-          value: filter,
-        });
-      }
-
-      return;
-    }
-
-    insert(form, "filters", {
-      value: {
-        type: "WindowName",
-        name: "",
-        strategy: "Contains",
-      },
-    });
-
-    onCleanup(() => {
-      reset(form, "filters");
-    });
-  });
 
   return (
     <div>
@@ -91,7 +67,7 @@ export default function FilterFields(props: {
                       <WindowNameFilterSelect
                         {...props}
                         name={field.name}
-                        value={field.value || "Contains"}
+                        value={field.value}
                       />
                       <div class={error()}>{field.error}</div>
                     </div>
@@ -109,20 +85,16 @@ export default function FilterFields(props: {
 function WindowNameFilterSelect(
   props: FieldElementProps<WallpaperForm, `filters.${number}.strategy`> & {
     name: string;
-    value: StringFilterStrategy;
+    value?: StringFilterStrategy;
   },
 ) {
   const { base, select, chevron } = selectClass();
 
   return (
     <div class={base()}>
-      <select class={select()} {...props}>
+      <select class={select()} {...props} value={props.value}>
         <For each={Object.entries(STRING_FILTER_STRATEGIES)}>
-          {([value, label]) => (
-            <option value={value} selected={props.value === value}>
-              {label}
-            </option>
-          )}
+          {([value, label]) => <option value={value}>{label}</option>}
         </For>
       </select>
 

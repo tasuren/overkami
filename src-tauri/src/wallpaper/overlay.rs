@@ -207,7 +207,7 @@ pub fn create_window(
 
     #[cfg(target_os = "macos")]
     {
-        use crate::os::platform_impl::macos::custom_feature;
+        use crate::os::platform_impl::custom_feature;
 
         custom_feature::setup_collection_behavior(window.clone());
     }

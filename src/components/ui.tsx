@@ -13,6 +13,7 @@ export const buttonClass = tv({
   variants: {
     color: {
       primary: "bg-primary hover:bg-primary/70",
+      secondary: "bg-secondary hover:bg-secondary/70",
       error: [
         "text-error border border-error shadow-none",
         "bg-transparent hover:bg-error/10",

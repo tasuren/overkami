@@ -17,9 +17,8 @@ import type { WallpaperForm } from "./WallpaperForm";
 
 export default function SourceField(props: {
   form: FormStore<WallpaperForm>;
-  defaultSourcePath?: string;
 }) {
-  const { form, defaultSourcePath } = props;
+  const { form } = props;
 
   const [type, setType] = createSignal<WallpaperSource["type"]>("Picture");
 
@@ -72,7 +71,7 @@ export default function SourceField(props: {
       >
         {(field, props) => {
           const { base, error } = fieldClass();
-          let fileName = field.value || defaultSourcePath;
+          let fileName = field.value;
 
           let buttonElement!: HTMLButtonElement;
           onMount(async () => {
@@ -107,7 +106,7 @@ export default function SourceField(props: {
                 {...props}
                 id={props.name}
                 type="text"
-                value={defaultSourcePath}
+                value={field.value}
                 hidden
               />
 

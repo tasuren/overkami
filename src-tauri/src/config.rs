@@ -4,7 +4,6 @@ pub use setup::setup_config;
 mod model {
     use std::collections::HashMap;
 
-    pub use application::*;
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
     pub use wallpaper::*;
@@ -22,24 +21,6 @@ mod model {
             Self {
                 version: VERSION.to_owned(),
                 wallpapers: HashMap::new(),
-            }
-        }
-    }
-
-    mod application {
-        use std::path::PathBuf;
-
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Debug, Clone, Serialize, Deserialize)]
-        pub struct Application {
-            pub name: Option<String>,
-            pub path: PathBuf,
-        }
-
-        impl PartialEq for Application {
-            fn eq(&self, other: &Self) -> bool {
-                self.path == other.path
             }
         }
     }
@@ -76,9 +57,10 @@ mod model {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
         pub struct Wallpaper {
             pub name: String,
-            pub application: super::Application,
+            pub application_path: PathBuf,
             pub filters: Vec<Filter>,
             pub source: WallpaperSource,
             pub opacity: f64,

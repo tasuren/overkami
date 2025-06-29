@@ -1,5 +1,7 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
-import { Show } from "solid-js";
+import { Show, createEffect, createSignal, onCleanup } from "solid-js";
 import { useView } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { iconButtonClass, iconClass } from "../ui";
@@ -11,6 +13,38 @@ export default function WallpaperView(props: {
 }) {
   const { wallpaper, id } = props;
   const [, setView] = useView();
+  const [dirty, setDirty] = createSignal(false);
+
+  createEffect(async () => {
+    // Prevent window close when dirty.
+    const window = getCurrentWindow();
+
+    const unListen = await window.onCloseRequested(async (event) => {
+      if (
+        dirty() &&
+        !(await confirm("変更が保存されていません、それでも閉じますか？"))
+      ) {
+        return;
+      }
+
+      window.hide();
+      event.preventDefault();
+    });
+
+    onCleanup(() => {
+      unListen();
+    });
+  });
+
+  /* TODO: This will reset traffic lights position. I want to fix.
+  if (platform() === "macos") {
+    createEffect(() => {
+      setDocumentEdited(dirty());
+
+      onCleanup(() => setDocumentEdited(false));
+    });
+  }
+  */
 
   return (
     <div>
@@ -18,7 +52,19 @@ export default function WallpaperView(props: {
         <button
           type="button"
           class={iconButtonClass()}
-          onClick={() => setView({ type: "home" })}
+          onClick={async () => {
+            if (dirty()) {
+              if (
+                !(await confirm(
+                  "変更が保存されていません、それでも戻りますか？",
+                ))
+              ) {
+                return;
+              }
+            }
+
+            setView({ type: "home" });
+          }}
         >
           <ChevronLeft
             class={iconClass({ class: "cursor-pointer" })}
@@ -36,7 +82,7 @@ export default function WallpaperView(props: {
         class="px-16 py-2 mt-[48px] overflow-y-auto"
         style="height: calc(100vh - 48px * 2);"
       >
-        <WallpaperForm id={id} wallpaper={wallpaper} />
+        <WallpaperForm id={id} wallpaper={wallpaper} setDirty={setDirty} />
       </div>
     </div>
   );
