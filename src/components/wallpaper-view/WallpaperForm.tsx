@@ -8,7 +8,7 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import Save from "lucide-solid/icons/save";
 import Trash2 from "lucide-solid/icons/trash-2";
 import WandSparkles from "lucide-solid/icons/wand-sparkles";
-import { createEffect } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
 import {
   addWallpaper,
@@ -57,11 +57,12 @@ export default function WallpaperForm(props: {
   wallpaper: Wallpaper | undefined;
   setDirty: (dirty: boolean) => void;
 }) {
-  const { wallpaper, id, setDirty } = props;
+  let { wallpaper, id, setDirty } = props;
   let isNew = wallpaper === undefined;
+  const initialValues = wallpaper || DEFAULT_WALLPAPER_VALUE;
 
   const form = createFormStore<WallpaperForm>({
-    initialValues: wallpaper || DEFAULT_WALLPAPER_VALUE,
+    initialValues,
   });
   const [, setWallpapers] = useWallpapers();
   const [, setView] = useView();
@@ -91,6 +92,7 @@ export default function WallpaperForm(props: {
       });
 
       isNew = false;
+      wallpaper = newWallpaper;
     } else {
       const changedValues = getValues(form, { shouldDirty: true });
 
@@ -119,6 +121,12 @@ export default function WallpaperForm(props: {
 
     removeWallpaper(id);
   };
+
+  onCleanup(() => {
+    if (form.dirty) {
+      applyWallpaper(initialValues);
+    }
+  });
 
   return (
     <Form of={form} class="space-y-2" onSubmit={handleSubmit}>

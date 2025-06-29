@@ -79,7 +79,7 @@ impl Overlay {
         }
 
         log::info!(
-            "Creating overlay for wallpaper ID {wallpaper_id} and target window {:?}",
+            "Creating overlay: wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
             target_window.id()
         );
 
@@ -102,7 +102,7 @@ impl Overlay {
 
         // Set initial overlay order.
         match overlay.target_window.is_frontmost() {
-            Err(e) => log::info!(
+            Err(e) => log::warn!(
                 "Failed to check if window {:?} is frontmost, skipping always on top. Detail: {e}",
                 overlay.target_window.id()
             ),
@@ -118,12 +118,6 @@ impl Overlay {
     }
 
     pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
-        log::info!(
-            "Handling event {event:?} for target window {:?} on overlay {:?}",
-            target_window.id(),
-            self.overlay_window.label()
-        );
-
         match event {
             Event::Moved => self.on_move(target_window.bounds().unwrap()),
             Event::Resized => self.on_resize(target_window.bounds().unwrap()),

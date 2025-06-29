@@ -89,7 +89,11 @@ mod application_updates {
 
         async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
-                log::debug!("Received application event for {wallpaper_id}: {event:?}");
+                log::debug!(
+                    "Received application event: \
+                    event = {event:?}, \
+                    wallpaper_id = {wallpaper_id}"
+                );
 
                 on_application_event(wallpaper_id, &config, event, &overlay_hosts, &app).await;
             }
@@ -151,6 +155,12 @@ mod config_updates {
             let config = Arc::clone(&config);
 
             tauri::async_runtime::spawn(async move {
+                log::info!(
+                    "Applying wallpaper: \
+                    payload = {payload:?}, \
+                    wallpaper_id = {wallpaper_id}"
+                );
+
                 apply_wallpaper(wallpaper_id, config, overlay_hosts, payload).await;
             });
         })
