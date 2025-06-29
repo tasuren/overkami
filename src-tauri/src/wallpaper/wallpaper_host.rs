@@ -65,10 +65,7 @@ mod application_updates {
     use uuid::Uuid;
 
     use crate::{
-        os::{
-            application_observer::{listen_application, ApplicationEvent},
-            windows::get_windows,
-        },
+        os::application_observer::{listen_application, ApplicationEvent},
         wallpaper::{overlay_host::OverlayHost, wallpaper_host::SharedWallpaperConfig},
     };
 
@@ -110,12 +107,10 @@ mod application_updates {
         match event {
             ApplicationEvent::Added(pid) => {
                 let config = config.lock().await;
-                let windows = get_windows().await;
 
-                let overlay_host =
-                    OverlayHost::start(wallpaper_id, pid, &config, &windows, app.clone())
-                        .await
-                        .expect("Failed to start overlay host");
+                let overlay_host = OverlayHost::start(wallpaper_id, pid, &config, app.clone())
+                    .await
+                    .expect("Failed to start overlay host");
 
                 overlay_hosts.lock().await.push(overlay_host);
             }

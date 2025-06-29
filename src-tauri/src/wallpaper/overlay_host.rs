@@ -6,12 +6,13 @@ use tauri::{
     AppHandle, Listener, Manager,
 };
 use uuid::Uuid;
-use window_getter::{Window, WindowId};
+use window_getter::WindowId;
 use window_observer::{tokio::sync::mpsc, WindowObserver};
 
 use crate::{
-    config::{Filter, Wallpaper},
+    config::{Filter, Wallpaper, WallpaperSource},
     event_manager::EventManager,
+    os::windows::get_windows,
     wallpaper::overlay::Overlay,
 };
 
@@ -23,7 +24,7 @@ pub type FiltersState = Arc<Mutex<Vec<Filter>>>;
 /// This struct is responsible for observing window events
 /// and managing overlays based on the provided filters.
 pub struct OverlayHost {
-    _wallpaper_id: Uuid,
+    wallpaper_id: Uuid,
     pid: u32,
     observer: WindowObserver,
     overlays: Overlays,
@@ -36,7 +37,6 @@ impl OverlayHost {
         wallpaper_id: Uuid,
         pid: u32,
         config: &Wallpaper,
-        windows: &[Window],
         app: AppHandle,
     ) -> anyhow::Result<Self> {
         log::info!(
@@ -79,7 +79,7 @@ impl OverlayHost {
         });
 
         let overlay_host = Self {
-            _wallpaper_id: wallpaper_id,
+            wallpaper_id,
             pid,
             observer,
             overlays,
@@ -88,22 +88,30 @@ impl OverlayHost {
         };
 
         // Initialize overlays for existing windows.
-        let mut overlays = overlay_host.overlays.lock().await;
+        overlay_host
+            .create_windows(&filters, &config.source, config.opacity)
+            .await;
 
-        for window in windows {
+        Ok(overlay_host)
+    }
+
+    async fn create_windows(&self, filters: &FiltersState, source: &WallpaperSource, opacity: f64) {
+        let mut overlays = self.overlays.lock().await;
+
+        for window in get_windows().await {
             if let Ok(window_pid) = window.owner_pid() {
-                if window_pid as u32 != pid {
+                if window_pid as u32 != self.pid {
                     continue;
                 }
 
                 let window_id = window.id();
                 let Some(overlay) = Overlay::new(
-                    wallpaper_id,
+                    self.wallpaper_id,
                     window.clone(),
-                    &config.source,
-                    config.opacity,
-                    app.clone(),
-                    Arc::clone(&filters),
+                    source,
+                    opacity,
+                    self.app.clone(),
+                    Arc::clone(filters),
                 )
                 .await
                 else {
@@ -113,9 +121,6 @@ impl OverlayHost {
                 overlays.insert(window_id, overlay);
             }
         }
-
-        drop(overlays);
-        Ok(overlay_host)
     }
 
     pub fn pid(&self) -> u32 {
@@ -125,7 +130,7 @@ impl OverlayHost {
     pub async fn stop(self) {
         log::info!(
             "Stopping overlay host: wallpaper_id = {}, pid = {}",
-            self._wallpaper_id,
+            self.wallpaper_id,
             self.pid
         );
 
