@@ -251,7 +251,7 @@ mod observer {
                 let target_window: Option<Window> = target_window.try_into().ok().flatten();
 
                 if let Some(target_window) = target_window {
-                    log::info!(
+                    log::debug!(
                         "Received window event for window: \
                         target_window = {:?}, \
                         event = {event:?}, \
