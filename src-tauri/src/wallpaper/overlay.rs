@@ -16,6 +16,7 @@ use crate::{
 /// This struct has responsibility for managing overlay window.
 /// e.g. position, size, opacity, source, and opacity or source configuration updates.
 pub struct Overlay {
+    wallpaper_id: Uuid,
     target_window: Window,
     overlay_window: WebviewWindow,
     listener: u32,
@@ -78,7 +79,7 @@ impl Overlay {
         }
 
         log::info!(
-            "Creating overlay: wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
+            "Create new overlay: wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
             target_window.id()
         );
 
@@ -94,6 +95,7 @@ impl Overlay {
         });
 
         let overlay = Self {
+            wallpaper_id,
             target_window,
             overlay_window,
             listener,
@@ -168,8 +170,13 @@ impl Overlay {
     }
 
     pub fn close(&self) {
-        self.overlay_window.app_handle().unlisten(self.listener);
+        log::info!(
+            "Closing overlay window: wallpaper_id = {}, target_window_id = {:?}",
+            self.wallpaper_id,
+            self.target_window.id()
+        );
 
+        self.overlay_window.app_handle().unlisten(self.listener);
         self.overlay_window.close().unwrap();
     }
 }
@@ -182,7 +189,7 @@ pub fn create_window(
     opacity: f64,
 ) -> WebviewWindow {
     let label = format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32());
-    log::info!("Creating overlay window with label: {label}");
+    log::info!("Create overlay window with label: {label}");
 
     let window = WebviewWindowBuilder::new(app, label, source::get_wallpaper_url(source))
         .decorations(false)

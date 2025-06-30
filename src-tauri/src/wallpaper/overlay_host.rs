@@ -23,23 +23,23 @@ pub type Overlays = Arc<Mutex<HashMap<WindowId, Overlay>>>;
 /// This struct is responsible for observing window events
 /// and managing overlays based on the provided filters.
 pub struct OverlayHost {
+    app: AppHandle,
     wallpaper_id: Uuid,
     pid: u32,
     observer: WindowObserver,
     overlays: Overlays,
     event_listener: u32,
-    app: AppHandle,
 }
 
 impl OverlayHost {
     pub async fn start(
+        app: AppHandle,
         wallpaper_id: Uuid,
         pid: u32,
         config: &Wallpaper,
-        app: AppHandle,
     ) -> anyhow::Result<Option<Self>> {
         log::info!(
-            "Starting new overlay host: wallpaper_id = {}, pid = {}",
+            "Start new overlay host: wallpaper_id = {}, pid = {}",
             wallpaper_id,
             pid
         );
@@ -55,11 +55,11 @@ impl OverlayHost {
 
         let overlays: Overlays = Default::default();
         observer::spawn_overlay_management_task(
+            app.clone(),
             wallpaper_id,
             pid,
             Arc::clone(&overlays),
             rx,
-            app.clone(),
         );
 
         // Listen for configuration changes.
@@ -240,11 +240,11 @@ mod observer {
     }
 
     pub fn spawn_overlay_management_task(
+        app: AppHandle,
         wallpaper_id: Uuid,
         pid: u32,
         overlays: Overlays,
         mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
-        app: AppHandle,
     ) {
         tauri::async_runtime::spawn(async move {
             while let Some((target_window, event)) = rx.recv().await {
@@ -291,6 +291,12 @@ mod observer {
         let mut overlays = overlays.lock().await;
 
         let Some(overlay) = overlays.get(&window.id()) else {
+            log::debug!(
+                "New window is detected, creating new overlay for it: \
+                wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
+                window.id()
+            );
+
             let config = app.state::<ConfigState>();
             let config = config.lock().await;
             let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {

@@ -20,7 +20,7 @@ pub struct WallpaperHost {
 
 impl WallpaperHost {
     pub async fn new(id: Uuid, config: Wallpaper, app: AppHandle) -> Self {
-        log::info!("Creating wallpaper host for ID: {id}");
+        log::info!("Create wallpaper host for ID: {id}");
 
         let event_manager_state = app.state::<EventManagerState>();
         let overlay_hosts: OverlayHosts = Default::default();
@@ -108,7 +108,7 @@ mod application_updates {
             ApplicationEvent::Added(pid) => {
                 let config = config.lock().await;
 
-                let overlay_host = OverlayHost::start(wallpaper_id, pid, &config, app.clone())
+                let overlay_host = OverlayHost::start(app.clone(), wallpaper_id, pid, &config)
                     .await
                     .expect("Failed to start overlay host");
 
@@ -158,7 +158,7 @@ mod config_updates {
 
             tauri::async_runtime::spawn(async move {
                 log::info!(
-                    "Applying wallpaper: \
+                    "Apply wallpaper: \
                     payload = {payload:?}, \
                     wallpaper_id = {wallpaper_id}"
                 );
