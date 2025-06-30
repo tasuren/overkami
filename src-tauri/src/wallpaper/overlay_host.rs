@@ -190,35 +190,7 @@ mod observer {
 
             #[cfg(target_os = "macos")]
             {
-                let retry_timeout = std::time::Instant::now();
-
-                loop {
-                    if retry_timeout.elapsed() > std::time::Duration::from_secs(5) {
-                        log::info!(
-                            "Failed to start window observer because \
-                            it may does not support accessibility API: \
-                            wallpaper_id = {wallpaper_id}, pid = {pid}"
-                        );
-
-                        break Ok(None);
-                    }
-
-                    match start() {
-                        Err(window_observer::Error::InvalidProcessToObserve { .. }) => {
-                            // On macOS, the application that has just been launched
-                            // may not be ready to observe yet. So we need to retry.
-
-                            log::info!(
-                                "Retrying to start window observer: \
-                                wallpaper_id = {wallpaper_id}, pid = {pid}"
-                            );
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-
-                            continue;
-                        }
-                        observer => break observer.map(Some).map_err(|e| e.into()),
-                    }
-                }
+                start_observer_with_retry(start, wallpaper_id, pid)
             }
             #[cfg(target_os = "windows")]
             {
@@ -227,6 +199,43 @@ mod observer {
         })
         .await
         .unwrap()
+    }
+
+    #[cfg(target_os = "macos")]
+    fn start_observer_with_retry(
+        start: impl Fn() -> Result<WindowObserver, window_observer::Error>,
+        wallpaper_id: Uuid,
+        pid: u32,
+    ) -> anyhow::Result<Option<WindowObserver>> {
+        // On macOS, the application that has just been launched may not be ready
+        // to observe yet. So we need to retry.
+
+        let retry_timeout = std::time::Instant::now();
+
+        loop {
+            if retry_timeout.elapsed() > std::time::Duration::from_secs(5) {
+                log::info!(
+                    "Failed to start window observer because \
+                    it may does not support accessibility API: \
+                    wallpaper_id = {wallpaper_id}, pid = {pid}"
+                );
+
+                break Ok(None);
+            }
+
+            match start() {
+                Err(window_observer::Error::InvalidProcessToObserve { .. }) => {
+                    log::info!(
+                        "Retrying to start window observer: \
+                        wallpaper_id = {wallpaper_id}, pid = {pid}"
+                    );
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+
+                    continue;
+                }
+                observer => break observer.map(Some).map_err(|e| e.into()),
+            }
+        }
     }
 
     pub fn spawn_overlay_management_task(
