@@ -8,7 +8,6 @@ use crate::{
     event_manager::payload::ApplyWallpaper,
     os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
-    wallpaper::overlay_host::FiltersState,
     EventManagerState,
 };
 
@@ -33,7 +32,7 @@ impl Overlay {
             }
             Err(e) => {
                 log::info!(
-                    "Failed to get title for {:?}, ignoring it. Detail: {e}",
+                    "Failed to get title for {:?}, ignoring this window. Detail: {e}",
                     target_window.id()
                 );
 
@@ -45,7 +44,7 @@ impl Overlay {
             Ok(bounds) => bounds,
             Err(e) => {
                 log::info!(
-                    "Failed to get window bounds for {:?}, ignoreing it. Detail: {e}",
+                    "Failed to get window bounds for {:?}, ignoreing this window. Detail: {e}",
                     target_window.id()
                 );
 
@@ -56,7 +55,7 @@ impl Overlay {
         // On windows, some windows may have zero width or height.
         if bounds.width() == 0. || bounds.height() == 0. {
             log::info!(
-                "{:?} has no width or height, no overlay will be created.",
+                "{:?} has no width or height, ignoreing this window.",
                 target_window.id()
             );
 
@@ -71,10 +70,10 @@ impl Overlay {
         target_window: Window,
         source: &WallpaperSource,
         opacity: f64,
+        filters: &[Filter],
         app: AppHandle,
-        filters: FiltersState,
     ) -> Option<Self> {
-        if !Self::should_handle(&target_window, &filters.lock().await).await {
+        if !Self::should_handle(&target_window, filters).await {
             return None;
         }
 
