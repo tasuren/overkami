@@ -114,7 +114,7 @@ export default function SourceField(props: {
                 type="button"
                 class={inputClass({
                   file: true,
-                  class: "text-left font-mono",
+                  class: "text-left font-mono overflow-hidden",
                 })}
                 onClick={selectFile}
                 ref={buttonElement}
