@@ -214,7 +214,7 @@ mod observer {
         let retry_timeout = std::time::Instant::now();
 
         loop {
-            if retry_timeout.elapsed() > std::time::Duration::from_secs(5) {
+            if retry_timeout.elapsed() > std::time::Duration::from_secs(30) {
                 log::info!(
                     "Failed to start window observer because \
                     it may does not support accessibility API: \
@@ -230,7 +230,7 @@ mod observer {
                         "Retrying to start window observer: \
                         wallpaper_id = {wallpaper_id}, pid = {pid}"
                     );
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(500));
 
                     continue;
                 }
