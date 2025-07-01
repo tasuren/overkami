@@ -67,6 +67,7 @@ pub mod payload {
 
     /// Represents the payload for applying wallpaper settings.
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct ApplyWallpaper {
         pub application_path: Option<PathBuf>,
         pub filters: Option<Vec<Filter>>,

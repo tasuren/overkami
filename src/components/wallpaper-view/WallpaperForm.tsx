@@ -95,6 +95,7 @@ export default function WallpaperForm(props: {
       wallpaper = newWallpaper;
     } else {
       const changedValues = getValues(form, { shouldDirty: true });
+      console.log(changedValues, newWallpaper, form.dirty);
 
       applyWallpaper({
         ...changedValues,
