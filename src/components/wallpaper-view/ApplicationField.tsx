@@ -5,6 +5,7 @@ import {
   type FormStore,
   required,
 } from "@modular-forms/solid";
+import { basename } from "@tauri-apps/api/path";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
 import { For, Show, createResource, splitProps } from "solid-js";
@@ -71,6 +72,10 @@ function ApplicationSelect(
     refetch();
   };
 
+  const [currentFileName] = createResource(async () =>
+    field.value ? await basename(field.value) : undefined,
+  );
+
   const { base, select, chevron } = selectClass();
 
   return (
@@ -102,6 +107,18 @@ function ApplicationSelect(
               </option>
             )}
           </For>
+
+          <Show
+            when={
+              currentFileName() &&
+              applicationWindows()?.find((app) => app.path === field.value) ===
+                undefined
+            }
+          >
+            <option value={field.value} selected>
+              {currentFileName()}
+            </option>
+          </Show>
         </select>
 
         <span class={chevron()}>
