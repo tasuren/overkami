@@ -153,6 +153,10 @@ mod config_updates {
         event_manager: &EventManager,
     ) -> u32 {
         event_manager.listen_apply_wallpaper(move |payload| {
+            if payload.id != wallpaper_id {
+                return;
+            }
+
             let overlay_hosts = Arc::clone(&overlay_hosts);
             let config = Arc::clone(&config);
 
@@ -175,6 +179,10 @@ mod config_updates {
         payload: ApplyWallpaper,
     ) {
         let mut config = config.lock().await;
+
+        if let Some(name) = payload.name {
+            config.name = name;
+        }
 
         if let Some(application_path) = payload.application_path {
             // If the application path has changed, we need to update the application listener.

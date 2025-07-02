@@ -3,6 +3,7 @@ import {
   type SubmitHandler,
   createFormStore,
   getValues,
+  reset,
 } from "@modular-forms/solid";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import Save from "lucide-solid/icons/save";
@@ -20,6 +21,7 @@ import type {
   Wallpaper,
   WallpaperSource,
 } from "../../lib/binding/payload_config";
+import type { ApplyWallpaper } from "../../lib/binding/payload_wallpaper_event";
 import { buttonClass } from "../ui";
 import ApplicationField from "./ApplicationField";
 import FilterFields from "./FilterFields";
@@ -60,10 +62,13 @@ export default function WallpaperForm(props: {
   let { wallpaper, id, setDirty } = props;
   let isNew = wallpaper === undefined;
   const initialValues = wallpaper || DEFAULT_WALLPAPER_VALUE;
+  const undoInitial: ApplyWallpaper = { id };
 
   const form = createFormStore<WallpaperForm>({
     initialValues,
   });
+  form;
+
   const [, setWallpapers] = useWallpapers();
   const [, setView] = useView();
 
@@ -95,9 +100,8 @@ export default function WallpaperForm(props: {
       wallpaper = newWallpaper;
     } else {
       const changedValues = getValues(form, { shouldDirty: true });
-      console.log(changedValues, newWallpaper, form.dirty);
-
-      applyWallpaper({
+      const payload = {
+        id,
         ...changedValues,
         filters:
           changedValues.filters !== undefined
@@ -105,8 +109,13 @@ export default function WallpaperForm(props: {
             : undefined,
         source:
           changedValues.source !== undefined ? newWallpaper.source : undefined,
-      });
+      };
+
+      applyWallpaper(payload);
     }
+
+    // Reset dirty state after applying.
+    reset(form, { initialValues: newWallpaper });
   };
 
   const deleteWallpaper = async () => {
@@ -125,7 +134,9 @@ export default function WallpaperForm(props: {
 
   onCleanup(() => {
     if (form.dirty) {
-      applyWallpaper(initialValues);
+      // Reset wallpaper state.
+      // Wallpaper state may be dirty if the user use "Try" button.
+      applyWallpaper({ id, ...initialValues });
     }
   });
 

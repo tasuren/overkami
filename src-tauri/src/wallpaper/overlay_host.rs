@@ -64,9 +64,13 @@ impl OverlayHost {
 
         // Listen for configuration changes.
         let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
-            move |data| {
+            move |payload| {
+                if payload.id != wallpaper_id {
+                    return;
+                }
+
                 async_runtime::spawn(async move {
-                    if let Some(new) = data.filters {
+                    if let Some(new) = payload.filters {
                         log::info!(
                             "Updating filters for overlay host: \
                             wallpaper_id = {wallpaper_id}, \
@@ -225,7 +229,7 @@ mod observer {
             }
 
             match start() {
-                Err(window_observer::Error::InvalidProcessToObserve { .. }) => {
+                Err(window_observer::Error::InvalidProcessId(pid)) => {
                     log::info!(
                         "Retrying to start window observer: \
                         wallpaper_id = {wallpaper_id}, pid = {pid}"
@@ -233,6 +237,15 @@ mod observer {
                     std::thread::sleep(std::time::Duration::from_millis(500));
 
                     continue;
+                }
+                Err(window_observer::Error::NotSupported) => {
+                    log::info!(
+                        "Failed to start window observer because \
+                        it does not support accessibility API: \
+                        wallpaper_id = {wallpaper_id}, pid = {pid}"
+                    );
+
+                    break Ok(None);
                 }
                 observer => break observer.map(Some).map_err(|e| e.into()),
             }

@@ -90,7 +90,9 @@ impl Overlay {
             let overlay_window = overlay_window.clone();
 
             move |payload| {
-                on_apply_wallpaper(&overlay_window, payload);
+                if payload.id == wallpaper_id {
+                    on_apply_wallpaper(&overlay_window, payload);
+                }
             }
         });
 

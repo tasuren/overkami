@@ -62,6 +62,7 @@ pub mod payload {
     use std::path::PathBuf;
 
     use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
 
     use crate::config::{Filter, Wallpaper, WallpaperSource};
 
@@ -69,6 +70,8 @@ pub mod payload {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ApplyWallpaper {
+        pub id: Uuid,
+        pub name: Option<String>,
         pub application_path: Option<PathBuf>,
         pub filters: Option<Vec<Filter>>,
         pub opacity: Option<f64>,
@@ -78,7 +81,7 @@ pub mod payload {
     /// Represents the payload for adding a new wallpaper configuration.
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct AddWallpaper {
-        pub id: uuid::Uuid,
+        pub id: Uuid,
         pub wallpaper: Wallpaper,
     }
 }
