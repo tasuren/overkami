@@ -103,56 +103,61 @@ impl Overlay {
             listener,
         };
 
-        // Set initial overlay order.
-        match overlay.target_window.is_frontmost() {
-            Err(e) => log::warn!(
-                "Failed to check if window {:?} is frontmost, skipping always on top. Detail: {e}",
-                overlay.target_window.id()
-            ),
-            Ok(true) => overlay.on_activate(),
-            Ok(false) => overlay.on_deactivate().await,
-        }
-
-        // Set initial position and size
-        overlay.on_move(overlay.target_window.bounds().unwrap());
-        overlay.on_resize(overlay.target_window.bounds().unwrap());
+        overlay.setup_initial_window_state().await;
 
         Some(overlay)
     }
 
+    async fn setup_initial_window_state(&self) {
+        // Set initial overlay order.
+        match self.target_window.is_frontmost() {
+            Err(e) => log::warn!(
+                "Failed to check if window {:?} is frontmost, \
+                skipping always on top. Detail: {e}",
+                self.target_window.id()
+            ),
+            Ok(true) => self.activate(),
+            Ok(false) => self.deactivate().await,
+        }
+
+        // Set initial position and size
+        self.move_(self.target_window.bounds().unwrap());
+        self.resize(self.target_window.bounds().unwrap());
+    }
+
     pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
         match event {
-            Event::Moved => self.on_move(target_window.bounds().unwrap()),
-            Event::Resized => self.on_resize(target_window.bounds().unwrap()),
-            Event::Activated => self.on_activate(),
-            Event::Deactivated => self.on_deactivate().await,
+            Event::Moved => self.move_(target_window.bounds().unwrap()),
+            Event::Resized => self.resize(target_window.bounds().unwrap()),
+            Event::Activated => self.activate(),
+            Event::Deactivated => self.deactivate().await,
             _ => {}
         }
     }
 
-    pub fn on_move(&self, bounds: window_getter::Bounds) {
+    pub fn move_(&self, bounds: window_getter::Bounds) {
         let position = adjust_position(&self.overlay_window, bounds.x(), bounds.y());
 
         self.overlay_window.set_position(position).unwrap();
     }
 
-    pub fn on_resize(&self, bounds: window_getter::Bounds) {
+    pub fn resize(&self, bounds: window_getter::Bounds) {
         let size = adjust_size(&self.overlay_window, bounds.width(), bounds.height());
 
         self.overlay_window.set_size(size).unwrap();
     }
 
-    pub fn on_activate(&self) {
+    pub fn activate(&self) {
         self.overlay_window.set_always_on_top(true).unwrap();
     }
 
-    pub async fn on_deactivate(&self) {
+    pub async fn deactivate(&self) {
         self.overlay_window.set_always_on_top(false).unwrap();
 
-        self.on_order_change().await;
+        self.set_order().await;
     }
 
-    pub async fn on_order_change(&self) {
+    pub async fn set_order(&self) {
         #[cfg(target_os = "macos")]
         {
             // On macOS, we can't set the order above immediately.
@@ -191,7 +196,7 @@ pub fn create_window(
     opacity: f64,
 ) -> WebviewWindow {
     let label = format!("wallpaper-{}-{}", wallpaper_id, target_window.id().as_u32());
-    log::info!("Create overlay window with label: {label}");
+    log::info!("Create overlay window with label `{label}`.");
 
     let window = WebviewWindowBuilder::new(app, label, source::get_wallpaper_url(source))
         .decorations(false)

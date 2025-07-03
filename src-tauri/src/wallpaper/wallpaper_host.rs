@@ -110,15 +110,12 @@ mod application_updates {
 
                 let overlay_host = OverlayHost::start(app.clone(), wallpaper_id, pid, &config)
                     .await
-                    .expect("Failed to start overlay host");
+                    .unwrap();
 
                 if let Some(overlay_host) = overlay_host {
                     overlay_hosts.lock().await.push(overlay_host);
                 } else {
-                    log::info!(
-                        "Overlay host creation is skipped: \
-                        wallpaper_id = {wallpaper_id}, pid = {pid}"
-                    );
+                    log::info!("Overlay host creation is skipped");
                 }
             }
             ApplicationEvent::Removed(pid) => {

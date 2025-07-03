@@ -46,7 +46,7 @@ impl OverlayHost {
 
         // Initialize the observer and overlays.
         let (tx, rx) = mpsc::unbounded_channel();
-        let Some(observer) = observer::start_observer(wallpaper_id, pid, tx)
+        let Some(observer) = observer::start_observer(pid, tx)
             .await
             .context("Failed to start observer")?
         else {
@@ -54,7 +54,7 @@ impl OverlayHost {
         };
 
         let overlays: Overlays = Default::default();
-        observer::spawn_overlay_management_task(
+        overlay_management::spawn_overlay_management_task(
             app.clone(),
             wallpaper_id,
             pid,
@@ -151,28 +151,14 @@ impl OverlayHost {
 }
 
 mod observer {
-    use std::sync::Arc;
-
     use pollster::FutureExt;
-    use tauri::{AppHandle, Manager};
-    use uuid::Uuid;
-    use window_getter::Window;
-    use window_observer::{
-        tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender},
-        Event, WindowObserver,
-    };
-
-    use crate::{
-        wallpaper::{overlay::Overlay, overlay_host::Overlays},
-        ConfigState,
-    };
+    use window_observer::{tokio::sync::mpsc::UnboundedSender, Event, WindowObserver};
 
     pub async fn start_observer(
-        wallpaper_id: Uuid,
         pid: u32,
         tx: UnboundedSender<(window_observer::Window, Event)>,
     ) -> anyhow::Result<Option<WindowObserver>> {
-        log::info!("Starting window observer: wallpaper_id = {wallpaper_id}, pid = {pid}");
+        log::info!("Starting window observer for PID {pid}.");
 
         // `WindowObserver::start` future will not be `Send`, so we need to
         // spawn it on a blocking thread. Otherwise, we can't spawn tasks
@@ -195,7 +181,7 @@ mod observer {
 
             #[cfg(target_os = "macos")]
             {
-                start_observer_with_retry(start, wallpaper_id, pid)
+                start_observer_with_retry(start)
             }
             #[cfg(target_os = "windows")]
             {
@@ -209,8 +195,6 @@ mod observer {
     #[cfg(target_os = "macos")]
     fn start_observer_with_retry(
         start: impl Fn() -> Result<WindowObserver, window_observer::Error>,
-        wallpaper_id: Uuid,
-        pid: u32,
     ) -> anyhow::Result<Option<WindowObserver>> {
         // On macOS, the application that has just been launched may not be ready
         // to observe yet. So we need to retry.
@@ -219,21 +203,17 @@ mod observer {
 
         loop {
             if retry_timeout.elapsed() > std::time::Duration::from_secs(30) {
-                log::info!(
+                log::warn!(
                     "Failed to start window observer because \
-                    it may does not support accessibility API: \
-                    wallpaper_id = {wallpaper_id}, pid = {pid}"
+                    it may does not support accessibility API or some reason."
                 );
 
                 break Ok(None);
             }
 
             match start() {
-                Err(window_observer::Error::InvalidProcessId(pid)) => {
-                    log::info!(
-                        "Retrying to start window observer: \
-                        wallpaper_id = {wallpaper_id}, pid = {pid}"
-                    );
+                Err(window_observer::Error::InvalidProcessId(_)) => {
+                    log::debug!("Retrying to start window observer...");
                     std::thread::sleep(std::time::Duration::from_millis(500));
 
                     continue;
@@ -241,9 +221,10 @@ mod observer {
                 Err(window_observer::Error::NotSupported) => {
                     log::info!(
                         "Failed to start window observer because \
-                        it does not support accessibility API: \
-                        wallpaper_id = {wallpaper_id}, pid = {pid}"
+                        it does not support accessibility API."
                     );
+
+                    // TODO: Return an error to frontend.
 
                     break Ok(None);
                 }
@@ -251,6 +232,20 @@ mod observer {
             }
         }
     }
+}
+
+mod overlay_management {
+    use std::sync::Arc;
+
+    use tauri::{AppHandle, Manager};
+    use tokio::sync::mpsc::UnboundedReceiver;
+    use uuid::Uuid;
+    use window_getter::Window;
+    use window_observer::Event;
+
+    use crate::{wallpaper::overlay::Overlay, ConfigState};
+
+    use super::Overlays;
 
     pub fn spawn_overlay_management_task(
         app: AppHandle,
@@ -261,18 +256,15 @@ mod observer {
     ) {
         tauri::async_runtime::spawn(async move {
             while let Some((target_window, event)) = rx.recv().await {
+                log::debug!(
+                    "Received window event {event:?}: \
+                    wallpaper_id = {wallpaper_id}, \
+                    pid = {pid}"
+                );
+
                 let target_window: Option<Window> = target_window.try_into().ok().flatten();
 
                 if let Some(target_window) = target_window {
-                    log::debug!(
-                        "Received window event for window: \
-                        target_window = {:?}, \
-                        event = {event:?}, \
-                        wallpaper_id = {wallpaper_id}, \
-                        pid = {pid}",
-                        target_window.id()
-                    );
-
                     manage_overlay(
                         wallpaper_id,
                         event,
@@ -281,14 +273,9 @@ mod observer {
                         app.clone(),
                     )
                     .await;
+                    continue;
                 } else {
-                    log::error!(
-                        "Received window event but window is invalid as \
-                        `window_getter::Window`: \
-                        event = {event:?}, \
-                        wallpaper_id = {wallpaper_id}, \
-                        pid = {pid}"
-                    );
+                    log::error!("Received window event but it is invalid as window_getter.");
                 }
             }
         });
@@ -305,19 +292,14 @@ mod observer {
 
         let Some(overlay) = overlays.get(&window.id()) else {
             log::debug!(
-                "New window is detected, creating new overlay for it: \
-                wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
+                "New window is detected, creating new overlay for it: {:?}",
                 window.id()
             );
 
             let config = app.state::<ConfigState>();
             let config = config.lock().await;
             let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {
-                log::warn!(
-                    "No wallpaper found so skip overlay creation: \
-                    wallpaper_id = {wallpaper_id}, target_window_id = {:?}",
-                    window.id()
-                );
+                log::warn!("No wallpaper found so skip overlay creation.");
 
                 return;
             };
