@@ -1,17 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
-use tauri::{
-    async_runtime::{self, Mutex},
-    AppHandle, Listener, Manager,
-};
+use tauri::{async_runtime::Mutex, AppHandle};
 use uuid::Uuid;
 use window_getter::WindowId;
 use window_observer::{tokio::sync::mpsc, WindowObserver};
 
 use crate::{
     config::{Filter, Wallpaper, WallpaperSource},
-    event_manager::EventManager,
     os::windows::get_windows,
     wallpaper::overlay::Overlay,
 };
@@ -28,7 +24,6 @@ pub struct OverlayHost {
     pid: u32,
     observer: WindowObserver,
     overlays: Overlays,
-    event_listener: u32,
 }
 
 impl OverlayHost {
@@ -62,32 +57,11 @@ impl OverlayHost {
             rx,
         );
 
-        // Listen for configuration changes.
-        let event_listener = app.state::<EventManager>().listen_apply_wallpaper({
-            move |payload| {
-                if payload.id != wallpaper_id {
-                    return;
-                }
-
-                async_runtime::spawn(async move {
-                    if let Some(new) = payload.filters {
-                        log::info!(
-                            "Updating filters for overlay host: \
-                            wallpaper_id = {wallpaper_id}, \
-                            pid = {pid}, \
-                            filters = {new:?}"
-                        );
-                    }
-                });
-            }
-        });
-
         let overlay_host = Self {
             wallpaper_id,
             pid,
             observer,
             overlays,
-            event_listener,
             app: app.clone(),
         };
 
@@ -142,10 +116,15 @@ impl OverlayHost {
             .stop()
             .await
             .expect("Failed to stop window observer");
-        self.app.unlisten(self.event_listener);
 
         for overlay in self.overlays.lock().await.values() {
             overlay.close();
+        }
+    }
+
+    pub async fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
+        for overlay in self.overlays.lock().await.values() {
+            overlay.apply_wallpaper(opacity, source.clone());
         }
     }
 }
@@ -266,11 +245,11 @@ mod overlay_management {
 
                 if let Some(target_window) = target_window {
                     manage_overlay(
+                        app.clone(),
                         wallpaper_id,
                         event,
                         target_window,
                         Arc::clone(&overlays),
-                        app.clone(),
                     )
                     .await;
                     continue;
@@ -282,24 +261,24 @@ mod overlay_management {
     }
 
     async fn manage_overlay(
+        app: AppHandle,
         wallpaper_id: Uuid,
         event: Event,
         window: Window,
         overlays: Overlays,
-        app: AppHandle,
     ) {
         let mut overlays = overlays.lock().await;
 
         let Some(overlay) = overlays.get(&window.id()) else {
-            log::debug!(
-                "New window is detected, creating new overlay for it: {:?}",
-                window.id()
-            );
+            log::debug!("New window is detected: {:?}", window.id());
 
             let config = app.state::<ConfigState>();
             let config = config.lock().await;
             let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {
-                log::warn!("No wallpaper found so skip overlay creation.");
+                log::warn!(
+                    "No wallpaper found so skip overlay creation for {:?}.",
+                    window.id()
+                );
 
                 return;
             };

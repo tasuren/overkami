@@ -1,6 +1,6 @@
-pub mod manager;
-pub mod overlay;
-pub mod overlay_host;
-pub mod wallpaper_host;
+mod manager;
+mod overlay;
+mod overlay_host;
+mod wallpaper_host;
 
-pub use manager::setup_wallpapers;
+pub use manager::{add_wallpaper, remove_wallpaper, setup_wallpapers, WallpaperHostsState};

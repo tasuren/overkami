@@ -1,14 +1,12 @@
-use tauri::{AppHandle, Listener, Manager, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, WebviewWindow, WebviewWindowBuilder};
 use uuid::Uuid;
 use window_getter::Window;
 use window_observer::Event;
 
 use crate::{
     config::{Filter, WallpaperSource},
-    event_manager::payload::ApplyWallpaper,
     os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
-    EventManagerState,
 };
 
 /// Represents an overlay window for a wallpaper.
@@ -19,7 +17,6 @@ pub struct Overlay {
     wallpaper_id: Uuid,
     target_window: Window,
     overlay_window: WebviewWindow,
-    listener: u32,
 }
 
 impl Overlay {
@@ -86,21 +83,11 @@ impl Overlay {
         let overlay_window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
 
         // Listen for updates of config
-        let listener = app.state::<EventManagerState>().listen_apply_wallpaper({
-            let overlay_window = overlay_window.clone();
-
-            move |payload| {
-                if payload.id == wallpaper_id {
-                    on_apply_wallpaper(&overlay_window, payload);
-                }
-            }
-        });
 
         let overlay = Self {
             wallpaper_id,
             target_window,
             overlay_window,
-            listener,
         };
 
         overlay.setup_initial_window_state().await;
@@ -123,6 +110,24 @@ impl Overlay {
         // Set initial position and size
         self.move_(self.target_window.bounds().unwrap());
         self.resize(self.target_window.bounds().unwrap());
+    }
+
+    pub fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
+        if let Some(opacity) = opacity {
+            log::info!("Update wallpaper overlay opacity to {opacity}");
+
+            self.overlay_window.set_opacity(opacity).unwrap();
+        }
+
+        if let Some(source) = source {
+            log::info!("Update wallpaper overlay opacity to {source:?}");
+
+            let url = source::get_wallpaper_url(&source);
+
+            self.overlay_window
+                .eval(format!("window.location.replace('{url}');"))
+                .unwrap();
+        }
     }
 
     pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
@@ -183,7 +188,6 @@ impl Overlay {
             self.target_window.id()
         );
 
-        self.overlay_window.app_handle().unlisten(self.listener);
         self.overlay_window.close().unwrap();
     }
 }
@@ -221,25 +225,7 @@ pub fn create_window(
     window
 }
 
-pub fn on_apply_wallpaper(window: &WebviewWindow, payload: ApplyWallpaper) {
-    if let Some(opacity) = payload.opacity {
-        log::info!("Update wallpaper overlay opacity to {opacity}");
-
-        window.set_opacity(opacity).unwrap();
-    }
-
-    if let Some(source) = payload.source {
-        log::info!("Update wallpaper overlay opacity to {source:?}");
-
-        let url = source::get_wallpaper_url(&source);
-
-        window
-            .eval(format!("window.location.replace('{url}');"))
-            .unwrap();
-    }
-}
-
-mod source {
+pub mod source {
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     use tauri::{Url, WebviewUrl};
 

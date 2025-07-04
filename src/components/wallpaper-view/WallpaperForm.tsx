@@ -21,7 +21,6 @@ import type {
   Wallpaper,
   WallpaperSource,
 } from "../../lib/binding/payload_config";
-import type { ApplyWallpaper } from "../../lib/binding/payload_wallpaper_event";
 import { buttonClass } from "../ui";
 import ApplicationField from "./ApplicationField";
 import FilterFields from "./FilterFields";
@@ -62,7 +61,6 @@ export default function WallpaperForm(props: {
   let { wallpaper, id, setDirty } = props;
   let isNew = wallpaper === undefined;
   const initialValues = wallpaper || DEFAULT_WALLPAPER_VALUE;
-  const undoInitial: ApplyWallpaper = { id };
 
   const form = createFormStore<WallpaperForm>({
     initialValues,
@@ -91,10 +89,7 @@ export default function WallpaperForm(props: {
 
   const handleApply = (newWallpaper: WallpaperForm) => {
     if (isNew) {
-      addWallpaper({
-        id,
-        wallpaper: newWallpaper,
-      });
+      addWallpaper(id, newWallpaper);
 
       isNew = false;
       wallpaper = newWallpaper;
@@ -111,7 +106,7 @@ export default function WallpaperForm(props: {
           changedValues.source !== undefined ? newWallpaper.source : undefined,
       };
 
-      applyWallpaper(payload);
+      applyWallpaper(id, payload);
     }
 
     // Reset dirty state after applying.
@@ -136,7 +131,7 @@ export default function WallpaperForm(props: {
     if (form.dirty) {
       // Reset wallpaper state.
       // Wallpaper state may be dirty if the user use "Try" button.
-      applyWallpaper({ id, ...initialValues });
+      applyWallpaper(id, initialValues);
     }
   });
 

@@ -1,14 +1,14 @@
-import { emit } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import type { AddWallpaper, ApplyWallpaper } from "./payload_wallpaper_event";
 
-export async function applyWallpaper(payload: ApplyWallpaper) {
-  await emit("apply-wallpaper", payload);
+export async function applyWallpaper(id: string, payload: ApplyWallpaper) {
+  await invoke("apply-wallpaper", { id, payload });
 }
 
-export async function addWallpaper(payload: AddWallpaper) {
-  await emit("add-wallpaper", payload);
+export async function addWallpaper(id: string, payload: AddWallpaper) {
+  await invoke("add-wallpaper", { id, payload });
 }
 
 export async function removeWallpaper(id: string) {
-  await emit("remove-wallpaper", id);
+  await invoke("remove-wallpaper", { id });
 }
