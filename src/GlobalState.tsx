@@ -24,17 +24,14 @@ const initialConfig = await getConfig();
 export function GlobalStateProvider(props: ParentProps) {
   const [config, setConfig] = createSignal<Config>(initialConfig);
   const [wallpapers, setWallpapers] = createSignal<Wallpapers>(
-    {},
+    initialConfig.wallpapers,
     { equals: false },
   );
   const [view, setView] = createSignal<View>({ type: "home" });
 
-  createEffect(async () => {
-    setWallpapers(config().wallpapers);
-  });
-
   createEffect(
     on(wallpapers, (wallpapers) => {
+      console.log(1);
       setConfig({
         version: config().version,
         wallpapers: wallpapers,
