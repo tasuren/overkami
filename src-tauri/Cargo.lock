@@ -5813,7 +5813,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 [[package]]
 name = "window-getter"
 version = "0.1.0"
-source = "git+https://github.com/tasuren/window-getter-rs.git#29943b8645a371003126f42f5c45a992332340f6"
+source = "git+https://github.com/tasuren/window-getter-rs.git#db1d7208b59b921190fbe58e1a976eaa02bcded6"
 dependencies = [
  "objc2 0.6.1",
  "objc2-core-foundation",
@@ -5825,7 +5825,7 @@ dependencies = [
 [[package]]
 name = "window-observer"
 version = "0.1.0"
-source = "git+https://github.com/tasuren/window-observer-rs.git#22c93a211c249379c98ca5822cf15a433f60664d"
+source = "git+https://github.com/tasuren/window-observer-rs.git#a56dc539863d50acec07aa81d30753a4d33097e5"
 dependencies = [
  "accessibility",
  "accessibility-sys",

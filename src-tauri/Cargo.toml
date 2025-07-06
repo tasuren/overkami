@@ -25,7 +25,7 @@ serde_json = "1"
 dunce = "1.0.5"
 percent-encoding = "2.3.1"
 sysinfo = "0.35.2"
-window-observer = { git = "https://github.com/tasuren/window-observer-rs.git", features = ["macos-id"] }
+window-observer = { git = "https://github.com/tasuren/window-observer-rs.git", features = ["macos-private-api"] }
 window-getter = { git = "https://github.com/tasuren/window-getter-rs.git" }
 tauri-plugin-dialog = "2"
 applications = "0.3.1"
@@ -47,4 +47,4 @@ objc2-app-kit = { version = "0.3.1", default-features = false, features = ["NSRe
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
 version = "0.61.3"
-features = ["Win32_UI_WindowsAndMessaging"]
+features = ["Win32_UI_WindowsAndMessaging", "Win32_Graphics_Dwm"]

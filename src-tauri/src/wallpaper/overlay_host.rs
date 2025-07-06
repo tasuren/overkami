@@ -241,7 +241,7 @@ mod overlay_management {
                     pid = {pid}"
                 );
 
-                let target_window: Option<Window> = target_window.try_into().ok().flatten();
+                let target_window = target_window.create_window_getter_window().ok().flatten();
 
                 if let Some(target_window) = target_window {
                     manage_overlay(
