@@ -63,7 +63,7 @@ function filterObject<K extends string, V>(
   ) as Partial<Record<K, V>>;
 }
 
-function getSpecificFieldAsReplaced(
+function mapObj(
   from: ApplyWallpaper,
   to: ApplyWallpaper,
   filter: (
@@ -78,7 +78,7 @@ function getSpecificFieldAsReplaced(
   );
 }
 
-function getSpecificFieldAsReplacedUndefined(
+function mapObjUndefined(
   from: ApplyWallpaper,
   filter: (
     key: keyof ApplyWallpaper,
@@ -151,7 +151,7 @@ export default function WallpaperForm(props: {
 
       undo = Object.assign(
         undo,
-        getSpecificFieldAsReplaced(
+        mapObj(
           payload,
           initialValues,
           (_, value) => value !== undefined,
@@ -176,7 +176,7 @@ export default function WallpaperForm(props: {
       // are not needed anymore. So we can remove them.
       undo = Object.assign(
         undo,
-        getSpecificFieldAsReplacedUndefined(
+        mapObjUndefined(
           reverted,
           (_, value) => value !== undefined,
         ),
