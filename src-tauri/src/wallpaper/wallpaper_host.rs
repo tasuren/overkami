@@ -62,6 +62,8 @@ impl WallpaperHost {
     }
 
     async fn change_application(&self, old_app_path: PathBuf, new_app_path: PathBuf) {
+        println!("aa");
+
         // When the application is updated, we need to clear the overlay hosts.
         // Then we will set up new overlay hosts with the updated configuration.
         let old_overlay_hosts = std::mem::take(&mut *self.overlay_hosts.lock().await);
@@ -71,6 +73,7 @@ impl WallpaperHost {
         }
 
         // Register the new application listener due to application change.
+        println!("{old_app_path:?} {new_app_path:?}");
         if let Some(tx) = unlisten_application(&old_app_path, self.id).await {
             listen_application(tx, new_app_path, self.id).await;
         };

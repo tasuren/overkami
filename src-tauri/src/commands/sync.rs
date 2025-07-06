@@ -23,6 +23,7 @@ pub async fn apply_wallpaper(
             detail: None,
         });
     };
+    log::debug!("current: {wallpaper:?}");
 
     // Update the wallpaper configuration with the provided payload.
     let old_wallpaper = wallpaper.clone();
@@ -33,6 +34,8 @@ pub async fn apply_wallpaper(
     let hosts = hosts.lock().await;
 
     if let Some(host) = hosts.get(&id) {
+        println!("old: {old_wallpaper:?}");
+        println!("new: {payload:?}");
         host.apply_wallpaper(old_wallpaper, payload).await;
 
         Ok(())
@@ -50,6 +53,7 @@ async fn update_wallpaper_config(wallpaper: &mut Wallpaper, payload: payload::Ap
     }
 
     if let Some(application_path) = payload.application_path {
+        println!("{}", application_path.display());
         wallpaper.application_path = application_path;
     }
 
