@@ -151,11 +151,7 @@ export default function WallpaperForm(props: {
 
       undo = Object.assign(
         undo,
-        mapObj(
-          payload,
-          initialValues,
-          (_, value) => value !== undefined,
-        ),
+        mapObj(payload, initialValues, (_, value) => value !== undefined),
       );
 
       // Include values that have been changed twice and then reverted back
@@ -176,10 +172,7 @@ export default function WallpaperForm(props: {
       // are not needed anymore. So we can remove them.
       undo = Object.assign(
         undo,
-        mapObjUndefined(
-          reverted,
-          (_, value) => value !== undefined,
-        ),
+        mapObjUndefined(reverted, (_, value) => value !== undefined),
       );
     }
   };

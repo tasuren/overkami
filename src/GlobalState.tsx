@@ -1,9 +1,9 @@
 import {
-  type ParentProps,
   createContext,
   createEffect,
   createSignal,
   on,
+  type ParentProps,
   useContext,
 } from "solid-js";
 import { getConfig } from "./lib/binding/command_config";

@@ -60,10 +60,7 @@ function AddButton() {
   );
 }
 
-export function WallpaperCard(props: {
-  id: string;
-  wallpaper: Wallpaper;
-}) {
+export function WallpaperCard(props: { id: string; wallpaper: Wallpaper }) {
   const { wallpaper, id } = props;
   const [, setView] = useView();
 

@@ -15,9 +15,7 @@ import type { WallpaperSource } from "../../lib/binding/payload_config";
 import { fieldClass, iconClass, inputClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
-export default function SourceField(props: {
-  form: FormStore<WallpaperForm>;
-}) {
+export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
   const { form } = props;
 
   const [type, setType] = createSignal<WallpaperSource["type"]>("Picture");
