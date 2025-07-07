@@ -1,13 +1,7 @@
 mod webview_window {
     use anyhow::Context as _;
     use tauri::WebviewWindow;
-    use windows::Win32::{
-        Foundation::COLORREF,
-        UI::WindowsAndMessaging::{
-            GetWindowLongPtrW, SetLayeredWindowAttributes, SetWindowLongPtrW, SetWindowPos,
-            GWL_EXSTYLE, LWA_ALPHA, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, WS_EX_LAYERED,
-        },
-    };
+    use windows::Win32::{Foundation::*, UI::WindowsAndMessaging::*};
 
     impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
         fn setup_platform_specific(&self) -> anyhow::Result<()> {

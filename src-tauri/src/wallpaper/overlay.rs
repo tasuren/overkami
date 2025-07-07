@@ -83,7 +83,6 @@ impl Overlay {
         let overlay_window = create_window(&app, &wallpaper_id, &target_window, source, opacity);
 
         // Listen for updates of config
-
         let overlay = Self {
             wallpaper_id,
             target_window,
@@ -141,13 +140,21 @@ impl Overlay {
     }
 
     pub fn move_(&self, bounds: window_getter::Bounds) {
-        let position = adjust_position(&self.overlay_window, bounds.x(), bounds.y());
+        let position = adjust_position(
+            self.overlay_window.scale_factor().unwrap(),
+            bounds.x(),
+            bounds.y(),
+        );
 
         self.overlay_window.set_position(position).unwrap();
     }
 
     pub fn resize(&self, bounds: window_getter::Bounds) {
-        let size = adjust_size(&self.overlay_window, bounds.width(), bounds.height());
+        let size = adjust_size(
+            self.overlay_window.scale_factor().unwrap(),
+            bounds.width(),
+            bounds.height(),
+        );
 
         self.overlay_window.set_size(size).unwrap();
     }
