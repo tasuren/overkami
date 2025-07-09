@@ -27,8 +27,8 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .on_menu_event(move |app, event| match event.id().as_ref() {
-            "settings" => {
+        .on_menu_event(move |app, event| {
+            if event.id().as_ref() == "settings" {
                 window.show().unwrap();
                 window.set_focus().unwrap();
 
@@ -36,7 +36,6 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
                 app.set_activation_policy(tauri::ActivationPolicy::Regular)
                     .unwrap();
             }
-            _ => {}
         })
         .build(app)
         .expect("Failed to create tray icon");
