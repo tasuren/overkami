@@ -102,7 +102,7 @@ impl Overlay {
                 skipping always on top. Detail: {e}",
                 self.target_window.id()
             ),
-            Ok(true) => self.activate(),
+            Ok(true) => self.activate().await,
             Ok(false) => self.deactivate().await,
         }
 
@@ -133,7 +133,7 @@ impl Overlay {
         match event {
             Event::Moved => self.move_(target_window.bounds().unwrap()),
             Event::Resized => self.resize(target_window.bounds().unwrap()),
-            Event::Activated => self.activate(),
+            Event::Activated => self.activate().await,
             Event::Deactivated => self.deactivate().await,
             _ => {}
         }
@@ -159,7 +159,8 @@ impl Overlay {
         self.overlay_window.set_size(size).unwrap();
     }
 
-    pub fn activate(&self) {
+    pub async fn activate(&self) {
+        self.set_order().await;
         self.overlay_window.set_always_on_top(true).unwrap();
     }
 
