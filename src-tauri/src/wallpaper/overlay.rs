@@ -5,7 +5,7 @@ use window_observer::Event;
 
 use crate::{
     config::{Filter, WallpaperSource},
-    os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
+    os::{activate_another_app, platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
 };
 
@@ -90,6 +90,7 @@ impl Overlay {
         };
 
         overlay.setup_initial_window_state().await;
+        overlay.setup_activate_intercept().await;
 
         Some(overlay)
     }
@@ -159,15 +160,40 @@ impl Overlay {
         self.overlay_window.set_size(size).unwrap();
     }
 
+    /// Sets up an intercept for the target window activation.
+    /// Catching mouse event by overlay window, target window will not be activated.
+    /// And then, we activate the target window manually.
+    /// This is useful for preventing flickering when the user clicks on the overlay window.
+    ///
+    /// Otherwise, the target window will be activated and the target window goes frontmost
+    /// and the overlay window will activated later. This causes flickering.
+    async fn setup_activate_intercept(&self) {
+        let target_window = self.target_window.clone();
+        let overlay_window = self.overlay_window.clone();
+
+        self.overlay_window.on_window_event(move |event| {
+            if matches!(event, tauri::WindowEvent::Focused(true)) {
+                overlay_window.set_ignore_cursor_events(true).unwrap();
+                overlay_window.set_order_above(target_window.id()).unwrap();
+                overlay_window.set_always_on_top(true).unwrap();
+
+                activate_another_app(&target_window).unwrap();
+            }
+        })
+    }
+
     pub async fn activate(&self) {
         self.set_order().await;
         self.overlay_window.set_always_on_top(true).unwrap();
+
+        self.overlay_window.set_ignore_cursor_events(true).unwrap();
     }
 
     pub async fn deactivate(&self) {
         self.overlay_window.set_always_on_top(false).unwrap();
-
         self.set_order().await;
+
+        self.overlay_window.set_ignore_cursor_events(false).unwrap();
     }
 
     pub async fn set_order(&self) {

@@ -70,6 +70,26 @@ mod window {
     }
 }
 
+pub mod application {
+    use anyhow::Context as _;
+    use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
+    use window_getter::Window;
+
+    pub fn activate_another_app(target: &Window) -> anyhow::Result<()> {
+        let pid = target.owner_pid().context("Failed to get owner PID")?;
+        let app =
+            unsafe { NSRunningApplication::runningApplicationWithProcessIdentifier(pid as _) }
+                .context("There are no running application with the given window")?;
+
+        let result = unsafe { app.activateWithOptions(NSApplicationActivationOptions::empty()) };
+        if !result {
+            anyhow::bail!("Something went wrong while activating the application");
+        }
+
+        Ok(())
+    }
+}
+
 pub mod custom_feature {
     use objc2_app_kit::NSWindowCollectionBehavior;
     use tauri::{Manager, WebviewWindow};
@@ -105,6 +125,7 @@ pub mod custom_feature {
 }
 
 /// Implementations of private API Core Graphics Services bindings.
+/// This is used to change the order of windows.
 mod core_graphics_services {
     #![allow(non_upper_case_globals)]
     #![allow(dead_code)]
