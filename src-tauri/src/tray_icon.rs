@@ -4,6 +4,7 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
     let window = app.get_webview_window("main").unwrap();
     window.on_window_event({
         let window = window.clone();
+        #[cfg(target_os = "macos")]
         let app = app.handle().clone();
 
         move |event| {
@@ -27,13 +28,13 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .on_menu_event(move |app, event| {
+        .on_menu_event(move |_app, event| {
             if event.id().as_ref() == "settings" {
                 window.show().unwrap();
                 window.set_focus().unwrap();
 
                 #[cfg(target_os = "macos")]
-                app.set_activation_policy(tauri::ActivationPolicy::Regular)
+                _app.set_activation_policy(tauri::ActivationPolicy::Regular)
                     .unwrap();
             }
         })
