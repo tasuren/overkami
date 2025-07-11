@@ -25,5 +25,5 @@ pub fn activate_another_app(target: &window_getter::Window) -> anyhow::Result<()
     #[cfg(target_os = "macos")]
     return macos::application::activate_another_app(target);
     #[cfg(target_os = "windows")]
-    unimplemented!("activate_another_app is not implemented yet for Windows");
+    return windows::set_foreground_window(target);
 }

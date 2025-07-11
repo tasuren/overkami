@@ -5,7 +5,7 @@ use window_observer::Event;
 
 use crate::{
     config::{Filter, WallpaperSource},
-    os::{activate_another_app, platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
+    os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
     utils::{adjust_position, adjust_size},
 };
 
@@ -90,6 +90,7 @@ impl Overlay {
         };
 
         overlay.setup_initial_window_state().await;
+        #[cfg(target_os = "macos")]
         overlay.setup_activate_intercept().await;
 
         Some(overlay)
@@ -167,6 +168,7 @@ impl Overlay {
     ///
     /// Otherwise, the target window will be activated and the target window goes frontmost
     /// and the overlay window will activated later. This causes flickering.
+    #[cfg(target_os = "macos")]
     async fn setup_activate_intercept(&self) {
         let target_window = self.target_window.clone();
         let overlay_window = self.overlay_window.clone();
@@ -177,7 +179,7 @@ impl Overlay {
                 overlay_window.set_order_above(target_window.id()).unwrap();
                 overlay_window.set_always_on_top(true).unwrap();
 
-                activate_another_app(&target_window).unwrap();
+                crate::os::platform_impl::activate_another_app(&target_window).unwrap();
             }
         })
     }
@@ -186,13 +188,16 @@ impl Overlay {
         self.set_order().await;
         self.overlay_window.set_always_on_top(true).unwrap();
 
+        #[cfg(target_os = "macos")]
         self.overlay_window.set_ignore_cursor_events(true).unwrap();
     }
 
     pub async fn deactivate(&self) {
+        #[cfg(target_os = "macos")]
         self.overlay_window.set_always_on_top(false).unwrap();
         self.set_order().await;
 
+        #[cfg(target_os = "macos")]
         self.overlay_window.set_ignore_cursor_events(false).unwrap();
     }
 
