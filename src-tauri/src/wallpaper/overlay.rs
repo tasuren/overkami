@@ -90,7 +90,6 @@ impl Overlay {
         };
 
         overlay.setup_initial_window_state().await;
-        #[cfg(target_os = "macos")]
         overlay.setup_activate_intercept().await;
 
         Some(overlay)
@@ -168,16 +167,15 @@ impl Overlay {
     ///
     /// Otherwise, the target window will be activated and the target window goes frontmost
     /// and the overlay window will activated later. This causes flickering.
-    #[cfg(target_os = "macos")]
     async fn setup_activate_intercept(&self) {
         let target_window = self.target_window.clone();
         let overlay_window = self.overlay_window.clone();
 
         self.overlay_window.on_window_event(move |event| {
             if matches!(event, tauri::WindowEvent::Focused(true)) {
-                overlay_window.set_ignore_cursor_events(true).unwrap();
+                overlay_window.merge_ignore_cursor_events(true).unwrap();
                 overlay_window.set_order_above(target_window.id()).unwrap();
-                overlay_window.set_always_on_top(true).unwrap();
+                overlay_window.merge_always_on_top(true).unwrap();
 
                 crate::os::platform_impl::activate_another_app(&target_window).unwrap();
             }
@@ -186,19 +184,20 @@ impl Overlay {
 
     pub async fn activate(&self) {
         self.set_order().await;
-        self.overlay_window.set_always_on_top(true).unwrap();
+        self.overlay_window.merge_always_on_top(true).unwrap();
 
-        #[cfg(target_os = "macos")]
-        self.overlay_window.set_ignore_cursor_events(true).unwrap();
+        self.overlay_window
+            .merge_ignore_cursor_events(true)
+            .unwrap();
     }
 
     pub async fn deactivate(&self) {
-        #[cfg(target_os = "macos")]
-        self.overlay_window.set_always_on_top(false).unwrap();
+        self.overlay_window.merge_always_on_top(false).unwrap();
         self.set_order().await;
 
-        #[cfg(target_os = "macos")]
-        self.overlay_window.set_ignore_cursor_events(false).unwrap();
+        self.overlay_window
+            .merge_ignore_cursor_events(false)
+            .unwrap();
     }
 
     pub async fn set_order(&self) {
@@ -250,8 +249,8 @@ pub fn create_window(
         .build()
         .unwrap();
 
-    window.set_ignore_cursor_events(true).unwrap();
     window.setup_platform_specific().unwrap();
+    window.merge_ignore_cursor_events(true).unwrap();
     window.set_opacity(opacity).unwrap();
 
     #[cfg(target_os = "macos")]
