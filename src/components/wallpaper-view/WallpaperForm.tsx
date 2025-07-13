@@ -189,6 +189,7 @@ export default function WallpaperForm(props: {
     setView({ type: "home" });
 
     removeWallpaper(id);
+    saveConfig(config());
   };
 
   onCleanup(() => {
