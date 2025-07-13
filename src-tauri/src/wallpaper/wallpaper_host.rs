@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use tauri::{async_runtime::Mutex, AppHandle};
 use uuid::Uuid;
@@ -45,12 +45,12 @@ impl WallpaperHost {
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
-        unlisten_application(&config.application_path, self.id).await;
+        unlisten_application(&config.application_name, self.id).await;
     }
 
     pub async fn apply_wallpaper(&self, old_wallpaper: Wallpaper, mut payload: ApplyWallpaper) {
-        if let Some(new_app_path) = payload.application_path.take() {
-            self.change_application(old_wallpaper.application_path, new_app_path)
+        if let Some(new_app_name) = payload.application_name.take() {
+            self.change_application(old_wallpaper.application_name, new_app_name)
                 .await;
         }
 
@@ -61,7 +61,7 @@ impl WallpaperHost {
         }
     }
 
-    async fn change_application(&self, old_app_path: PathBuf, new_app_path: PathBuf) {
+    async fn change_application(&self, old_app_name: String, new_app_name: String) {
         // When the application is updated, we need to clear the overlay hosts.
         // Then we will set up new overlay hosts with the updated configuration.
         let old_overlay_hosts = std::mem::take(&mut *self.overlay_hosts.lock().await);
@@ -71,8 +71,8 @@ impl WallpaperHost {
         }
 
         // Register the new application listener due to application change.
-        if let Some(tx) = unlisten_application(&old_app_path, self.id).await {
-            listen_application(tx, new_app_path, self.id).await;
+        if let Some(tx) = unlisten_application(&old_app_name, self.id).await {
+            listen_application(tx, new_app_name, self.id).await;
         };
     }
 }
@@ -99,7 +99,7 @@ mod application_updates {
 
         {
             let config = config.lock().await;
-            listen_application(tx, config.application_path.clone(), wallpaper_id).await;
+            listen_application(tx, config.application_name.clone(), wallpaper_id).await;
         }
 
         async_runtime::spawn(async move {

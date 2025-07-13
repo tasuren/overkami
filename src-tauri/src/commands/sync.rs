@@ -50,8 +50,8 @@ async fn update_wallpaper_config(wallpaper: &mut Wallpaper, payload: payload::Ap
         wallpaper.name = name;
     }
 
-    if let Some(application_path) = payload.application_path {
-        wallpaper.application_path = application_path;
+    if let Some(application_name) = payload.application_name {
+        wallpaper.application_name = application_name;
     }
 
     if let Some(filters) = payload.filters {
@@ -83,8 +83,6 @@ pub async fn remove_wallpaper(app: AppHandle, id: Uuid) {
 }
 
 mod payload {
-    use std::path::PathBuf;
-
     use serde::{Deserialize, Serialize};
 
     use crate::config::{Filter, Wallpaper, WallpaperSource};
@@ -94,7 +92,7 @@ mod payload {
     #[serde(rename_all = "camelCase")]
     pub struct ApplyWallpaper {
         pub name: Option<String>,
-        pub application_path: Option<PathBuf>,
+        pub application_name: Option<String>,
         pub filters: Option<Vec<Filter>>,
         pub opacity: Option<f64>,
         pub source: Option<WallpaperSource>,

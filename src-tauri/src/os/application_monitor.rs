@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsStr,
     path::{Path, PathBuf},
     sync::{LazyLock, Mutex},
 };
@@ -53,13 +52,13 @@ pub fn get_application_process(pid: u32) -> Option<ApplicationProcess> {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ApplicationProcess {
     pub pid: u32,
-    pub name: Option<String>,
+    pub name: String,
     /// Executable path. For macOS, this can be the `.app` bundle path.
     pub path: PathBuf,
 }
 
 impl ApplicationProcess {
-    pub fn new(pid: u32, name: Option<String>, path: PathBuf) -> Self {
+    pub fn new(pid: u32, name: String, path: PathBuf) -> Self {
         Self { pid, name, path }
     }
 }
@@ -67,11 +66,7 @@ impl ApplicationProcess {
 impl ApplicationProcess {
     fn from_sysinfo(pid: u32, process: &sysinfo::Process) -> Option<Self> {
         let path = process.exe()?;
-        let name = process
-            .name()
-            .to_str()
-            .or_else(|| path.file_name().and_then(OsStr::to_str))
-            .map(|name| name.to_owned());
+        let name = path.file_name().and_then(|name| name.to_str())?.to_owned();
 
         Some(Self::new(pid, name, path.to_owned()))
     }

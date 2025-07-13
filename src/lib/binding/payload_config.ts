@@ -43,7 +43,7 @@ export type Filter = WindowNameFilter;
 
 export type Wallpaper = {
   name: string;
-  applicationPath: string;
+  applicationName: string;
   filters: Filter[];
   source: WallpaperSource;
   opacity: number;

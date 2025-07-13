@@ -1,6 +1,5 @@
 use std::{
     collections::{HashMap, HashSet},
-    path::PathBuf,
     sync::{atomic, LazyLock},
 };
 
@@ -20,7 +19,7 @@ pub enum ApplicationEvent {
 
 pub type ListenerTx = Sender<ApplicationEvent>;
 pub type WallpaperTxMap = HashMap<Uuid, ListenerTx>;
-pub type ApplicationListeners = HashMap<PathBuf, WallpaperTxMap>;
+pub type ApplicationListeners = HashMap<String, WallpaperTxMap>;
 
 static APPLICATION_LISTENERS: LazyLock<Mutex<ApplicationListeners>> =
     LazyLock::new(Default::default);
@@ -28,7 +27,7 @@ static OBSERVER_STARTED: atomic::AtomicBool = atomic::AtomicBool::new(false);
 
 /// Registers a listener for application launch or dead events.
 /// To unlisten, simply drop the [`Receiver`](tauri::async_runtime::Receiver).
-pub async fn listen_application(tx: ListenerTx, target_app_path: PathBuf, wallpaper_id: Uuid) {
+pub async fn listen_application(tx: ListenerTx, target_app_path: String, wallpaper_id: Uuid) {
     if !OBSERVER_STARTED.load(atomic::Ordering::Relaxed) {
         OBSERVER_STARTED.store(true, atomic::Ordering::Relaxed);
 
@@ -44,10 +43,7 @@ pub async fn listen_application(tx: ListenerTx, target_app_path: PathBuf, wallpa
     };
 }
 
-pub async fn unlisten_application(
-    target_app_path: &PathBuf,
-    wallpaper_id: Uuid,
-) -> Option<ListenerTx> {
+pub async fn unlisten_application(target_app_path: &str, wallpaper_id: Uuid) -> Option<ListenerTx> {
     let mut listeners = APPLICATION_LISTENERS.lock().await;
 
     if let Some(tx_map) = listeners.get_mut(target_app_path) {
@@ -70,7 +66,13 @@ async fn observe_applications() {
     loop {
         let current: HashSet<_> = {
             let listeners = APPLICATION_LISTENERS.lock().await;
-            get_application_processes(|path| listeners.contains_key(path))
+            get_application_processes(|path| {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    listeners.contains_key(name)
+                } else {
+                    false
+                }
+            })
         };
 
         // Calculate the difference.
@@ -87,7 +89,10 @@ async fn observe_applications() {
         // Send events to listeners.
         async fn send_event(event: ApplicationEvent, process: &ApplicationProcess) {
             let mut listeners = APPLICATION_LISTENERS.lock().await;
-            let Some(tx_map) = listeners.get_mut(&process.path) else {
+            let Some(name) = process.path.file_name().and_then(|n| n.to_str()) else {
+                return;
+            };
+            let Some(tx_map) = listeners.get_mut(name) else {
                 return;
             };
 

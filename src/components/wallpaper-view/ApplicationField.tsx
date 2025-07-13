@@ -28,7 +28,7 @@ export default function ApplicationField(props: {
   return (
     <Field
       of={form}
-      name="applicationPath"
+      name="applicationName"
       validate={[required("壁紙を適用するアプリを選択してください。")]}
     >
       {(field, props) => (
@@ -56,8 +56,8 @@ export default function ApplicationField(props: {
 }
 
 function ApplicationSelect(
-  props: FieldElementProps<WallpaperForm, "applicationPath"> & {
-    field: FieldStore<WallpaperForm, "applicationPath">;
+  props: FieldElementProps<WallpaperForm, "applicationName"> & {
+    field: FieldStore<WallpaperForm, "applicationName">;
   },
 ) {
   const [{ field }, selectProps] = splitProps(props, ["field"]);
@@ -100,10 +100,10 @@ function ApplicationSelect(
           <For each={applicationWindows()}>
             {(option) => (
               <option
-                value={option.path}
-                selected={field.value === option.path}
+                value={option.name}
+                selected={field.value === option.name}
               >
-                {option.windowTitle || option.name || "不明なアプリ"}
+                {option.windowTitle || option.name}
               </option>
             )}
           </For>
@@ -111,7 +111,7 @@ function ApplicationSelect(
           <Show
             when={
               currentFileName() &&
-              applicationWindows()?.find((app) => app.path === field.value) ===
+              applicationWindows()?.find((app) => app.name === field.value) ===
                 undefined
             }
           >

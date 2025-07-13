@@ -8,7 +8,7 @@ use crate::os::application_monitor::get_application_process;
 #[serde(rename_all = "camelCase")]
 pub struct ApplicationWindow {
     pub title: Option<String>,
-    pub name: Option<String>,
+    pub name: String,
     pub path: PathBuf,
 }
 

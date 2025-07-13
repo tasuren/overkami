@@ -31,7 +31,7 @@ import SourceField from "./SourceField";
 
 export type WallpaperForm = {
   name: string;
-  applicationPath: string;
+  applicationName: string;
   filters: Filter[];
   source: WallpaperSource;
   opacity: number;
@@ -39,7 +39,7 @@ export type WallpaperForm = {
 
 const DEFAULT_WALLPAPER_VALUE: WallpaperForm = {
   name: "",
-  applicationPath: "",
+  applicationName: "",
   filters: [
     {
       type: "WindowName",

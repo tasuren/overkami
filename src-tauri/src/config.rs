@@ -60,7 +60,7 @@ mod model {
         #[serde(rename_all = "camelCase")]
         pub struct Wallpaper {
             pub name: String,
-            pub application_path: PathBuf,
+            pub application_name: String,
             pub filters: Vec<Filter>,
             pub source: WallpaperSource,
             pub opacity: f64,
