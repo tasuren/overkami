@@ -4,20 +4,20 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
     let window = app.get_webview_window("main").unwrap();
     window.on_window_event({
         let window = window.clone();
-        #[cfg(target_os = "macos")]
-        let app = app.handle().clone();
 
         move |event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 window.hide().expect("Failed to hide main window");
-
-                #[cfg(target_os = "macos")]
-                app.set_activation_policy(tauri::ActivationPolicy::Accessory)
-                    .unwrap();
             }
         }
     });
+
+    #[cfg(target_os = "macos")]
+    {
+        app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+        window.set_always_on_top(true).unwrap();
+    }
 
     let menu = MenuBuilder::new(app)
         .text("settings", "設定")
@@ -32,10 +32,6 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
             if event.id().as_ref() == "settings" {
                 window.show().unwrap();
                 window.set_focus().unwrap();
-
-                #[cfg(target_os = "macos")]
-                _app.set_activation_policy(tauri::ActivationPolicy::Regular)
-                    .unwrap();
             }
         })
         .build(app)
