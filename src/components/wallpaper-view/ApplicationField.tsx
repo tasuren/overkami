@@ -10,13 +10,7 @@ import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
 import { createResource, For, Show, splitProps } from "solid-js";
 import { getApplicationWindows } from "../../lib/binding/command_os";
-import {
-  fieldClass,
-  iconButtonClass,
-  iconClass,
-  selectClass,
-  textMutedClass,
-} from "../ui";
+import { fieldClass, iconButtonClass, iconClass, selectClass } from "../ui";
 import type { WallpaperForm } from "./WallpaperForm";
 
 export default function ApplicationField(props: {
@@ -36,17 +30,6 @@ export default function ApplicationField(props: {
           <label for={props.name}>壁紙を適用するアプリ</label>
 
           <ApplicationSelect {...props} field={field} />
-
-          <div
-            class={textMutedClass({
-              class: [
-                "overflow-hidden",
-                "font-mono text-sm cursor-text select-all",
-              ],
-            })}
-          >
-            <Show when={field.value}>{field.value}</Show>
-          </div>
 
           <div class={error()}>{field.error}</div>
         </div>
