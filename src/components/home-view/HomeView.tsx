@@ -1,7 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { basename } from "@tauri-apps/api/path";
 import Plus from "lucide-solid/icons/plus";
-import { For, Show, createResource } from "solid-js";
+import { createResource, For, Show } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { cl } from "../../lib/utils";
@@ -88,7 +88,7 @@ export function WallpaperCard(props: { id: string; wallpaper: Wallpaper }) {
         </div>
       </div>
 
-      <div class="absolute bottom-0 left-0 backdrop-blur-lg w-full h-2/5 rounded-b-lg">
+      <div class="absolute bottom-0 left-0 bg-black/60 backdrop-blur-lg w-full h-2/5 rounded-b-lg">
         <div class="h-full text-left flex flex-col justify-evenly px-3 py-2">
           <div class="font-mono text-xl">{wallpaper.name}</div>
           <div
