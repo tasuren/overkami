@@ -52,6 +52,14 @@ mod webview_window {
 
             Ok(())
         }
+
+        fn merge_always_on_top(&self, top: bool) -> anyhow::Result<()> {
+            Ok(self.set_always_on_top(top)?)
+        }
+
+        fn merge_ignore_cursor_events(&self, ignore: bool) -> anyhow::Result<()> {
+            Ok(self.set_ignore_cursor_events(ignore)?)
+        }
     }
 }
 
