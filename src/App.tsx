@@ -1,8 +1,8 @@
 import { Match, Switch } from "solid-js";
 import "./App.css";
-import { GlobalStateProvider, useView } from "./GlobalState";
 import { HomeView } from "./components/home-view/HomeView";
 import { default as WallpaperView } from "./components/wallpaper-view/WallpaperView";
+import { GlobalStateProvider, useView } from "./GlobalState";
 import { cl } from "./lib/utils";
 
 export function Main() {

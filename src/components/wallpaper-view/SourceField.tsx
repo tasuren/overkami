@@ -8,7 +8,7 @@ import {
   setValue,
 } from "@modular-forms/solid";
 import { basename } from "@tauri-apps/api/path";
-import { open } from "@tauri-apps/plugin-dialog";
+import { type DialogFilter, open } from "@tauri-apps/plugin-dialog";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import { createSignal, onMount } from "solid-js";
 import type { WallpaperSource } from "../../lib/binding/payload_config";
@@ -21,7 +21,7 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
   const [type, setType] = createSignal<WallpaperSource["type"]>("Picture");
 
   const selectFile = async () => {
-    let filter = undefined;
+    let filter: DialogFilter | undefined;
 
     switch (getValue(form, "source.type")) {
       case "Picture":
@@ -82,7 +82,7 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
             buttonElement.innerText = fileName;
           });
 
-          let title = undefined;
+          let title: string | undefined;
           switch (type()) {
             case "Picture":
               title = "壁紙に使う画像ファイル";

@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
-import { Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup, Show } from "solid-js";
 import { useView } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { iconButtonClass, iconClass } from "../ui";

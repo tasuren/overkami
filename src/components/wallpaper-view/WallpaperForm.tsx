@@ -1,8 +1,8 @@
 import {
-  Form,
-  type SubmitHandler,
   createFormStore,
+  Form,
   getValues,
+  type SubmitHandler,
 } from "@modular-forms/solid";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import Save from "lucide-solid/icons/save";

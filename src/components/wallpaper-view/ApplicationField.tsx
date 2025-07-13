@@ -8,7 +8,7 @@ import {
 import { basename } from "@tauri-apps/api/path";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import RefreshCcw from "lucide-solid/icons/refresh-ccw";
-import { For, Show, createResource, splitProps } from "solid-js";
+import { createResource, For, Show, splitProps } from "solid-js";
 import { getApplicationWindows } from "../../lib/binding/command_os";
 import {
   fieldClass,
