@@ -12,7 +12,7 @@ pub fn get_ns_window(window: &WebviewWindow) -> Retained<NSWindow> {
 
 mod webview_window {
     use anyhow::{Context, Result};
-    use tauri::{Manager, WebviewWindow};
+    use tauri::{LogicalPosition, Manager, WebviewWindow};
     use window_getter::WindowId;
 
     use super::core_graphics_services;
@@ -59,6 +59,10 @@ mod webview_window {
 
         fn merge_ignore_cursor_events(&self, ignore: bool) -> anyhow::Result<()> {
             Ok(self.set_ignore_cursor_events(ignore)?)
+        }
+
+        fn set_position_with_adjustment(&self, x: f64, y: f64) -> anyhow::Result<()> {
+            Ok(self.set_position(LogicalPosition::new(x, y))?)
         }
     }
 }
