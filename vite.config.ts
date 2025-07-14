@@ -30,7 +30,6 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         index: "./index.html",
-        "builtin-wallpapers/picture": "./src/builtin-wallpapers/picture.html",
       },
     },
   },
