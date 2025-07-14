@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use tauri::WebviewWindow;
+use tauri::{LogicalPosition, Manager, WebviewWindow};
 use windows::Win32::{Foundation::*, UI::WindowsAndMessaging::*};
 
 fn get_ex_style(hwnd: HWND) -> anyhow::Result<WINDOW_EX_STYLE> {
@@ -28,10 +28,33 @@ fn manage_window_ex_style(
     Ok(())
 }
 
+struct DiffPos {
+    x: f64,
+    y: f64,
+}
+
 impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
     fn setup_platform_specific(&self) -> anyhow::Result<()> {
         let hwnd = self.hwnd().unwrap();
+
         manage_window_ex_style(hwnd, true, WS_EX_LAYERED)?;
+
+        // Get window invisible border for resizing.
+        // We're going to use this as offset when window moving.
+        let scale_factor = self.scale_factor().context("Failed to get scale factor")?;
+        let inner_pos = self
+            .inner_position()
+            .context("Failed to get inner position")?
+            .to_logical::<f64>(scale_factor);
+        let outer_pos = self
+            .outer_position()
+            .context("Failed to get outer position")?
+            .to_logical::<f64>(scale_factor);
+
+        self.manage(DiffPos {
+            x: outer_pos.x - inner_pos.x,
+            y: outer_pos.y - inner_pos.y,
+        });
 
         Ok(())
     }
@@ -85,6 +108,15 @@ impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
         let hwnd = self.hwnd().unwrap();
 
         manage_window_ex_style(hwnd, ignore, WS_EX_TRANSPARENT)
+    }
+
+    fn set_position_with_adjustment(&self, x: f64, y: f64) -> anyhow::Result<()> {
+        let diff = self.state::<DiffPos>();
+
+        let pos = LogicalPosition::new(x + diff.x, y + diff.y);
+        self.set_position(pos)?;
+
+        Ok(())
     }
 }
 

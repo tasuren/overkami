@@ -108,8 +108,8 @@ impl Overlay {
         }
 
         // Set initial position and size
-        self.move_(self.target_window.bounds().unwrap());
-        self.resize(self.target_window.bounds().unwrap());
+        self.move_(&self.target_window);
+        self.resize(&self.target_window);
     }
 
     pub fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
@@ -132,25 +132,29 @@ impl Overlay {
 
     pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
         match event {
-            Event::Moved => self.move_(target_window.bounds().unwrap()),
-            Event::Resized => self.resize(target_window.bounds().unwrap()),
+            Event::Moved => self.move_(target_window),
+            Event::Resized => self.resize(target_window),
             Event::Activated => self.activate().await,
             Event::Deactivated => self.deactivate().await,
             _ => {}
         }
     }
 
-    pub fn move_(&self, bounds: window_getter::Bounds) {
+    pub fn move_(&self, target_window: &Window) {
+        let bounds = target_window.bounds().unwrap();
         let position = adjust_position(
             self.overlay_window.scale_factor().unwrap(),
             bounds.x(),
             bounds.y(),
         );
 
-        self.overlay_window.set_position(position).unwrap();
+        self.overlay_window
+            .set_position_with_adjustment(position.x, position.y)
+            .unwrap();
     }
 
-    pub fn resize(&self, bounds: window_getter::Bounds) {
+    pub fn resize(&self, target_window: &Window) {
+        let bounds = target_window.bounds().unwrap();
         let size = adjust_size(
             self.overlay_window.scale_factor().unwrap(),
             bounds.width(),

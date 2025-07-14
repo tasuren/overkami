@@ -17,6 +17,7 @@ pub trait WebviewWindowPlatformExt {
     fn set_order_above(&self, relative_to: WindowId) -> anyhow::Result<()>;
     fn merge_always_on_top(&self, top: bool) -> anyhow::Result<()>;
     fn merge_ignore_cursor_events(&self, ignore: bool) -> anyhow::Result<()>;
+    fn set_position_with_adjustment(&self, x: f64, y: f64) -> anyhow::Result<()>;
 }
 
 pub trait WindowPlatformExt {
