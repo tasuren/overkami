@@ -51,7 +51,7 @@ impl Overlay {
         };
 
         // On windows, some windows may have zero width or height.
-        if bounds.width() == 0. || bounds.height() == 0. {
+        if bounds.width == 0. || bounds.height == 0. {
             log::info!(
                 "{:?} has no width or height, ignoreing this window.",
                 target_window.id()
@@ -103,8 +103,8 @@ impl Overlay {
                 skipping always on top. Detail: {e}",
                 self.target_window.id()
             ),
-            Ok(true) => self.activate().await,
-            Ok(false) => self.deactivate().await,
+            Ok(true) => self.set_foreground().await,
+            Ok(false) => self.set_background().await,
         }
 
         // Set initial position and size
@@ -130,12 +130,18 @@ impl Overlay {
         }
     }
 
-    pub async fn handle_target_window_event(&self, event: Event, target_window: &Window) {
+    pub async fn handle_target_window_event(&self, event: Event) {
         match event {
-            Event::Moved => self.move_(target_window),
-            Event::Resized => self.resize(target_window),
-            Event::Activated => self.activate().await,
-            Event::Deactivated => self.deactivate().await,
+            Event::Moved { window } => {
+                let window = window.create_window_getter_window().unwrap().unwrap();
+                self.move_(&window)
+            }
+            Event::Resized { window } => {
+                let window = window.create_window_getter_window().unwrap().unwrap();
+                self.resize(&window)
+            }
+            Event::Foregrounded { .. } => self.set_foreground().await,
+            Event::Backgrounded { .. } => self.set_background().await,
             _ => {}
         }
     }
@@ -144,8 +150,8 @@ impl Overlay {
         let bounds = target_window.bounds().unwrap();
         let position = adjust_position(
             self.overlay_window.scale_factor().unwrap(),
-            bounds.x(),
-            bounds.y(),
+            bounds.x,
+            bounds.y,
         );
 
         self.overlay_window
@@ -157,8 +163,8 @@ impl Overlay {
         let bounds = target_window.bounds().unwrap();
         let size = adjust_size(
             self.overlay_window.scale_factor().unwrap(),
-            bounds.width(),
-            bounds.height(),
+            bounds.width,
+            bounds.height,
         );
 
         self.overlay_window.set_size(size).unwrap();
@@ -186,7 +192,7 @@ impl Overlay {
         })
     }
 
-    pub async fn activate(&self) {
+    pub async fn set_foreground(&self) {
         self.set_order().await;
         self.overlay_window.merge_always_on_top(true).unwrap();
 
@@ -195,7 +201,7 @@ impl Overlay {
             .unwrap();
     }
 
-    pub async fn deactivate(&self) {
+    pub async fn set_background(&self) {
         self.overlay_window.merge_always_on_top(false).unwrap();
         self.set_order().await;
 

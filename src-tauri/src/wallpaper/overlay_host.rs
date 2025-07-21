@@ -135,7 +135,7 @@ mod observer {
 
     pub async fn start_observer(
         pid: u32,
-        tx: UnboundedSender<(window_observer::Window, Event)>,
+        tx: UnboundedSender<Result<Event, window_observer::platform_impl::PlatformError>>,
     ) -> anyhow::Result<Option<WindowObserver>> {
         log::info!("Starting window observer for PID {pid}.");
 
@@ -148,12 +148,14 @@ mod observer {
                 WindowObserver::start(
                     pid,
                     tx.clone(),
-                    window_observer::smallvec![
-                        Event::Resized,
-                        Event::Moved,
-                        Event::Activated,
-                        Event::Deactivated
-                    ],
+                    window_observer::EventFilter {
+                        foregrounded: true,
+                        backgrounded: true,
+                        moved: true,
+                        resized: true,
+                        closed: true,
+                        ..Default::default()
+                    },
                 )
                 .block_on()
             };
@@ -217,9 +219,8 @@ mod overlay_management {
     use std::sync::Arc;
 
     use tauri::{AppHandle, Manager};
-    use tokio::sync::mpsc::UnboundedReceiver;
     use uuid::Uuid;
-    use window_getter::Window;
+    use window_getter::{Window, WindowId};
     use window_observer::Event;
 
     use crate::{wallpaper::overlay::Overlay, ConfigState};
@@ -231,76 +232,92 @@ mod overlay_management {
         wallpaper_id: Uuid,
         pid: u32,
         overlays: Overlays,
-        mut rx: UnboundedReceiver<(window_observer::Window, Event)>,
+        mut rx: window_observer::EventRx,
     ) {
         tauri::async_runtime::spawn(async move {
-            while let Some((target_window, event)) = rx.recv().await {
+            while let Some(event) = rx.recv().await {
+                let Ok(event) = event else {
+                    log::warn!("Received invalid window event: {:?}", event);
+                    continue;
+                };
+
                 log::debug!(
-                    "Received window event {event:?}: \
+                    "Received window event: \
+                    event = {event:?}, \
                     wallpaper_id = {wallpaper_id}, \
                     pid = {pid}"
                 );
 
-                let target_window = target_window.create_window_getter_window().ok().flatten();
-
-                if let Some(target_window) = target_window {
-                    manage_overlay(
-                        app.clone(),
-                        wallpaper_id,
-                        event,
-                        target_window,
-                        Arc::clone(&overlays),
-                    )
-                    .await;
-                    continue;
-                } else {
-                    log::error!("Received window event but it is invalid as window_getter.");
-                }
+                manage_overlay(app.clone(), wallpaper_id, event, Arc::clone(&overlays)).await;
             }
         });
     }
 
-    async fn manage_overlay(
+    async fn manage_overlay(app: AppHandle, wallpaper_id: Uuid, event: Event, overlays: Overlays) {
+        match event {
+            Event::Created { window } => {
+                let window = window.create_window_getter_window().unwrap().unwrap();
+                handle_window_created(app, wallpaper_id, window, overlays).await
+            }
+            Event::Closed { window_id } => handle_window_closed(window_id, overlays).await,
+            _ => handle_general_event(event, overlays).await,
+        }
+    }
+
+    /// Handles window created events by creating a new overlay.
+    async fn handle_window_created(
         app: AppHandle,
         wallpaper_id: Uuid,
-        event: Event,
         window: Window,
         overlays: Overlays,
     ) {
+        log::debug!("New window is detected: {:?}", window.id());
         let mut overlays = overlays.lock().await;
 
-        let Some(overlay) = overlays.get(&window.id()) else {
-            log::debug!("New window is detected: {:?}", window.id());
-
-            let config = app.state::<ConfigState>();
-            let config = config.lock().await;
-            let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {
-                log::warn!(
-                    "No wallpaper found so skip overlay creation for {:?}.",
-                    window.id()
-                );
-
-                return;
-            };
-
-            let window_id = window.id();
-            let overlay = Overlay::new(
-                wallpaper_id,
-                window,
-                &wallpaper.source,
-                wallpaper.opacity,
-                &wallpaper.filters,
-                app.clone(),
-            )
-            .await;
-
-            if let Some(overlay) = overlay {
-                overlays.insert(window_id, overlay);
-            }
+        let config = app.state::<ConfigState>();
+        let config = config.lock().await;
+        let Some(wallpaper) = config.wallpapers.get(&wallpaper_id) else {
+            log::warn!(
+                "No wallpaper found so skip overlay creation for {:?}.",
+                window.id()
+            );
 
             return;
         };
 
-        overlay.handle_target_window_event(event, &window).await;
+        let window_id = window.id();
+        let overlay = Overlay::new(
+            wallpaper_id,
+            window,
+            &wallpaper.source,
+            wallpaper.opacity,
+            &wallpaper.filters,
+            app.clone(),
+        )
+        .await;
+
+        if let Some(overlay) = overlay {
+            overlays.insert(window_id, overlay);
+        }
+    }
+
+    /// Handles window closed events by removing the overlay.
+    async fn handle_window_closed(window_id: WindowId, overlays: Overlays) {
+        log::debug!("Handling general window closed event: {:?}", window_id);
+        let mut overlays = overlays.lock().await;
+
+        if let Some(overlay) = overlays.remove(&window_id) {
+            overlay.close();
+        }
+    }
+
+    /// Handles general window events that overlays might need to do action for overlay window.
+    async fn handle_general_event(event: Event, overlays: Overlays) {
+        log::debug!("Handling general window event: {:?}", event);
+        let overlays = overlays.lock().await;
+
+        for overlay in overlays.values() {
+            overlay.handle_target_window_event(event.clone()).await;
+        }
     }
 }
