@@ -108,8 +108,9 @@ impl Overlay {
         }
 
         // Set initial position and size
-        self.move_(&self.target_window);
-        self.resize(&self.target_window);
+        let bounds = self.target_window.bounds().unwrap();
+        self.move_(bounds.clone().into());
+        self.resize(bounds.into());
     }
 
     pub fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
@@ -130,28 +131,23 @@ impl Overlay {
         }
     }
 
-    pub async fn handle_target_window_event(&self, event: Event) {
+    pub async fn handle_target_window_event(&self, window: window_observer::Window, event: Event) {
         match event {
-            Event::Moved { window } => {
-                let window = window.create_window_getter_window().unwrap().unwrap();
-                self.move_(&window)
-            }
-            Event::Resized { window } => {
-                let window = window.create_window_getter_window().unwrap().unwrap();
-                self.resize(&window)
-            }
-            Event::Foregrounded { .. } => self.set_foreground().await,
-            Event::Backgrounded { .. } => self.set_background().await,
+            Event::Moved => self.move_(window.position().unwrap()),
+            Event::Resized => self.resize(window.size().unwrap()),
+            Event::Foregrounded => self.set_foreground().await,
+            Event::Backgrounded => self.set_background().await,
+            Event::Showed => self.overlay_window.show().unwrap(),
+            Event::Hidden => self.overlay_window.hide().unwrap(),
             _ => {}
         }
     }
 
-    pub fn move_(&self, target_window: &Window) {
-        let bounds = target_window.bounds().unwrap();
+    pub fn move_(&self, position: window_observer::Position) {
         let position = adjust_position(
             self.overlay_window.scale_factor().unwrap(),
-            bounds.x,
-            bounds.y,
+            position.x,
+            position.y,
         );
 
         self.overlay_window
@@ -159,12 +155,11 @@ impl Overlay {
             .unwrap();
     }
 
-    pub fn resize(&self, target_window: &Window) {
-        let bounds = target_window.bounds().unwrap();
+    pub fn resize(&self, size: window_observer::Size) {
         let size = adjust_size(
             self.overlay_window.scale_factor().unwrap(),
-            bounds.width,
-            bounds.height,
+            size.width,
+            size.height,
         );
 
         self.overlay_window.set_size(size).unwrap();

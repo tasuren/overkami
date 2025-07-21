@@ -131,11 +131,11 @@ impl OverlayHost {
 
 mod observer {
     use pollster::FutureExt;
-    use window_observer::{tokio::sync::mpsc::UnboundedSender, Event, WindowObserver};
+    use window_observer::WindowObserver;
 
     pub async fn start_observer(
         pid: u32,
-        tx: UnboundedSender<Result<Event, window_observer::platform_impl::PlatformError>>,
+        tx: window_observer::EventTx,
     ) -> anyhow::Result<Option<WindowObserver>> {
         log::info!("Starting window observer for PID {pid}.");
 
@@ -154,6 +154,8 @@ mod observer {
                         moved: true,
                         resized: true,
                         closed: true,
+                        hidden: true,
+                        showed: true,
                         ..Default::default()
                     },
                 )
@@ -221,7 +223,7 @@ mod overlay_management {
     use tauri::{AppHandle, Manager};
     use uuid::Uuid;
     use window_getter::{Window, WindowId};
-    use window_observer::Event;
+    use window_observer::{Event, MaybeWindowAvailable};
 
     use crate::{wallpaper::overlay::Overlay, ConfigState};
 
@@ -253,14 +255,26 @@ mod overlay_management {
         });
     }
 
-    async fn manage_overlay(app: AppHandle, wallpaper_id: Uuid, event: Event, overlays: Overlays) {
+    async fn manage_overlay(
+        app: AppHandle,
+        wallpaper_id: Uuid,
+        event: MaybeWindowAvailable,
+        overlays: Overlays,
+    ) {
         match event {
-            Event::Created { window } => {
-                let window = window.create_window_getter_window().unwrap().unwrap();
-                handle_window_created(app, wallpaper_id, window, overlays).await
+            MaybeWindowAvailable::Available { window, event } => match event {
+                Event::Created => {
+                    if let Some(window) = window.create_window_getter_window().ok().flatten() {
+                        handle_window_created(app, wallpaper_id, window, overlays).await;
+                    };
+                }
+                event => handle_general_event(window, event, overlays).await,
+            },
+            MaybeWindowAvailable::NotAvailable { event } => {
+                if let Event::Closed { window_id } = event {
+                    handle_window_closed(window_id, overlays).await;
+                }
             }
-            Event::Closed { window_id } => handle_window_closed(window_id, overlays).await,
-            _ => handle_general_event(event, overlays).await,
         }
     }
 
@@ -312,12 +326,26 @@ mod overlay_management {
     }
 
     /// Handles general window events that overlays might need to do action for overlay window.
-    async fn handle_general_event(event: Event, overlays: Overlays) {
-        log::debug!("Handling general window event: {:?}", event);
-        let overlays = overlays.lock().await;
+    async fn handle_general_event(
+        window: window_observer::Window,
+        event: Event,
+        overlays: Overlays,
+    ) {
+        let Ok(window_id) = window.id() else {
+            return;
+        };
+        log::debug!(
+            "Handling general window event: \
+            window_id = {:?}, event = {:?}",
+            window_id,
+            event
+        );
 
-        for overlay in overlays.values() {
-            overlay.handle_target_window_event(event.clone()).await;
+        let overlays = overlays.lock().await;
+        if let Some(overlay) = overlays.get(&window_id) {
+            overlay
+                .handle_target_window_event(window, event.clone())
+                .await;
         }
     }
 }
