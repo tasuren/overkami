@@ -17,6 +17,7 @@ pub struct Overlay {
     wallpaper_id: Uuid,
     target_window: Window,
     overlay_window: WebviewWindow,
+    hidden: bool,
 }
 
 impl Overlay {
@@ -87,6 +88,7 @@ impl Overlay {
             wallpaper_id,
             target_window,
             overlay_window,
+            hidden: false,
         };
 
         overlay.setup_initial_window_state().await;
@@ -131,16 +133,36 @@ impl Overlay {
         }
     }
 
-    pub async fn handle_target_window_event(&self, window: window_observer::Window, event: Event) {
+    pub async fn handle_target_window_event(
+        &mut self,
+        window: window_observer::Window,
+        event: Event,
+    ) {
         match event {
-            Event::Moved => self.move_(window.position().unwrap()),
-            Event::Resized => self.resize(window.size().unwrap()),
-            Event::Foregrounded => self.set_foreground().await,
-            Event::Backgrounded => self.set_background().await,
-            Event::Showed => self.overlay_window.show().unwrap(),
-            Event::Hidden => self.overlay_window.hide().unwrap(),
+            Event::Showed => self.show(),
+            Event::Hidden => self.hide(),
             _ => {}
         }
+
+        if !self.hidden {
+            match event {
+                Event::Moved => self.move_(window.position().unwrap()),
+                Event::Resized => self.resize(window.size().unwrap()),
+                Event::Foregrounded => self.set_foreground().await,
+                Event::Backgrounded => self.set_background().await,
+                _ => {}
+            }
+        }
+    }
+
+    pub fn show(&mut self) {
+        self.overlay_window.show().unwrap();
+        self.hidden = false;
+    }
+
+    pub fn hide(&mut self) {
+        self.overlay_window.hide().unwrap();
+        self.hidden = true;
     }
 
     pub fn move_(&self, position: window_observer::Position) {

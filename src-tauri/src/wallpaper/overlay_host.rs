@@ -268,7 +268,7 @@ mod overlay_management {
                         handle_window_created(app, wallpaper_id, window, overlays).await;
                     };
                 }
-                event => handle_general_event(window, event, overlays).await,
+                event => handle_general_event(app, wallpaper_id, window, event, overlays).await,
             },
             MaybeWindowAvailable::NotAvailable { event } => {
                 if let Event::Closed { window_id } = event {
@@ -327,6 +327,8 @@ mod overlay_management {
 
     /// Handles general window events that overlays might need to do action for overlay window.
     async fn handle_general_event(
+        app: AppHandle,
+        wallpaper_id: Uuid,
         window: window_observer::Window,
         event: Event,
         overlays: Overlays,
@@ -341,11 +343,19 @@ mod overlay_management {
             event
         );
 
-        let overlays = overlays.lock().await;
-        if let Some(overlay) = overlays.get(&window_id) {
-            overlay
-                .handle_target_window_event(window, event.clone())
-                .await;
+        {
+            let mut overlays = overlays.lock().await;
+            if let Some(overlay) = overlays.get_mut(&window_id) {
+                overlay
+                    .handle_target_window_event(window, event.clone())
+                    .await;
+                return;
+            }
+        }
+
+        // If no overlay exists for the window, create a new one.
+        if let Some(window) = window.create_window_getter_window().ok().flatten() {
+            handle_window_created(app, wallpaper_id, window, overlays).await;
         }
     }
 }
