@@ -34,9 +34,8 @@ impl OverlayHost {
         config: &Wallpaper,
     ) -> anyhow::Result<Option<Self>> {
         log::info!(
-            "Start new overlay host: wallpaper_id = {}, pid = {}",
-            wallpaper_id,
-            pid
+            "Start new overlay host: \
+            wallpaper_id = {wallpaper_id}, pid = {pid}"
         );
 
         // Initialize the observer and overlays.
@@ -239,7 +238,7 @@ mod overlay_management {
         tauri::async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
                 let Ok(event) = event else {
-                    log::warn!("Received invalid window event: {:?}", event);
+                    log::warn!("Received invalid window event: {event:?}");
                     continue;
                 };
 
@@ -317,7 +316,7 @@ mod overlay_management {
 
     /// Handles window closed events by removing the overlay.
     async fn handle_window_closed(window_id: WindowId, overlays: Overlays) {
-        log::debug!("Handling general window closed event: {:?}", window_id);
+        log::debug!("Handling general window closed event: {window_id:?}");
         let mut overlays = overlays.lock().await;
 
         if let Some(overlay) = overlays.remove(&window_id) {
@@ -338,9 +337,7 @@ mod overlay_management {
         };
         log::debug!(
             "Handling general window event: \
-            window_id = {:?}, event = {:?}",
-            window_id,
-            event
+            window_id = {window_id:?}, event = {event:?}",
         );
 
         {

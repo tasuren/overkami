@@ -35,7 +35,7 @@ pub fn setup_wallpapers(app: &tauri::App) {
 }
 
 pub async fn add_wallpaper(app: AppHandle, id: Uuid, payload: AddWallpaper) {
-    log::info!("Adding new wallpaper host for ID: {}", id);
+    log::info!("Adding new wallpaper host for ID: {id}");
 
     let host = WallpaperHost::new(app.clone(), id, payload).await;
     app.state::<WallpaperHostsState>()
@@ -45,7 +45,7 @@ pub async fn add_wallpaper(app: AppHandle, id: Uuid, payload: AddWallpaper) {
 }
 
 pub async fn remove_wallpaper(app: &AppHandle, id: Uuid) {
-    log::info!("Removing wallpaper host for ID: {}", id);
+    log::info!("Removing wallpaper host for ID: {id}");
 
     let hosts = app.state::<WallpaperHostsState>();
     let mut hosts = hosts.lock().await;
