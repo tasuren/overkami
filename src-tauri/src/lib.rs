@@ -26,6 +26,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level_for("tao", log::LevelFilter::Warn)
+                .level_for("overkami_lib", log::LevelFilter::Info)
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())

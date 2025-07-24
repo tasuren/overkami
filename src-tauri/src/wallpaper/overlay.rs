@@ -210,12 +210,12 @@ impl Overlay {
     }
 
     pub async fn set_foreground(&self) {
-        self.set_order().await;
-        self.overlay_window.merge_always_on_top(true).unwrap();
-
         self.overlay_window
             .merge_ignore_cursor_events(true)
             .unwrap();
+
+        self.set_order().await;
+        self.overlay_window.merge_always_on_top(true).unwrap();
     }
 
     pub async fn set_background(&self) {

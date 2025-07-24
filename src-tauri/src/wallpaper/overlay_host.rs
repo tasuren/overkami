@@ -346,6 +346,7 @@ mod overlay_management {
                 overlay
                     .handle_target_window_event(window, event.clone())
                     .await;
+
                 return;
             }
         }
