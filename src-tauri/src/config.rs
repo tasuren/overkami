@@ -35,6 +35,7 @@ mod model {
         pub enum WallpaperSource {
             RemoteWebPage { location: String },
             LocalWebPage { location: PathBuf },
+            YouTube { location: String },
             Picture { location: PathBuf },
             Video { location: PathBuf },
         }

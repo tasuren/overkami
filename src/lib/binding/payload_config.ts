@@ -8,6 +8,11 @@ export type LocalWebPageSource = {
   location: string;
 };
 
+export type YouTubeSource = {
+  type: "YouTube";
+  location: string;
+};
+
 export type PictureSource = {
   type: "Picture";
   location: string;
@@ -18,7 +23,7 @@ export type VideoSource = {
   location: string;
 };
 
-export type RemoteWallpaperSource = RemoteWebPageSource;
+export type RemoteWallpaperSource = RemoteWebPageSource | YouTubeSource;
 export type LocalWallpaperSource =
   | LocalWebPageSource
   | PictureSource

@@ -301,26 +301,31 @@ pub mod source {
     pub fn get_wallpaper_url(source: &WallpaperSource) -> WebviewUrl {
         match source {
             WallpaperSource::Picture { location } => {
-                let path = utf8_percent_encode(
+                let location = utf8_percent_encode(
                     location.to_str().expect("Failed to read picture location"),
                     NON_ALPHANUMERIC,
                 );
 
-                WebviewUrl::App(format!("?wallpaper=picture&path={path}").into())
+                WebviewUrl::App(format!("?wallpaper=picture&location={location}").into())
             }
             WallpaperSource::Video { location } => {
-                let path = utf8_percent_encode(
+                let location = utf8_percent_encode(
                     location.to_str().expect("Failed to read video location"),
                     NON_ALPHANUMERIC,
                 );
 
-                WebviewUrl::App(format!("?wallpaper=video&path={path}").into())
+                WebviewUrl::App(format!("?wallpaper=video&location={location}").into())
             }
             WallpaperSource::LocalWebPage { location } => {
                 WebviewUrl::External(Url::parse(&convert_file_src(location).unwrap()).unwrap())
             }
             WallpaperSource::RemoteWebPage { location } => {
                 WebviewUrl::External(Url::parse(location).unwrap())
+            }
+            WallpaperSource::YouTube { location } => {
+                let location = utf8_percent_encode(location, NON_ALPHANUMERIC);
+
+                WebviewUrl::App(format!("?wallpaper=youtube&location={location}").into())
             }
         }
     }

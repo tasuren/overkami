@@ -60,7 +60,13 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
     <div>
       <div class="mb-2">壁紙</div>
 
-      <SourceTypeField form={form} onChange={setType} />
+      <SourceTypeField
+        form={form}
+        onChange={(a) => {
+          console.log(a);
+          setType(a);
+        }}
+      />
 
       <Field
         of={form}
@@ -90,11 +96,32 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
             case "Video":
               title = "壁紙に使う動画ファイル";
               break;
-            case "LocalWebPage":
-              title = "壁紙に使うHTMLファイル";
+            case "YouTube":
+              title = "壁紙に使うYouTubeの動画URL";
               break;
           }
 
+          if (type() === "YouTube") {
+            return (
+              <div class={base()}>
+                <label for={props.name} class="text-sm">
+                  {title}
+                </label>
+
+                <input
+                  {...props}
+                  id={props.name}
+                  class={inputClass({
+                    class: "text-left font-mono",
+                  })}
+                  type="url"
+                  value={field.value}
+                />
+
+                <div class={error()}>{field.error}</div>
+              </div>
+            );
+          }
           return (
             <div class={base()}>
               <label for={props.name} class="text-sm">
@@ -169,11 +196,13 @@ function SourceTypeSelect(props: {
         {...fieldProps}
         class={select()}
         id={id}
-        onSelect={() => onChange(field.value || "Picture")}
+        onChange={() => onChange(field.value || "Picture")}
       >
         <option value="Picture" selected>
           画像
         </option>
+        <option value="Video">動画</option>
+        <option value="YouTube">YouTube</option>
       </select>
 
       <span class={chevron()}>
