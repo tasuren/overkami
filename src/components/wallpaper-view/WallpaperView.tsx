@@ -1,7 +1,6 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
-import { createEffect, createSignal, onCleanup, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { useView } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { iconButtonClass, iconClass } from "../ui";
@@ -14,37 +13,6 @@ export default function WallpaperView(props: {
   const { wallpaper, id } = props;
   const [, setView] = useView();
   const [dirty, setDirty] = createSignal(false);
-
-  createEffect(async () => {
-    // Prevent window close when dirty.
-    const window = getCurrentWindow();
-
-    const unListen = await window.onCloseRequested(async (event) => {
-      if (
-        dirty() &&
-        !(await confirm("変更が保存されていません、それでも閉じますか？"))
-      ) {
-        return;
-      }
-
-      window.hide();
-      event.preventDefault();
-    });
-
-    onCleanup(() => {
-      unListen();
-    });
-  });
-
-  /* TODO: This will reset traffic lights position. I want to fix.
-  if (platform() === "macos") {
-    createEffect(() => {
-      setDocumentEdited(dirty());
-
-      onCleanup(() => setDocumentEdited(false));
-    });
-  }
-  */
 
   return (
     <div>
