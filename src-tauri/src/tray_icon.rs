@@ -25,8 +25,14 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
         .build()
         .expect("Failed to create tray icon menu");
 
+    #[cfg(target_os = "macos")]
+    let icon = tauri::include_image!("icons/MacTrayIcon.png");
+    #[cfg(not(target_os = "macos"))]
+    let icon = app.default_window_icon().unwrap().clone();
+
     TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(icon)
+        .icon_as_template(cfg!(target_os = "macos"))
         .menu(&menu)
         .on_menu_event(move |_app, event| {
             if event.id().as_ref() == "settings" {
