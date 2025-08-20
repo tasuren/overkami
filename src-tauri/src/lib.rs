@@ -21,14 +21,9 @@ fn setup(app: &mut tauri::App) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut app = tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .level_for("tao", log::LevelFilter::Warn)
-                .level_for("overkami_lib", log::LevelFilter::Info)
-                .build(),
-        )
+        .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -46,8 +41,16 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             commands::os::platform_custom_feature::set_document_edited
         ])
-        .run(tauri::generate_context!())
-        .expect("Failed to run Tauri application");
+        .build(tauri::generate_context!())
+        .expect("Failed to run tauri application");
+
+    #[cfg(target_os = "macos")]
+    {
+        app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+        app.set_dock_visibility(false);
+    }
+
+    app.run(|_app, _event| {});
 }
 
 mod panic_hook {

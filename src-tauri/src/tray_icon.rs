@@ -15,7 +15,6 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
 
     #[cfg(target_os = "macos")]
     {
-        app.set_activation_policy(tauri::ActivationPolicy::Accessory);
         window.set_always_on_top(true).unwrap();
     }
 
