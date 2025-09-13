@@ -115,6 +115,7 @@ impl Overlay {
         self.resize(bounds.into());
     }
 
+    /// Apply the wallpaper settings.
     pub fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
         if let Some(opacity) = opacity {
             log::info!("Update wallpaper overlay opacity to {opacity}");

@@ -72,6 +72,7 @@ impl OverlayHost {
         Ok(Some(overlay_host))
     }
 
+    /// Create the overlay windows for the windows opened by specific process.
     async fn create_windows(&self, filters: &[Filter], source: &WallpaperSource, opacity: f64) {
         let mut overlays = self.overlays.lock().await;
 
@@ -80,8 +81,8 @@ impl OverlayHost {
                 if window_pid as u32 != self.pid {
                     continue;
                 }
-
                 let window_id = window.id();
+
                 let Some(overlay) = Overlay::new(
                     self.wallpaper_id,
                     window.clone(),
@@ -104,6 +105,7 @@ impl OverlayHost {
         self.pid
     }
 
+    /// Stop the overlay windows.
     pub async fn stop(self) {
         log::info!(
             "Stopping overlay host: wallpaper_id = {}, pid = {}",
@@ -121,6 +123,7 @@ impl OverlayHost {
         }
     }
 
+    /// Apply wallpaper settings.
     pub async fn apply_wallpaper(&self, opacity: Option<f64>, source: Option<WallpaperSource>) {
         for overlay in self.overlays.lock().await.values() {
             overlay.apply_wallpaper(opacity, source.clone());
@@ -128,6 +131,7 @@ impl OverlayHost {
     }
 }
 
+/// Implementations of the observation windows opened by specific processes.
 mod observer {
     use pollster::FutureExt;
     use window_observer::WindowObserver;
@@ -216,6 +220,8 @@ mod observer {
     }
 }
 
+/// Handle the window's events to achieve overlays movements
+/// that match the target windows.
 mod overlay_management {
     use std::sync::Arc;
 
@@ -254,6 +260,7 @@ mod overlay_management {
         });
     }
 
+    /// Handles window events.
     async fn manage_overlay(
         app: AppHandle,
         wallpaper_id: Uuid,

@@ -13,6 +13,8 @@ use crate::{
 pub type OverlayHosts = Arc<Mutex<Vec<OverlayHost>>>;
 pub type SharedWallpaperConfig = Arc<Mutex<Wallpaper>>;
 
+/// The host of wallpaper for the application.
+/// It tracks app launches and if the wallpaper application is need, apply it to the app.
 pub struct WallpaperHost {
     id: Uuid,
     config: SharedWallpaperConfig,
@@ -42,12 +44,14 @@ impl WallpaperHost {
         }
     }
 
+    /// Stop wallpaper.
     pub async fn stop(self) {
         let config = self.config.lock().await;
 
         unlisten_application(&config.application_name, self.id).await;
     }
 
+    /// Apply new wallpaper settings.
     pub async fn apply_wallpaper(&self, old_wallpaper: Wallpaper, mut payload: ApplyWallpaper) {
         if let Some(new_app_name) = payload.application_name.take() {
             self.change_application(old_wallpaper.application_name, new_app_name)
@@ -61,6 +65,7 @@ impl WallpaperHost {
         }
     }
 
+    /// Change the target application of wallpaper.
     async fn change_application(&self, old_app_name: String, new_app_name: String) {
         // When the application is updated, we need to clear the overlay hosts.
         // Then we will set up new overlay hosts with the updated configuration.
@@ -77,7 +82,7 @@ impl WallpaperHost {
     }
 }
 
-/// Handle application rise and fall events.
+/// Handle application rise and fall events to make or stop wallpaper instances.
 mod application_updates {
     use tauri::{async_runtime, AppHandle};
     use uuid::Uuid;
