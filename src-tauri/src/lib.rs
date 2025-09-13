@@ -4,7 +4,6 @@ mod os;
 mod tray_icon;
 mod utils;
 mod wallpaper;
-mod window;
 
 pub use config::state::{ConfigPathState, ConfigState};
 
