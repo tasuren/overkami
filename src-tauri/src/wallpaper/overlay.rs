@@ -352,6 +352,8 @@ mod filter {
     }
 
     pub fn wallpaper_filter(window_name: Option<String>, filters: &[Filter]) -> bool {
+        println!("{filters:?} {window_name:?}");
+
         filters.iter().all(|filter| match (&window_name, filter) {
             (Some(window_name), Filter::WindowName { name, strategy }) => {
                 string_filter(window_name, name, strategy)

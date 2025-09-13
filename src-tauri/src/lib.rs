@@ -6,6 +6,7 @@ mod utils;
 mod wallpaper;
 
 pub use config::state::{ConfigPathState, ConfigState};
+use tauri::Manager;
 
 fn setup(app: &mut tauri::App) {
     log::info!("Starting overkami...");
@@ -44,13 +45,21 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("Failed to run tauri application");
 
+    // TODO: 初回起動時のみ↓を実行しない。（ドックにアイコンを表示する。）
     #[cfg(target_os = "macos")]
     {
         app.set_activation_policy(tauri::ActivationPolicy::Accessory);
         app.set_dock_visibility(false);
+
+        // TODO: CGRequestScreenCaptureAccessを実施
     }
 
-    app.run(|_app, _event| {});
+    app.run(|app, event| {
+        #[cfg(target_os = "macos")]
+        if let tauri::RunEvent::Reopen { .. } = event {
+            app.get_webview_window("main").unwrap().set_focus().unwrap();
+        }
+    });
 }
 
 mod panic_hook {
