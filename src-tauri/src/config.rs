@@ -13,6 +13,7 @@ mod model {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Config {
         pub version: String,
+        pub open_window_on_startup: bool,
         pub wallpapers: HashMap<Uuid, Wallpaper>,
     }
 
@@ -20,6 +21,7 @@ mod model {
         fn default() -> Self {
             Self {
                 version: VERSION.to_owned(),
+                open_window_on_startup: true,
                 wallpapers: HashMap::new(),
             }
         }

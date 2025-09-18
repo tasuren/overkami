@@ -24,7 +24,8 @@
         },
         "windowEffects": {
           "effects": ["acrylic", "sidebar"]
-        }
+        },
+        "visible": false
       }
     ],
     "security": {
