@@ -28,7 +28,7 @@ mod webview_window {
 
             app.run_on_main_thread(move || {
                 let ns_window = super::get_ns_window(&window);
-                unsafe { ns_window.setAlphaValue(opacity) };
+                ns_window.setAlphaValue(opacity);
             })
             .context("Failed to start opacity setting on main thread")?;
 
@@ -37,13 +37,13 @@ mod webview_window {
 
         fn set_order_above(&self, relative_to: WindowId) -> Result<()> {
             let ns_window = super::get_ns_window(self);
-            let window_id = unsafe { ns_window.windowNumber() };
+            let window_id = ns_window.windowNumber();
 
             let result = core_graphics_services::cgs_order_window(
                 core_graphics_services::cgs_default_connection_for_thread(),
                 window_id as _,
                 core_graphics_services::kCGSOrderAbove,
-                *relative_to.inner(),
+                relative_to.into_platform_window_id(),
             );
 
             if let Err(error) = result {
@@ -72,12 +72,11 @@ mod window {
 
     impl crate::os::WindowPlatformExt for window_getter::Window {
         fn is_frontmost(&self) -> anyhow::Result<bool> {
-            let app =
-                unsafe { objc2_app_kit::NSWorkspace::sharedWorkspace().frontmostApplication() };
+            let app = objc2_app_kit::NSWorkspace::sharedWorkspace().frontmostApplication();
             let Some(app) = app else { return Ok(false) };
 
             let pid = self.owner_pid().context("Failed to get owner PID")?;
-            Ok(pid == unsafe { app.processIdentifier() })
+            Ok(pid == app.processIdentifier())
         }
     }
 }
@@ -89,11 +88,10 @@ pub mod application {
 
     pub fn activate_another_app(target: &Window) -> anyhow::Result<()> {
         let pid = target.owner_pid().context("Failed to get owner PID")?;
-        let app =
-            unsafe { NSRunningApplication::runningApplicationWithProcessIdentifier(pid as _) }
-                .context("There are no running application with the given window")?;
+        let app = NSRunningApplication::runningApplicationWithProcessIdentifier(pid as _)
+            .context("There are no running application with the given window")?;
 
-        let result = unsafe { app.activateWithOptions(NSApplicationActivationOptions::empty()) };
+        let result = app.activateWithOptions(NSApplicationActivationOptions::empty());
         if !result {
             anyhow::bail!("Something went wrong while activating the application");
         }
@@ -112,15 +110,13 @@ pub mod custom_feature {
         app.run_on_main_thread(move || {
             let ns_window = super::get_ns_window(&window);
 
-            unsafe {
-                ns_window.setCollectionBehavior(
-                    NSWindowCollectionBehavior::Auxiliary
-                        | NSWindowCollectionBehavior::Transient
-                        | NSWindowCollectionBehavior::CanJoinAllSpaces
-                        | NSWindowCollectionBehavior::FullScreenAllowsTiling
-                        | NSWindowCollectionBehavior::IgnoresCycle,
-                );
-            }
+            ns_window.setCollectionBehavior(
+                NSWindowCollectionBehavior::Auxiliary
+                    | NSWindowCollectionBehavior::Transient
+                    | NSWindowCollectionBehavior::CanJoinAllSpaces
+                    | NSWindowCollectionBehavior::FullScreenAllowsTiling
+                    | NSWindowCollectionBehavior::IgnoresCycle,
+            );
         })
         .unwrap();
     }
@@ -154,7 +150,7 @@ mod core_graphics_services {
     pub const kCGSOrderAbove: CGSWindowOrderingMode = 1;
     pub const kCGSOrderIn: CGSWindowOrderingMode = 2;
 
-    extern "C" {
+    unsafe extern "C" {
         fn CGSMainConnectionID() -> CGSConnectionID;
         fn CGSDefaultConnectionForThread() -> CGSConnectionID;
         fn CGSOrderWindow(
