@@ -74,7 +74,7 @@ mod model {
 pub mod state {
     use std::path::PathBuf;
 
-    use tauri::{async_runtime::Mutex, Manager};
+    use tauri::{Manager, async_runtime::Mutex};
 
     use super::Config;
 
@@ -117,10 +117,10 @@ mod setup {
                 .unwrap_or_else(|e| failed_to_get_app_config_directory(app, e.to_string()))
         };
 
-        if !config_path.exists() {
-            if let Err(error) = std::fs::create_dir_all(&config_path) {
-                failed_to_prepare_config_dir(app, error.to_string());
-            };
+        if !config_path.exists()
+            && let Err(error) = std::fs::create_dir_all(&config_path)
+        {
+            failed_to_prepare_config_dir(app, error.to_string());
         }
 
         let config_path = config_path.join("config.json");

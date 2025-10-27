@@ -2,8 +2,10 @@ use tauri::{Manager, menu::MenuBuilder, tray::TrayIconBuilder};
 
 pub fn setup_tray_icon(app: &mut tauri::App) {
     let window = app.get_webview_window("main").unwrap();
+
     window.on_window_event({
         let window = window.clone();
+        #[cfg(target_os = "macos")]
         let app = app.handle().clone();
 
         move |event| {
@@ -32,13 +34,13 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
         .icon(icon)
         .icon_as_template(cfg!(target_os = "macos"))
         .menu(&menu)
-        .on_menu_event(move |app, event| {
+        .on_menu_event(move |_app, event| {
             if event.id().as_ref() == "settings" {
                 window.show().unwrap();
                 window.set_focus().unwrap();
 
                 #[cfg(target_os = "macos")]
-                app.set_dock_visibility(true).unwrap();
+                _app.set_dock_visibility(true).unwrap();
             }
         })
         .build(app)
