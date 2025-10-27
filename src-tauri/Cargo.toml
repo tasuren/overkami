@@ -1,9 +1,9 @@
 [package]
-name = "overkami"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-edition = "2021"
+name = "overkami-backend"
+authors = ["Takagi Tasuku <tasuren@outlook.jp>"]
+license = "GPL-3.0-only"
+publish = false
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

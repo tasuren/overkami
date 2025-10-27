@@ -3263,8 +3263,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "overkami"
-version = "0.1.0"
+name = "overkami-backend"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "applications",
