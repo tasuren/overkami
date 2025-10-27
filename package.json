@@ -14,23 +14,23 @@
   "license": "MIT",
   "dependencies": {
     "@modular-forms/solid": "^0.25.1",
-    "@tailwindcss/vite": "^4.1.11",
-    "@tauri-apps/api": "^2.6.0",
-    "@tauri-apps/plugin-dialog": "~2.3.0",
-    "@tauri-apps/plugin-log": "~2.6.0",
-    "@tauri-apps/plugin-opener": "^2.4.0",
-    "@tauri-apps/plugin-os": "~2.3.0",
-    "lucide-solid": "^0.525.0",
-    "solid-js": "^1.9.7",
-    "tailwind-variants": "^1.0.0",
-    "tailwindcss": "^4.1.11"
+    "@tailwindcss/vite": "^4.1.16",
+    "@tauri-apps/api": "^2.9.0",
+    "@tauri-apps/plugin-dialog": "~2.4.1",
+    "@tauri-apps/plugin-log": "~2.7.0",
+    "@tauri-apps/plugin-opener": "^2.5.1",
+    "@tauri-apps/plugin-os": "~2.3.1",
+    "lucide-solid": "^0.548.0",
+    "solid-js": "^1.9.9",
+    "tailwind-variants": "^3.1.1",
+    "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.1",
-    "@tauri-apps/cli": "^2.6.2",
+    "@biomejs/biome": "2.3.1",
+    "@tauri-apps/cli": "^2.9.1",
     "pathe": "^2.0.3",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "vite-plugin-solid": "^2.11.7"
+    "typescript": "~5.9.3",
+    "vite": "^7.1.12",
+    "vite-plugin-solid": "^2.11.10"
   }
 }
