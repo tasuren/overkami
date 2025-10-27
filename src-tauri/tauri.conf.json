@@ -15,7 +15,6 @@
                 "title": "overkami - オーバーカミ！",
                 "width": 700,
                 "height": 550,
-                "transparent": true,
                 "titleBarStyle": "Overlay",
                 "hiddenTitle": true,
                 "trafficLightPosition": {
