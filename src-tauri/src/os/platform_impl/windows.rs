@@ -35,7 +35,7 @@ struct DiffPos {
 
 impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
     fn setup_platform_specific(&self) -> anyhow::Result<()> {
-        let hwnd = self.hwnd().unwrap();
+        let hwnd = HWND(self.hwnd().unwrap().0);
 
         manage_window_ex_style(hwnd, true, WS_EX_LAYERED)?;
 
@@ -60,16 +60,17 @@ impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
     }
 
     fn set_opacity(&self, opacity: f64) -> anyhow::Result<()> {
-        let hwnd = self.hwnd().unwrap();
+        let hwnd = HWND(self.hwnd().unwrap().0);
 
         unsafe { SetLayeredWindowAttributes(hwnd, COLORREF(0), (255. * opacity) as u8, LWA_ALPHA) }
             .context("Failed to set layered window attributes")
     }
 
     fn set_order_above(&self, relative_to: window_getter::WindowId) -> anyhow::Result<()> {
-        let hwnd = self.hwnd().unwrap();
-        let hwnd_insert_after = unsafe { GetWindow(*relative_to.inner(), GW_HWNDPREV) }
-            .context("Failed to get window near target window")?;
+        let hwnd = HWND(self.hwnd().unwrap().0);
+        let hwnd_insert_after =
+            unsafe { GetWindow(relative_to.into_platform_window_id(), GW_HWNDPREV) }
+                .context("Failed to get window near target window")?;
 
         unsafe {
             SetWindowPos(
@@ -86,7 +87,7 @@ impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
     }
 
     fn merge_always_on_top(&self, top: bool) -> anyhow::Result<()> {
-        let hwnd = self.hwnd().unwrap();
+        let hwnd = HWND(self.hwnd().unwrap().0);
 
         manage_window_ex_style(hwnd, top, WS_EX_TOPMOST)?;
 
@@ -105,7 +106,7 @@ impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
     }
 
     fn merge_ignore_cursor_events(&self, ignore: bool) -> anyhow::Result<()> {
-        let hwnd = self.hwnd().unwrap();
+        let hwnd = HWND(self.hwnd().unwrap().0);
 
         manage_window_ex_style(hwnd, ignore, WS_EX_TRANSPARENT)
     }
@@ -122,12 +123,12 @@ impl crate::os::WebviewWindowPlatformExt for WebviewWindow {
 
 impl crate::os::WindowPlatformExt for window_getter::Window {
     fn is_frontmost(&self) -> anyhow::Result<bool> {
-        Ok(self.inner().is_foreground())
+        Ok(self.platform_window().is_foreground())
     }
 }
 
 pub fn set_foreground_window(target: &window_getter::Window) -> anyhow::Result<()> {
-    let hwnd = target.inner().hwnd();
+    let hwnd = target.platform_window().hwnd();
 
     unsafe {
         let _ = SetForegroundWindow(hwnd);
