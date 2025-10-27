@@ -42,16 +42,11 @@ fn get_application_windows_blocking() -> Vec<ApplicationWindow> {
             continue;
         };
 
-        let title =
-            window.title().ok().flatten().and_then(
-                |text| {
-                    if text.is_empty() {
-                        None
-                    } else {
-                        Some(text)
-                    }
-                },
-            );
+        let title = window
+            .title()
+            .ok()
+            .flatten()
+            .and_then(|text| if text.is_empty() { None } else { Some(text) });
 
         applications.push(ApplicationWindow {
             title,

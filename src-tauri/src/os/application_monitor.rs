@@ -74,7 +74,7 @@ impl ApplicationProcess {
 
 pub mod auto_refresh {
     use std::{
-        sync::{atomic, OnceLock},
+        sync::{OnceLock, atomic},
         thread::JoinHandle,
     };
 
@@ -86,14 +86,16 @@ pub mod auto_refresh {
             anyhow::bail!("Auto-refresh task is already running");
         }
 
-        let handle = std::thread::spawn(|| loop {
-            if STOP_AUTO_REFRESH.load(atomic::Ordering::Relaxed) {
-                break;
+        let handle = std::thread::spawn(|| {
+            loop {
+                if STOP_AUTO_REFRESH.load(atomic::Ordering::Relaxed) {
+                    break;
+                }
+
+                super::refresh_blocking();
+
+                std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
             }
-
-            super::refresh_blocking();
-
-            std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
         });
 
         AUTO_REFRESH_TASK.set(handle).unwrap();

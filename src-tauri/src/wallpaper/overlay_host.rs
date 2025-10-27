@@ -1,10 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
-use tauri::{async_runtime::Mutex, AppHandle};
+use tauri::{AppHandle, async_runtime::Mutex};
 use uuid::Uuid;
 use window_getter::WindowId;
-use window_observer::{tokio::sync::mpsc, WindowObserver};
+use window_observer::{WindowObserver, tokio::sync::mpsc};
 
 use crate::{
     config::{Filter, Wallpaper, WallpaperSource},
@@ -230,7 +230,7 @@ mod overlay_management {
     use window_getter::{Window, WindowId};
     use window_observer::{Event, MaybeWindowAvailable};
 
-    use crate::{wallpaper::overlay::Overlay, ConfigState};
+    use crate::{ConfigState, wallpaper::overlay::Overlay};
 
     use super::Overlays;
 

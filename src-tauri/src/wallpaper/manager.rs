@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use tauri::{
-    async_runtime::{self, Mutex},
     AppHandle, Manager,
+    async_runtime::{self, Mutex},
 };
 use uuid::Uuid;
 
-use crate::{commands::sync::AddWallpaper, wallpaper::wallpaper_host::WallpaperHost, ConfigState};
+use crate::{ConfigState, commands::sync::AddWallpaper, wallpaper::wallpaper_host::WallpaperHost};
 
 pub type WallpaperHostsState = Mutex<HashMap<Uuid, WallpaperHost>>;
 

@@ -1,6 +1,6 @@
 use tauri::Manager;
 
-use crate::{config::Config, ConfigPathState, ConfigState};
+use crate::{ConfigPathState, ConfigState, config::Config};
 
 #[tauri::command]
 pub async fn get_config(app: tauri::AppHandle) -> serde_json::Value {

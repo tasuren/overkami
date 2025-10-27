@@ -5,7 +5,7 @@ use window_observer::Event;
 
 use crate::{
     config::{Filter, WallpaperSource},
-    os::{platform_impl::WindowPlatformExt, WebviewWindowPlatformExt},
+    os::{WebviewWindowPlatformExt, platform_impl::WindowPlatformExt},
     utils::{adjust_position, adjust_size},
 };
 
@@ -292,7 +292,7 @@ pub fn create_window(
 }
 
 pub mod source {
-    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
     use tauri::{Url, WebviewUrl};
 
     use crate::{config::WallpaperSource, utils::convert_file_src};

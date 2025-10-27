@@ -4,7 +4,7 @@ use uuid::Uuid;
 pub use payload::*;
 
 use crate::{
-    commands::CommandError, config::Wallpaper, wallpaper::WallpaperHostsState, ConfigState,
+    ConfigState, commands::CommandError, config::Wallpaper, wallpaper::WallpaperHostsState,
 };
 
 #[tauri::command]

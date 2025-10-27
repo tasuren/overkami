@@ -74,7 +74,7 @@ mod model {
 pub mod state {
     use std::path::PathBuf;
 
-    use tauri::{async_runtime::Mutex, Manager};
+    use tauri::{Manager, async_runtime::Mutex};
 
     use super::Config;
 

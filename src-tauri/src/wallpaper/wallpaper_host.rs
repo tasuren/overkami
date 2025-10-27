@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tauri::{async_runtime::Mutex, AppHandle};
+use tauri::{AppHandle, async_runtime::Mutex};
 use uuid::Uuid;
 
 use crate::{
@@ -84,11 +84,11 @@ impl WallpaperHost {
 
 /// Handle application rise and fall events to make or stop wallpaper instances.
 mod application_updates {
-    use tauri::{async_runtime, AppHandle};
+    use tauri::{AppHandle, async_runtime};
     use uuid::Uuid;
 
     use crate::{
-        os::application_observer::{listen_application, ApplicationEvent},
+        os::application_observer::{ApplicationEvent, listen_application},
         wallpaper::{overlay_host::OverlayHost, wallpaper_host::SharedWallpaperConfig},
     };
 

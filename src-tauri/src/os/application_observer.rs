@@ -1,13 +1,13 @@
 use std::{
     collections::{HashMap, HashSet},
-    sync::{atomic, LazyLock},
+    sync::{LazyLock, atomic},
 };
 
 use smallvec::SmallVec;
 use tauri::async_runtime::{Mutex, Sender};
 use uuid::Uuid;
 
-use crate::os::application_monitor::{get_application_processes, ApplicationProcess};
+use crate::os::application_monitor::{ApplicationProcess, get_application_processes};
 
 pub type AppPid = u32;
 
