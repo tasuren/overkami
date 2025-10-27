@@ -47,10 +47,12 @@ pub async fn add_wallpaper(app: AppHandle, id: Uuid, payload: AddWallpaper) {
 pub async fn remove_wallpaper(app: &AppHandle, id: Uuid) {
     log::info!("Removing wallpaper host for ID: {id}");
 
-    let hosts = app.state::<WallpaperHostsState>();
-    let mut hosts = hosts.lock().await;
+    let wallpaper_hosts = app.state::<WallpaperHostsState>();
+    let mut wallpaper_hosts = wallpaper_hosts.lock().await;
 
-    if let Some(host) = hosts.remove(&id) {
-        host.stop().await;
+    if let Some(wallpaper_host) = wallpaper_hosts.remove(&id) {
+        wallpaper_host.stop().await;
+    } else {
+        log::warn!("There were no wallpaper to remove.")
     };
 }

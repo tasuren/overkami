@@ -118,7 +118,7 @@ impl OverlayHost {
             .await
             .expect("Failed to stop window observer");
 
-        for overlay in self.overlays.lock().await.values() {
+        for (_, overlay) in self.overlays.lock().await.drain() {
             overlay.close();
         }
     }

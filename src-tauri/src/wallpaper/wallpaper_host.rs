@@ -47,8 +47,11 @@ impl WallpaperHost {
     /// Stop wallpaper.
     pub async fn stop(self) {
         let config = self.config.lock().await;
-
         unlisten_application(&config.application_name, self.id).await;
+
+        for overlay in self.overlay_hosts.lock().await.drain(..) {
+            overlay.stop().await;
+        }
     }
 
     /// Apply new wallpaper settings.
