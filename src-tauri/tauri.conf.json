@@ -52,6 +52,9 @@
             "icons/macos/128x128@2x.png",
             "icons/macos/icon.icns",
             "icons/icon.ico"
-        ]
+        ],
+        "macOS": {
+            "signingIdentity": "-"
+        }
     }
 }
