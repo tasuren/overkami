@@ -31,9 +31,9 @@ export function GlobalStateProvider(props: ParentProps) {
 
   createEffect(
     on(wallpapers, (wallpapers) => {
-      console.log(1);
       setConfig({
         version: config().version,
+        open_window_on_startup: config().open_window_on_startup,
         wallpapers: wallpapers,
       });
     }),
