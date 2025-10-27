@@ -27,6 +27,7 @@ fn setup(app: &mut tauri::App) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[allow(unused_mut)]
     let mut app = tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_log::Builder::new().build())
@@ -105,10 +106,13 @@ pub fn run() {
         }
     }
 
-    app.run(|app, event| {
+    app.run(|_app, _event| {
         #[cfg(target_os = "macos")]
-        if let tauri::RunEvent::Reopen { .. } = event {
-            app.get_webview_window("main").unwrap().set_focus().unwrap();
+        if let tauri::RunEvent::Reopen { .. } = _event {
+            _app.get_webview_window("main")
+                .unwrap()
+                .set_focus()
+                .unwrap();
         }
     });
 }

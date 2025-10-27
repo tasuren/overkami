@@ -88,13 +88,13 @@ function WindowNameFilterSelect(
     value?: StringFilterStrategy;
   },
 ) {
-  const { base, select, chevron } = selectClass();
+  const { base, select, chevron, optionClass } = selectClass();
 
   return (
     <div class={base()}>
       <select class={select()} {...props} value={props.value}>
         <For each={Object.entries(STRING_FILTER_STRATEGIES)}>
-          {([value, label]) => <option value={value}>{label}</option>}
+          {([value, label]) => <option class={optionClass()} value={value}>{label}</option>}
         </For>
       </select>
 

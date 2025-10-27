@@ -59,7 +59,7 @@ function ApplicationSelect(
     field.value ? await basename(field.value) : undefined,
   );
 
-  const { base, select, chevron } = selectClass();
+  const { base, select, chevron, optionClass } = selectClass();
 
   return (
     <div class="flex items-center gap-2 w-96">
@@ -71,7 +71,7 @@ function ApplicationSelect(
           disabled={applicationWindows() === undefined}
           value={field.value}
         >
-          <option value="" disabled>
+          <option class={optionClass()} value="" disabled>
             <Show
               when={applicationWindows() === undefined}
               fallback="アプリを選択"
@@ -83,6 +83,7 @@ function ApplicationSelect(
           <For each={applicationWindows()}>
             {(option) => (
               <option
+                class={optionClass()}
                 value={option.name}
                 selected={field.value === option.name}
               >
@@ -98,7 +99,7 @@ function ApplicationSelect(
                 undefined
             }
           >
-            <option value={field.value} selected>
+            <option class={optionClass()} value={field.value} selected>
               {currentFileName()}
             </option>
           </Show>

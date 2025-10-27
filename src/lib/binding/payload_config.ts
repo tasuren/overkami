@@ -58,5 +58,6 @@ export type Wallpapers = { [key: string]: Wallpaper };
 
 export type Config = {
   version: string;
+  open_window_on_startup: boolean,
   wallpapers: Wallpapers;
 };

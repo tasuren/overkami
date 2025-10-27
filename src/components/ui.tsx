@@ -89,6 +89,7 @@ export const selectClass = tv({
   slots: {
     base: "relative",
     select: [...inputClass.base, "appearance-none cursor-pointer w-full"],
+    optionClass: "text-black dark:text-white",
     chevron: [
       "absolute right-3 top-1/2 -translate-y-1/2",
       "cursor-pointer pointer-events-none",
