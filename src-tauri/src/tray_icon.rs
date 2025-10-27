@@ -1,4 +1,4 @@
-use tauri::{menu::MenuBuilder, tray::TrayIconBuilder, Manager};
+use tauri::{Manager, menu::MenuBuilder, tray::TrayIconBuilder};
 
 pub fn setup_tray_icon(app: &mut tauri::App) {
     let window = app.get_webview_window("main").unwrap();
@@ -24,7 +24,7 @@ pub fn setup_tray_icon(app: &mut tauri::App) {
         .expect("Failed to create tray icon menu");
 
     #[cfg(target_os = "macos")]
-    let icon = tauri::include_image!("icons/MacTrayIcon.png");
+    let icon = tauri::include_image!("../overkami_icon_macOS_tray.png");
     #[cfg(not(target_os = "macos"))]
     let icon = app.default_window_icon().unwrap().clone();
 

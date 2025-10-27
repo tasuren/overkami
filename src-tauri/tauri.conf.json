@@ -1,54 +1,57 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "overkami",
-  "version": "0.1.0",
-  "identifier": "overkami.tasuren.jp",
-  "build": {
-    "beforeDevCommand": "bun run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
-    "frontendDist": "../dist"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "overkami - オーバーカミ！",
-        "width": 700,
-        "height": 550,
-        "transparent": true,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
-        "trafficLightPosition": {
-          "x": 16,
-          "y": 20
-        },
-        "windowEffects": {
-          "effects": ["acrylic", "sidebar"]
-        },
-        "visible": false
-      }
-    ],
-    "security": {
-      "csp": {
-        "default-src": "'self' ipc: http://ipc.localhost",
-        "img-src": "'self' asset: http://asset.localhost"
-      },
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["**/*"]
-      }
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "overkami",
+    "version": "0.1.0",
+    "identifier": "overkami.tasuren.jp",
+    "build": {
+        "beforeDevCommand": "bun run dev",
+        "devUrl": "http://localhost:1420",
+        "beforeBuildCommand": "bun run build",
+        "frontendDist": "../dist"
     },
-    "macOSPrivateApi": true
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  }
+    "app": {
+        "windows": [
+            {
+                "title": "overkami - オーバーカミ！",
+                "width": 700,
+                "height": 550,
+                "transparent": true,
+                "titleBarStyle": "Overlay",
+                "hiddenTitle": true,
+                "trafficLightPosition": {
+                    "x": 16,
+                    "y": 20
+                },
+                "visible": false
+            }
+        ],
+        "security": {
+            "csp": {
+                "default-src": "'self' ipc: http://ipc.localhost",
+                "img-src": "'self' asset: http://asset.localhost"
+            },
+            "assetProtocol": {
+                "enable": true,
+                "scope": ["**/*"]
+            }
+        },
+        "macOSPrivateApi": true
+    },
+    "bundle": {
+        "active": true,
+        "targets": "all",
+        "copyright": "(c) 2025 Takagi Tasuku",
+        "shortDescription": "An app that lets you apply wallpapers to apps",
+        "category": "Entertainment",
+        "licenseFile": "../LICENSE",
+        "publisher": "Takagi Tasuku",
+        "homepage": "https://overkami.tasuren.jp",
+        "icon": [
+            "icons/macos/32x32.png",
+            "icons/macos/128x128.png",
+            "icons/macos/128x128@2x.png",
+            "icons/macos/icon.icns",
+            "icons/icon.ico"
+        ]
+    }
 }
