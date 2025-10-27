@@ -66,20 +66,27 @@ pub fn run() {
             app.set_dock_visibility(false);
         }
 
-        use tauri_plugin_dialog::DialogExt;
+        use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
         use window_getter::platform_impl::macos::permission;
         use window_observer::platform_impl::macos::binding_ax_function::*;
 
         let mut must_exit = false;
 
         if !ax_is_process_trusted() {
+            app.dialog()
+                .message(
+                    "ウィンドウの動きに壁紙を追従させるために、アクセシビリティの許可が必要です。\n\
+                    許可した後、アプリを再起動してください。",
+                )
+                .title("アクセシビリティの許可が必要です。")
+                .buttons(MessageDialogButtons::Ok)
+                .show(|_| {});
+
             ax_is_process_trusted_with_options(true);
             must_exit = true;
         }
 
         if !permission::has_screen_capture_access() {
-            use tauri_plugin_dialog::MessageDialogButtons;
-
             app.dialog()
                 .message(
                     "ウィンドウ情報を取得するのに画面収録の許可が必要です。\n\
