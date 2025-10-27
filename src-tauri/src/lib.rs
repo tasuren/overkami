@@ -68,6 +68,14 @@ pub fn run() {
 
         use tauri_plugin_dialog::DialogExt;
         use window_getter::platform_impl::macos::permission;
+        use window_observer::platform_impl::macos::binding_ax_function::*;
+
+        let mut must_exit = false;
+
+        if !ax_is_process_trusted() {
+            ax_is_process_trusted_with_options(true);
+            must_exit = true;
+        }
 
         if !permission::has_screen_capture_access() {
             use tauri_plugin_dialog::MessageDialogButtons;
@@ -79,10 +87,14 @@ pub fn run() {
                 )
                 .title("画面収録の許可が必要です。")
                 .buttons(MessageDialogButtons::Ok)
-                .show(|_| {
-                    permission::request_screen_capture_access();
-                    std::process::exit(0);
-                });
+                .show(|_| {});
+
+            permission::request_screen_capture_access();
+            must_exit = true;
+        }
+
+        if must_exit {
+            std::process::exit(0);
         }
     }
 
