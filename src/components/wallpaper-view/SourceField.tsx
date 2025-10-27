@@ -188,7 +188,7 @@ function SourceTypeSelect(props: {
   id: string;
 }) {
   const { field, fieldProps, id, onChange } = props;
-  const { base, select, chevron } = selectClass();
+  const { base, select, chevron, optionClass } = selectClass();
 
   return (
     <div class={base({ size: "sm" })}>
@@ -198,11 +198,11 @@ function SourceTypeSelect(props: {
         id={id}
         onChange={() => onChange(field.value || "Picture")}
       >
-        <option value="Picture" selected>
+        <option class={optionClass()} value="Picture" selected>
           画像
         </option>
-        <option value="Video">動画</option>
-        <option value="YouTube">YouTube</option>
+        <option class={optionClass()} value="Video">動画</option>
+        <option class={optionClass()} value="YouTube">YouTube</option>
       </select>
 
       <span class={chevron()}>

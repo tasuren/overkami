@@ -205,11 +205,8 @@ export default function WallpaperForm(props: {
       <WallpaperNameField form={form} defaultName={wallpaper?.name} />
 
       <ApplicationField form={form} />
-
       <FilterFields form={form} />
-
       <SourceField form={form} />
-
       <OpacityField form={form} />
 
       <div class="my-4 flex gap-2">

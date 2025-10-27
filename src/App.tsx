@@ -14,6 +14,7 @@ export function Main() {
         <Match when={view().type === "home"}>
           <HomeView />
         </Match>
+
         <Match when={view()}>
           {(view) => {
             const wallpaperView = view();
@@ -35,7 +36,7 @@ export function Main() {
 function Header() {
   return (
     <div
-      class={cl("w-screen h-[48px] z-50", "flex justify-center items-center")}
+      class={cl("w-screen h-12 z-50", "flex justify-center items-center")}
       data-tauri-drag-region
     >
       <h1 class="h-fit text-xl font-bold" data-tauri-drag-region>
