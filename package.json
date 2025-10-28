@@ -1,8 +1,7 @@
 {
   "name": "overkami",
-  "version": "0.1.0",
-  "description": "",
   "type": "module",
+  "private": true,
   "scripts": {
     "start": "vite",
     "dev": "vite",
