@@ -38,7 +38,7 @@
     },
     "bundle": {
         "active": true,
-        "targets": "all",
+        "targets": ["deb", "rpm", "appimage", "nsis", "app", "dmg"],
         "copyright": "© 2025 Takagi Tasuku",
         "shortDescription": "An app that lets you apply wallpapers to apps",
         "category": "Entertainment",
