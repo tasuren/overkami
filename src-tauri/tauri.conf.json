@@ -39,7 +39,7 @@
     "bundle": {
         "active": true,
         "targets": "all",
-        "copyright": "(c) 2025 Takagi Tasuku",
+        "copyright": "© 2025 Takagi Tasuku",
         "shortDescription": "An app that lets you apply wallpapers to apps",
         "category": "Entertainment",
         "licenseFile": "../LICENSE",
