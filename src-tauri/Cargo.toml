@@ -1,7 +1,6 @@
 [package]
 name = "overkami"
 authors = ["Takagi Tasuku <tasuren@outlook.jp>"]
-license = "GPL-3.0-only"
 publish = false
 edition = "2024"
 

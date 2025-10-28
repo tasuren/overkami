@@ -43,6 +43,7 @@
         "shortDescription": "An app that lets you apply wallpapers to apps",
         "category": "Entertainment",
         "licenseFile": "../LICENSE",
+        "license": "GPL-3.0-or-later",
         "publisher": "Takagi Tasuku",
         "homepage": "https://overkami.tasuren.jp",
         "icon": [
