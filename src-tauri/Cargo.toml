@@ -1,5 +1,5 @@
 [package]
-name = "overkami-backend"
+name = "overkami"
 authors = ["Takagi Tasuku <tasuren@outlook.jp>"]
 license = "GPL-3.0-only"
 publish = false
@@ -25,7 +25,7 @@ serde_json = "1"
 dunce = "1.0.5"
 percent-encoding = "2.3.2"
 sysinfo = "0.35.2"
-window-observer = { version = "0.1.1", features = ["macos-private-api"] }
+window-observer = { version = "0.1.2", features = ["macos-private-api"] }
 window-getter = "0.1.2"
 tauri-plugin-dialog = "2"
 applications = "0.3.1"

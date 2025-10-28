@@ -3263,7 +3263,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "overkami-backend"
+name = "overkami"
 version = "0.0.0"
 dependencies = [
  "anyhow",
@@ -6040,9 +6040,9 @@ dependencies = [
 
 [[package]]
 name = "window-observer"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93549f85c8e084cea0173bba02be6da3246290298ce76772daf98aaf31285fd9"
+checksum = "c00c9b8127825652c6a1a4efefb68815a6621bb851a97ec9c51be68dde415dc8"
 dependencies = [
  "accessibility",
  "accessibility-sys",
