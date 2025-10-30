@@ -288,6 +288,11 @@ pub fn create_window(
         custom_feature::setup_collection_behavior(window.clone());
     }
 
+    if option_env!("DEVTOOLS").is_some() {
+        log::info!("Open devtools");
+        window.open_devtools();
+    }
+
     window
 }
 
