@@ -28,14 +28,6 @@
     - Tailwind Variants
     - Modular Forms: フォームバリデーション
 
-## スクリーンショット
-
-<img width="600" alt="overkami screen shot" src="https://github.com/user-attachments/assets/6c4ef1bc-4e2b-4a63-b629-0cb4c95e7e97" />
-
-<img width="600" alt="Ghostty with wallpaper" src="https://github.com/user-attachments/assets/f54569fc-9bc0-4ad8-9dbb-1d10c997f337" />
-
-https://github.com/user-attachments/assets/1b59cb07-8329-4dc5-82f5-0b7ddd741584
-
 ## 対応プラットフォーム
 
 - [x] Windows
@@ -43,6 +35,14 @@ https://github.com/user-attachments/assets/1b59cb07-8329-4dc5-82f5-0b7ddd741584
 - [ ] Linux系OS
 
 Linux系OSに対応する予定はないですが、Pull Requestは歓迎します。
+
+## スクリーンショット
+
+<img width="600" alt="overkami screen shot" src="https://github.com/user-attachments/assets/6c4ef1bc-4e2b-4a63-b629-0cb4c95e7e97" />
+
+<img width="600" alt="Ghostty with wallpaper" src="https://github.com/user-attachments/assets/f54569fc-9bc0-4ad8-9dbb-1d10c997f337" />
+
+https://github.com/user-attachments/assets/1b59cb07-8329-4dc5-82f5-0b7ddd741584
 
 ## ライセンス
 
