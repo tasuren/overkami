@@ -12,32 +12,28 @@ export function HomeView() {
   const [wallpapers] = useWallpapers();
 
   return (
-    <>
-      <Show
-        when={Object.entries(wallpapers()).length > 0}
-        fallback={<NothingFound />}
+    <Show
+      when={Object.entries(wallpapers()).length > 0}
+      fallback={<NothingFound />}
+    >
+      <div
+        class={cl(
+          "px-14 py-10 h-full",
+          "grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5",
+          "content-start gap-4 overflow-auto",
+        )}
       >
-        <div
-          class={cl(
-            "px-14 py-10 h-full",
-            "grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5",
-            "content-start gap-4 overflow-auto",
-          )}
-        >
-          <For each={Object.entries(wallpapers())}>
-            {([id, wallpaper]) => (
-              <WallpaperCard id={id} wallpaper={wallpaper} />
-            )}
-          </For>
-        </div>
-      </Show>
+        <For each={Object.entries(wallpapers())}>
+          {([id, wallpaper]) => <WallpaperCard id={id} wallpaper={wallpaper} />}
+        </For>
 
-      <AddButton />
-    </>
+        <AddWallpaperCard />
+      </div>
+    </Show>
   );
 }
 
-function AddButton() {
+export function AddWallpaperCard() {
   const [, setView] = useView();
 
   const onClick = () => {
@@ -51,12 +47,15 @@ function AddButton() {
   return (
     <button
       type="button"
-      class={buttonClass({
-        class: "fixed bottom-14 left-14 p-4 h-fit rounded-xl",
-      })}
       onClick={onClick}
+      class={cl(
+        "flex justify-center items-center h-44",
+        "rounded-lg border-4 border-dashed",
+        "border-dark dark:border-light opacity-60",
+        "cursor-pointer active:scale-95 transition",
+      )}
     >
-      <Plus class="stroke-dark dark:stroke-light" />
+      <Plus class="stroke-dark dark:stroke-light size-1/3" />
     </button>
   );
 }
