@@ -62,9 +62,8 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
 
       <SourceTypeField
         form={form}
-        onChange={(a) => {
-          console.log(a);
-          setType(a);
+        onChange={(type) => {
+          setType(type);
         }}
       />
 
@@ -74,6 +73,7 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
         validate={[required("壁紙に使うファイルを指定してください。")]}
       >
         {(field, props) => {
+          console.log(field.value);
           const { base, error } = fieldClass();
           let fileName = field.value;
 
@@ -122,6 +122,7 @@ export default function SourceField(props: { form: FormStore<WallpaperForm> }) {
               </div>
             );
           }
+
           return (
             <div class={base()}>
               <label for={props.name} class="text-sm">
@@ -161,22 +162,35 @@ export function SourceTypeField(props: {
   const { form, onChange } = props;
   const { base, error } = fieldClass();
 
+  const [isFirst, setFirst] = createSignal(true);
+
   return (
     <Field of={form} name="source.type">
-      {(field, props) => (
-        <div class={base()}>
-          <label for={props.name} class="text-sm">
-            壁紙の種類
-          </label>
-          <SourceTypeSelect
-            field={field}
-            fieldProps={props}
-            id={props.name}
-            onChange={onChange}
-          />
-          <div class={error()}>{field.error}</div>
-        </div>
-      )}
+      {(field, props) => {
+        if (isFirst()) {
+          onChange(field.value ?? "Picture");
+          setFirst(false);
+        }
+
+        return (
+          <div class={base()}>
+            <label for={props.name} class="text-sm">
+              壁紙の種類
+            </label>
+
+            <SourceTypeSelect
+              field={field}
+              fieldProps={props}
+              id={props.name}
+              onChange={(value) => {
+                setValue(form, "source.location", "");
+                onChange(value);
+              }}
+            />
+            <div class={error()}>{field.error}</div>
+          </div>
+        );
+      }}
     </Field>
   );
 }
@@ -194,6 +208,7 @@ function SourceTypeSelect(props: {
     <div class={base({ size: "sm" })}>
       <select
         {...fieldProps}
+        value={field.value}
         class={select()}
         id={id}
         onChange={() => onChange(field.value || "Picture")}
@@ -201,8 +216,12 @@ function SourceTypeSelect(props: {
         <option class={optionClass()} value="Picture" selected>
           画像
         </option>
-        <option class={optionClass()} value="Video">動画</option>
-        <option class={optionClass()} value="YouTube">YouTube</option>
+        <option class={optionClass()} value="Video">
+          動画
+        </option>
+        <option class={optionClass()} value="YouTube">
+          YouTube
+        </option>
       </select>
 
       <span class={chevron()}>
