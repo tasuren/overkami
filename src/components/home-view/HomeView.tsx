@@ -21,7 +21,7 @@ export function HomeView() {
           class={cl(
             "px-14 py-10 h-full",
             "grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5",
-            "gap-2 overflow-auto",
+            "content-start gap-4 overflow-auto",
           )}
         >
           <For each={Object.entries(wallpapers())}>
