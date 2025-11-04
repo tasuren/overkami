@@ -15,8 +15,8 @@ export default function WallpaperView(props: {
   const [dirty, setDirty] = createSignal(false);
 
   return (
-    <div>
-      <div class="fixed top-[48px] left-0 px-14 z-50 w-screen flex items-center gap-2 bg-light dark:bg-dark">
+    <>
+      <div class="fixed top-12 left-0 px-14 z-50 w-screen flex items-center gap-2 bg-light dark:bg-dark">
         <button
           type="button"
           class={iconButtonClass()}
@@ -47,11 +47,11 @@ export default function WallpaperView(props: {
       </div>
 
       <div
-        class="px-16 py-2 mt-[48px] overflow-y-auto"
+        class="px-16 py-2 mt-24 overflow-y-auto"
         style="height: calc(100vh - 48px * 2);"
       >
         <WallpaperForm id={id} wallpaper={wallpaper} setDirty={setDirty} />
       </div>
-    </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { cl } from "../../lib/utils";
 import { buttonClass, textMutedClass } from "../ui";
+import YouTubeEmbed from "../wallpaper/YouTubeEmbed";
 
 export function HomeView() {
   const [wallpapers] = useWallpapers();
@@ -127,6 +128,10 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
           loop
           muted
         />
+      );
+    case "YouTube":
+      return (
+        <YouTubeEmbed url={wallpaper.source.location} className="rounded-lg" />
       );
     case "LocalWebPage":
       return (

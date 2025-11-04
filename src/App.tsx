@@ -1,4 +1,4 @@
-import { Match, Switch } from "solid-js";
+import { Match, Show, Switch } from "solid-js";
 import "./App.css";
 import { HomeView } from "./components/home-view/HomeView";
 import { default as WallpaperView } from "./components/wallpaper-view/WallpaperView";
@@ -10,25 +10,23 @@ export function Main() {
 
   return (
     <main style="height: calc(100vh - 48px);">
-      <Switch>
-        <Match when={view().type === "home"}>
-          <HomeView />
-        </Match>
+      <HomeView />
 
-        <Match when={view()}>
-          {(view) => {
-            const wallpaperView = view();
-            if (wallpaperView.type !== "wallpaper") return;
+      <Show when={view().type === "wallpaper"}>
+        {(_) => {
+          const wallpaperView = view();
+          if (wallpaperView.type !== "wallpaper") return;
 
-            return (
+          return (
+            <div class="w-screen h-screen absolute top-0 left-0 bg-light dark:bg-dark">
               <WallpaperView
                 id={wallpaperView.id}
                 wallpaper={wallpaperView.wallpaper}
               />
-            );
-          }}
-        </Match>
-      </Switch>
+            </div>
+          );
+        }}
+      </Show>
     </main>
   );
 }
