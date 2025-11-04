@@ -21,6 +21,7 @@
     "@tauri-apps/plugin-os": "~2.3.2",
     "lucide-solid": "^0.548.0",
     "solid-js": "^1.9.10",
+    "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^3.1.1",
     "tailwindcss": "^4.1.16"
   },
