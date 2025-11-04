@@ -1,36 +1,35 @@
 {
-  "name": "overkami",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "tauri": "tauri",
-    "cargo": "cargo +nightly -Z unstable-options -C src-tauri"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@modular-forms/solid": "^0.25.1",
-    "@tailwindcss/vite": "^4.1.16",
-    "@tauri-apps/api": "^2.9.0",
-    "@tauri-apps/plugin-dialog": "~2.4.2",
-    "@tauri-apps/plugin-log": "~2.7.1",
-    "@tauri-apps/plugin-opener": "^2.5.2",
-    "@tauri-apps/plugin-os": "~2.3.2",
-    "lucide-solid": "^0.548.0",
-    "solid-js": "^1.9.10",
-    "tailwind-merge": "^3.3.1",
-    "tailwind-variants": "^3.1.1",
-    "tailwindcss": "^4.1.16"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.1",
-    "@tauri-apps/cli": "^2.9.2",
-    "pathe": "^2.0.3",
-    "typescript": "~5.9.3",
-    "vite": "^7.1.12",
-    "vite-plugin-solid": "^2.11.10"
-  }
+    "name": "overkami",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "start": "vite",
+        "dev": "vite",
+        "build": "vite build",
+        "serve": "vite preview",
+        "tauri": "tauri",
+        "cargo": "cargo +nightly -Z unstable-options -C src-tauri"
+    },
+    "dependencies": {
+        "@modular-forms/solid": "^0.25.1",
+        "@tailwindcss/vite": "^4.1.16",
+        "@tauri-apps/api": "^2.9.0",
+        "@tauri-apps/plugin-dialog": "~2.4.2",
+        "@tauri-apps/plugin-log": "~2.7.1",
+        "@tauri-apps/plugin-opener": "^2.5.2",
+        "@tauri-apps/plugin-os": "~2.3.2",
+        "lucide-solid": "^0.548.0",
+        "solid-js": "^1.9.10",
+        "tailwind-merge": "^3.3.1",
+        "tailwind-variants": "^3.1.1",
+        "tailwindcss": "^4.1.16"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.3.1",
+        "@tauri-apps/cli": "^2.9.2",
+        "pathe": "^2.0.3",
+        "typescript": "~5.9.3",
+        "vite": "^7.1.12",
+        "vite-plugin-solid": "^2.11.10"
+    }
 }
