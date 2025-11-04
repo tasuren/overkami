@@ -1,4 +1,4 @@
-import { Match, Show, Switch } from "solid-js";
+import { Show } from "solid-js";
 import "./App.css";
 import { HomeView } from "./components/home-view/HomeView";
 import { default as WallpaperView } from "./components/wallpaper-view/WallpaperView";
