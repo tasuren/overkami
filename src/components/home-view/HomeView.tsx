@@ -1,11 +1,11 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { basename } from "@tauri-apps/api/path";
 import Plus from "lucide-solid/icons/plus";
-import { createResource, For, Show } from "solid-js";
+import { createResource, For } from "solid-js";
 import { useView, useWallpapers } from "../../GlobalState";
 import type { Wallpaper } from "../../lib/binding/payload_config";
 import { cl } from "../../lib/utils";
-import { buttonClass, textMutedClass } from "../ui";
+import { textMutedClass } from "../ui";
 import YouTubeEmbed from "../wallpaper/YouTubeEmbed";
 
 export function HomeView() {
