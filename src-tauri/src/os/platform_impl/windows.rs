@@ -8,6 +8,12 @@ fn get_ex_style(hwnd: HWND) -> anyhow::Result<WINDOW_EX_STYLE> {
     Ok(WINDOW_EX_STYLE(result as _))
 }
 
+fn get_style(hwnd: HWND) -> anyhow::Result<WINDOW_STYLE> {
+    let result = unsafe { GetWindowLongPtrW(hwnd, GWL_STYLE) };
+    anyhow::ensure!(result != 0, "Failed to get current window ex style");
+    Ok(WINDOW_STYLE(result as _))
+}
+
 fn manage_window_ex_style(
     hwnd: HWND,
     add_mode: bool,
@@ -24,6 +30,22 @@ fn manage_window_ex_style(
     }
 
     anyhow::ensure!(result != 0, "Failed to set window ex style");
+
+    Ok(())
+}
+
+fn manage_window_style(hwnd: HWND, add_mode: bool, style: WINDOW_STYLE) -> anyhow::Result<()> {
+    let current = get_style(hwnd)?;
+
+    let mut result = 1;
+    if add_mode && !current.contains(style) {
+        result = unsafe { SetWindowLongPtrW(hwnd, GWL_STYLE, (current | style).0 as _) }
+    }
+    if !add_mode && current.contains(style) {
+        result = unsafe { SetWindowLongPtrW(hwnd, GWL_STYLE, (current & !style).0 as _) };
+    }
+
+    anyhow::ensure!(result != 0, "Failed to set window style");
 
     Ok(())
 }
@@ -137,4 +159,16 @@ pub fn set_foreground_window(target: &window_getter::Window) -> anyhow::Result<(
     Ok(())
 }
 
-pub mod custom_feature {}
+pub mod custom_feature {
+    use super::*;
+
+    pub fn set_visible_window(window: &WebviewWindow, visible: bool) -> anyhow::Result<()> {
+        let hwnd = HWND(window.hwnd().unwrap().0);
+
+        if visible {
+            manage_window_style(hwnd, true, WS_VISIBLE)
+        } else {
+            manage_window_style(hwnd, false, WS_VISIBLE)
+        }
+    }
+}

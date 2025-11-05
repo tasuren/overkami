@@ -9,6 +9,9 @@ use crate::{
     utils::{adjust_position, adjust_size},
 };
 
+#[cfg(target_os = "windows")]
+use crate::os::platform_impl::custom_feature::set_visible_window;
+
 /// Represents an overlay window for a wallpaper.
 ///
 /// This struct has responsibility for managing overlay window.
@@ -157,12 +160,18 @@ impl Overlay {
     }
 
     pub fn show(&mut self) {
+        #[cfg(not(target_os = "windows"))]
         self.overlay_window.show().unwrap();
+        #[cfg(target_os = "windows")]
+        set_visible_window(&self.overlay_window, true).unwrap();
         self.hidden = false;
     }
 
     pub fn hide(&mut self) {
+        #[cfg(not(target_os = "windows"))]
         self.overlay_window.hide().unwrap();
+        #[cfg(target_os = "windows")]
+        set_visible_window(&self.overlay_window, false).unwrap();
         self.hidden = true;
     }
 
@@ -179,6 +188,7 @@ impl Overlay {
     }
 
     pub fn resize(&self, size: window_observer::Size) {
+        println!("{:?}", size);
         let size = adjust_size(
             self.overlay_window.scale_factor().unwrap(),
             size.width,
