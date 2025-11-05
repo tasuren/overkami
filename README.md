@@ -11,7 +11,7 @@
 ですが、Pull Requestは歓迎しますし、このリポジトリの運用を引き継いでくれる人がいれば譲渡します。
 （場合によってはこの方針が変わる可能性もあります。）
 
-<img width="400" alt="Twier with wallpaper" src="https://github.com/user-attachments/assets/5e514f01-b82f-4854-b637-b7e401e0b13a" />
+<img width="400" alt="Twier with wallpaper" src="https://github.com/user-attachments/assets/3eb1ffd3-06e9-49b8-bece-4a6039a2d29c" />
 
 ## 仕組み
 
@@ -35,7 +35,7 @@
 
 ## 対応プラットフォーム
 
-- [x] Windows
+- [x] Windows: 現在かなり不安定 ⚠️
 - [x] macOS
 - [ ] Linux系OS
 
@@ -43,9 +43,9 @@ Linux系OSに対応する予定はないですが、Pull Requestは歓迎しま�
 
 ## スクリーンショット
 
-<img width="600" alt="overkami screen shot" src="https://github.com/user-attachments/assets/6c4ef1bc-4e2b-4a63-b629-0cb4c95e7e97" />
+<img width="600" alt="overkami screen shot" src="https://github.com/user-attachments/assets/1b0d07b3-b432-40ad-be41-c132a9a062c3" />
 
-<img width="600" alt="Ghostty with wallpaper" src="https://github.com/user-attachments/assets/f54569fc-9bc0-4ad8-9dbb-1d10c997f337" />
+<img width="600" alt="メモ帳に壁紙を設定した例" src="https://github.com/user-attachments/assets/90790964-74fb-4c59-b095-ba50e557fc9d" />
 
 https://github.com/user-attachments/assets/1b59cb07-8329-4dc5-82f5-0b7ddd741584
 
