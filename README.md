@@ -35,7 +35,7 @@
 
 ## 対応プラットフォーム
 
-- [x] Windows: 現在かなり不安定 ⚠️
+- [x] Windows
 - [x] macOS
 - [ ] Linux系OS
 
