@@ -138,14 +138,3 @@ function Thumbnail(props: { wallpaper: Wallpaper }) {
       return <iframe title={wallpaper.name} src={wallpaper.source.location} />;
   }
 }
-function NothingFound() {
-  return (
-    <div class="h-full flex justify-center items-center">
-      <div class={textMutedClass({ class: "text-center" })}>
-        壁紙がまだ設定されていません。
-        <br />
-        ¯\_(ツ)_/¯
-      </div>
-    </div>
-  );
-}
