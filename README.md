@@ -49,6 +49,25 @@ Linux系OSに対応する予定はないですが、Pull Requestは歓迎しま�
 
 https://github.com/user-attachments/assets/1b59cb07-8329-4dc5-82f5-0b7ddd741584
 
+## セットアップ方法
+
+このプロジェクトでは、JavaScriptランタイムのBunとRustパッケージマネージャcargoが必要です。
+
+セットアップをするにはまず、以下のコマンドでフロントエンドの依存関係をインストールします。
+
+```shell
+$ bun install --no-save
+```
+
+次に、以下のtauriコマンドでビルドを行います。
+
+```shell
+$ bun tauri build
+```
+
+すると、Macであれば`src-tauri/target/release/bundle`に、Windowsであれば`src-tauri/release/bundle/nsis`にバンドルがあります。
+開発のための、ホットリロード機能付きのビルドは`bun tauri dev`で動かせます。
+
 ## ライセンス
 
 このプロジェクト・アプリは、[GNU General Public License v3.0 or later](./LICENSE)に基づいて提供されます。
